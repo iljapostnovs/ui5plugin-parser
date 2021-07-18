@@ -1,12 +1,14 @@
 import * as fs from "fs";
 import * as glob from "glob";
-import { AcornSyntaxAnalyzer } from "../UI5Classes/JSParser/AcornSyntaxAnalyzer";
 import * as path from "path";
 import { UIClassFactory } from "../UI5Classes/UIClassFactory";
 import { CustomUIClass } from "../UI5Classes/UI5Parser/UIClass/CustomUIClass";
 import { TextDocumentTransformer } from "./TextDocumentTransformer";
 import { ITag, XMLParser } from "./XMLParser";
 import { ResourceModelData } from "../UI5Classes/ResourceModelData";
+import { ConfigHandler } from "../config/ConfigHandler";
+import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
+import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
@@ -14,7 +16,7 @@ export class FileReader {
 	private static _manifests: IUIManifest[] = [];
 	private static readonly _viewCache: IViews = {};
 	private static readonly _fragmentCache: Fragments = {};
-	private static readonly _UI5Version: any = vscode.workspace.getConfiguration("ui5.plugin").get("ui5version");
+	private static readonly _UI5Version: any = ConfigHandler.getUI5Version();
 	public static globalStoragePath: string | undefined;
 
 	public static setNewViewContentToCache(viewContent: string, fsPath: string, forceRefresh = false) {
@@ -27,7 +29,6 @@ export class FileReader {
 				this._viewCache[viewName].fsPath = fsPath;
 				this._viewCache[viewName].fragments = this.getFragmentsFromXMLDocumentText(viewContent);
 				this._viewCache[viewName].XMLParserData = undefined;
-				this._viewCache[viewName].referenceCodeLensCache = {};
 			} else {
 				this._viewCache[viewName] = {
 					controllerName: this.getControllerNameFromView(viewContent) || "",
@@ -35,8 +36,7 @@ export class FileReader {
 					name: viewName || "",
 					content: viewContent,
 					fsPath: fsPath,
-					fragments: this.getFragmentsFromXMLDocumentText(viewContent),
-					referenceCodeLensCache: {}
+					fragments: this.getFragmentsFromXMLDocumentText(viewContent)
 				};
 			}
 		}
@@ -52,15 +52,13 @@ export class FileReader {
 				this._fragmentCache[fragmentName].idClassMap = {};
 				this._fragmentCache[fragmentName].fragments = this.getFragmentsFromXMLDocumentText(text);
 				this._fragmentCache[fragmentName].XMLParserData = undefined;
-				this._fragmentCache[fragmentName].referenceCodeLensCache = {};
 			} else {
 				this._fragmentCache[fragmentName] = {
 					content: text,
 					fsPath: fsPath,
 					name: fragmentName,
 					idClassMap: {},
-					fragments: this.getFragmentsFromXMLDocumentText(text),
-					referenceCodeLensCache: {}
+					fragments: this.getFragmentsFromXMLDocumentText(text)
 				};
 			}
 		}
@@ -119,30 +117,21 @@ export class FileReader {
 	}
 
 	public static getAllManifests() {
-		if (this._manifests.length === 0) {
-			this._fetchAllWorkspaceManifests();
-		}
-
 		return this._manifests;
 	}
 
-	public static rereadAllManifests() {
+	public static rereadAllManifests(wsFolders: WorkspaceFolder[]) {
 		this._manifests = [];
-		this._fetchAllWorkspaceManifests();
+		this._fetchAllWorkspaceManifests(wsFolders);
 	}
 
 	public static getManifestForClass(className = "") {
-		if (this._manifests.length === 0) {
-			this._fetchAllWorkspaceManifests();
-		}
-
 		const returnManifest = this._manifests.find(UIManifest => className.startsWith(UIManifest.componentName + "."));
 
 		return returnManifest;
 	}
 
-	private static _fetchAllWorkspaceManifests() {
-		const wsFolders = workspace.workspaceFolders || [];
+	private static _fetchAllWorkspaceManifests(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const manifests = this.getManifestFSPathsInWorkspaceFolder(wsFolder);
 			for (const manifest of manifests) {
@@ -156,20 +145,20 @@ export class FileReader {
 					};
 					this._manifests.push(UIManifest);
 				} catch (error) {
-					vscode.window.showErrorMessage(`Couldn't read manifest.json. Error message: ${error?.message || ""}`);
+					console.error(`Couldn't read manifest.json. Error message: ${error?.message || ""}`);
 					throw error;
 				}
 			}
 		}
 	}
 
-	public static getManifestFSPathsInWorkspaceFolder(wsFolder: vscode.WorkspaceFolder) {
+	public static getManifestFSPathsInWorkspaceFolder(wsFolder: WorkspaceFolder) {
 		const timeStart = new Date().getTime();
 		const manifestPaths = this._readFilesInWorkspace(wsFolder, "**/manifest.json");
 		const timeEnd = new Date().getTime();
 		const timeSpent = timeEnd - timeStart;
 		if (timeSpent > 5000 || manifestPaths.length > 30) {
-			vscode.window.showInformationMessage(`Reading manifests took ${timeSpent / 100}s and ${manifestPaths.length} manifests found. Please make sure that "ui5.plugin.excludeFolderPattern" preference is configured correctly.`);
+			console.info(`Reading manifests took ${timeSpent / 100}s and ${manifestPaths.length} manifests found. Please make sure that "ui5.plugin.excludeFolderPattern" preference is configured correctly.`);
 		}
 
 		const manifests: IManifestPaths[] = manifestPaths.map(manifestPath => {
@@ -180,10 +169,10 @@ export class FileReader {
 		return manifests;
 	}
 
-	private static _readFilesInWorkspace(wsFolder: vscode.WorkspaceFolder, path: string) {
+	private static _readFilesInWorkspace(wsFolder: WorkspaceFolder, path: string) {
 
-		const wsFolderFSPath = wsFolder.uri.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
-		const exclusions: string[] = vscode.workspace.getConfiguration("ui5.plugin").get("excludeFolderPattern") || [];
+		const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
+		const exclusions: string[] = ConfigHandler.getExcludeFolderPatterns();
 		const exclusionPaths = exclusions.map(excludeString => {
 			return `${wsFolderFSPath}/${excludeString}`
 		});
@@ -309,32 +298,14 @@ export class FileReader {
 		return XMLFile.idClassMap[controlId];
 	}
 
-	static readAllFiles() {
-		return vscode.window.withProgress({
-			location: vscode.ProgressLocation.Window,
-			title: "Parsing project files",
-			cancellable: false
-		}, async progress => {
-			progress.report({
-				message: "Reading Fragments",
-				increment: 33
-			});
-			this._readAllFragmentsAndSaveInCache();
-			progress.report({
-				message: "Reading Views"
-			});
-			this._readAllViewsAndSaveInCache();
-			progress.report({
-				message: "Reading JS Files",
-				increment: 33
-			});
-			this._readAllJSFiles();
-			ResourceModelData.readTexts();
-		});
+	static readAllFiles(wsFolders: WorkspaceFolder[]) {
+		this._readAllFragmentsAndSaveInCache(wsFolders);
+		this._readAllViewsAndSaveInCache(wsFolders);
+		this._readAllJSFiles(wsFolders);
+		ResourceModelData.readTexts();
 	}
 
-	private static _readAllJSFiles() {
-		const wsFolders = workspace.workspaceFolders || [];
+	private static _readAllJSFiles(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const classPaths = this._readFilesInWorkspace(wsFolder, "**/*.js");
 			const classNames = classPaths.map(path => FileReader.getClassNameFromPath(path));
@@ -343,7 +314,7 @@ export class FileReader {
 					try {
 						UIClassFactory.getUIClass(className);
 					} catch (error) {
-						vscode.window.showErrorMessage(`Error parsing ${className}: ${error.message}`);
+						console.error(`Error parsing ${className}: ${error.message}`);
 					}
 				}
 			});
@@ -352,7 +323,6 @@ export class FileReader {
 				if (className) {
 					const UIClass = UIClassFactory.getUIClass(className);
 					if (UIClass instanceof CustomUIClass) {
-						UIClass.referenceCodeLensCache = {};
 						UIClass.relatedViewsAndFragments = undefined;
 						UIClassFactory.enrichTypesInCustomClass(UIClass);
 					}
@@ -361,8 +331,7 @@ export class FileReader {
 		}
 	}
 
-	private static _readAllViewsAndSaveInCache() {
-		const wsFolders = workspace.workspaceFolders || [];
+	private static _readAllViewsAndSaveInCache(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const viewPaths = this._readFilesInWorkspace(wsFolder, "**/*.view.xml");
 			viewPaths.forEach(viewPath => {
@@ -373,8 +342,7 @@ export class FileReader {
 		}
 	}
 
-	private static _readAllFragmentsAndSaveInCache() {
-		const wsFolders = workspace.workspaceFolders || [];
+	private static _readAllFragmentsAndSaveInCache(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const fragmentPaths = this._readFilesInWorkspace(wsFolder, "**/*.fragment.xml");
 			const fragmentData = fragmentPaths.map(path => {
@@ -390,7 +358,7 @@ export class FileReader {
 		}
 	}
 
-	public static getAllJSClassNamesFromProject(wsFolder: vscode.WorkspaceFolder) {
+	public static getAllJSClassNamesFromProject(wsFolder: WorkspaceFolder) {
 		let classNames: string[] = [];
 		const classPaths = this._readFilesInWorkspace(wsFolder, "**/*.js");
 		classNames = classPaths.reduce((accumulator: string[], viewPath) => {
@@ -411,7 +379,7 @@ export class FileReader {
 
 		return controllerName;
 	}
-	static getResponsibleClassForXMLDocument(document: vscode.TextDocument) {
+	static getResponsibleClassForXMLDocument(document: TextDocument) {
 		const XMLDocument = TextDocumentTransformer.toXMLFile(document);
 		if (XMLDocument) {
 			return this.getResponsibleClassNameForViewOrFragment(XMLDocument);
@@ -680,17 +648,6 @@ export class FileReader {
 		return `${manifest.fsPath}${fileSeparator}${i18nPath}`;
 	}
 
-	public static getComponentNameOfAppInCurrentWorkspaceFolder() {
-		return this.getCurrentWorkspaceFoldersManifest()?.componentName;
-	}
-
-	public static getCurrentWorkspaceFoldersManifest() {
-		const currentClassName = AcornSyntaxAnalyzer.getClassNameOfTheCurrentDocument();
-		if (currentClassName) {
-			return this.getManifestForClass(currentClassName);
-		}
-	}
-
 	public static removeFromCache(fsPath: string) {
 		return this._removeViewFromCache(fsPath) || this._removeFragmentFromCache(fsPath);
 	}
@@ -704,7 +661,6 @@ export class FileReader {
 				this._viewCache[className].XMLParserData = undefined;
 				this._viewCache[className].fragments = [];
 				this._viewCache[className].fsPath = "";
-				this._viewCache[className].referenceCodeLensCache = {};
 				delete this._viewCache[className];
 				return true;
 			}
@@ -721,7 +677,6 @@ export class FileReader {
 				this._fragmentCache[className].XMLParserData = undefined;
 				this._fragmentCache[className].fragments = [];
 				this._fragmentCache[className].fsPath = "";
-				this._fragmentCache[className].referenceCodeLensCache = {};
 				delete this._fragmentCache[className];
 				return true;
 			}
@@ -765,35 +720,6 @@ export class FileReader {
 			delete this._fragmentCache[oldName];
 		}
 	}
-
-	static getAllFilesInAllWorkspaces() {
-		const workspace = vscode.workspace;
-		const wsFolders = workspace.workspaceFolders || [];
-		const files: FileData[] = [];
-
-		for (const wsFolder of wsFolders) {
-			const wsFolderFSPath = wsFolder.uri.fsPath;
-			const exclusions: string[] = vscode.workspace.getConfiguration("ui5.plugin").get("excludeFolderPattern") || [];
-			const exclusionPaths = exclusions.map(excludeString => {
-				return `${wsFolderFSPath}/${excludeString}`
-			});
-			const workspaceFilePaths = glob.sync(wsFolderFSPath.replace(/\\/g, "/") + "/**/*{.js,.xml,.json}", {
-				ignore: exclusionPaths
-			});
-			workspaceFilePaths.forEach(filePath => {
-				const fsPath = path.normalize(filePath);
-				const file = fs.readFileSync(fsPath, "utf-8");
-				if (file) {
-					files.push({
-						fsPath,
-						content: file
-					});
-				}
-			});
-		}
-
-		return files;
-	}
 }
 
 export interface FileData {
@@ -832,7 +758,6 @@ export interface IXMLFile extends IXMLParserCacheable, IHasFragments {
 	content: string;
 	fsPath: string;
 	name: string;
-	referenceCodeLensCache: IReferenceCodeLensCacheable;
 }
 export interface IHasFragments {
 	fragments: IFragment[];

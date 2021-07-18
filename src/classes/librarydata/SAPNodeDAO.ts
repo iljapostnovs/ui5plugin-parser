@@ -1,9 +1,9 @@
-import * as vscode from "vscode";
 import { FileReader } from "../utils/FileReader";
 import { URLBuilder } from "../utils/URLBuilder";
 import { HTTPHandler } from "../utils/HTTPHandler";
 import { SAPNode } from "./SAPNode";
 import { UI5MetadataPreloader } from "./UI5MetadataDAO";
+import { ConfigHandler } from "../config/ConfigHandler";
 interface ILooseNodeObject {
 	[key: string]: SAPNode;
 }
@@ -55,7 +55,7 @@ export class SAPNodeDAO {
 	}
 
 	private _generateSAPNodes() {
-		const libs: any = vscode.workspace.getConfiguration("ui5.plugin").get("libsToLoad");
+		const libs: any = ConfigHandler.getLibsToLoad();
 		const libMap: any = {};
 		libs.forEach((lib: any) => {
 			libMap[lib] = true;

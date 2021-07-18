@@ -4,11 +4,10 @@ import { AcornSyntaxAnalyzer } from "../../JSParser/AcornSyntaxAnalyzer";
 import * as path from "path";
 import { AbstractUIClass, IUIField, IUIAggregation, IUIEvent, IUIMethod, IUIProperty, IUIAssociation, IUIEventParam, IUIMethodParam, IMember } from "./AbstractUIClass";
 import * as commentParser from "comment-parser";
-import { IReferenceCodeLensCacheable } from "../../../providers/codelens/jscodelens/strategies/ReferenceCodeLensGenerator";
 import { IViewsAndFragments } from "../../UIClassFactory";
-import { IAcornLocation } from "../../../adapters/vscode/RangeAdapter";
-import { IAcornPosition } from "../../../adapters/vscode/PositionAdapter";
 import LineColumn = require("line-column");
+import { IAcornPosition } from "../../adapters/PositionAdapter";
+import { IAcornLocation } from "../../adapters/RangeAdapter";
 const acornLoose = require("acorn-loose");
 
 interface IUIDefine {
@@ -74,12 +73,10 @@ export class CustomUIClass extends AbstractUIClass {
 	public acornReturnedClassExtendBody: any | undefined;
 	public classBodyAcornVariableName: string | undefined;
 	public classFSPath: string | undefined;
-	referenceCodeLensCache: IReferenceCodeLensCacheable;
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
 
 	constructor(className: string, documentText?: string) {
 		super(className);
-		this.referenceCodeLensCache = {};
 
 		this.classFSPath = FileReader.getClassFSPathFromClassName(this.className);
 		this._readFileContainingThisClassCode(documentText); //todo: rename. not always reading anyore.

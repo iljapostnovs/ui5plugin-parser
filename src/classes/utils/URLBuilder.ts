@@ -1,3 +1,4 @@
+import { ConfigHandler } from "../config/ConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
 import { AbstractUIClass } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
 import { FileReader } from "./FileReader";
@@ -5,7 +6,7 @@ import { FileReader } from "./FileReader";
 export class URLBuilder {
 	private static _URLBuilderInstance?: URLBuilder;
 	private readonly _UI5Version: string;
-	private readonly _URLHost = vscode.workspace.getConfiguration("ui5.plugin").get("dataSource");
+	private readonly _URLHost = ConfigHandler.getDataSource();
 
 	private constructor(UI5Version: string) {
 		this._UI5Version = UI5Version;
@@ -13,7 +14,7 @@ export class URLBuilder {
 
 	static getInstance() {
 		if (!this._URLBuilderInstance) {
-			const UI5Version: any = vscode.workspace.getConfiguration("ui5.plugin").get("ui5version");
+			const UI5Version: any = ConfigHandler.getUI5Version();
 			this._URLBuilderInstance = new URLBuilder(UI5Version);
 		}
 

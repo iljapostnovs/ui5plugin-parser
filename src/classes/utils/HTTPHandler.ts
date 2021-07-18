@@ -1,11 +1,11 @@
 import axios, { AxiosRequestConfig } from "axios";
 import * as https from "https";
-import * as vscode from "vscode";
+import { ConfigHandler } from "../config/ConfigHandler";
 export class HTTPHandler {
 	static async get(uri: string, options: AxiosRequestConfig = {}): Promise<any> {
 		let data = {};
 
-		const rejectUnauthorized = vscode.workspace.getConfiguration("ui5.plugin").get("rejectUnauthorized");
+		const rejectUnauthorized = ConfigHandler.getRejectUnauthorized();
 		const agent = new https.Agent({
 			rejectUnauthorized: !!rejectUnauthorized
 		});
@@ -14,7 +14,7 @@ export class HTTPHandler {
 		try {
 			data = (await axios.get(uri, options)).data;
 		} catch (error) {
-			vscode.window.showErrorMessage(`Error occurred sending HTTP Request. Message: "${error.message}". Response data: "${error.response?.data}"`);
+			console.error(`Error occurred sending HTTP Request. Message: "${error.message}". Response data: "${error.response?.data}"`);
 			throw error;
 		}
 
