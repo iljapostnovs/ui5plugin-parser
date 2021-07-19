@@ -1,11 +1,11 @@
 import axios, { AxiosRequestConfig } from "axios";
 import * as https from "https";
-import { ConfigHandler } from "../config/ConfigHandler";
+import { UI5Plugin } from "../../UI5Plugin";
 export class HTTPHandler {
 	static async get(uri: string, options: AxiosRequestConfig = {}): Promise<any> {
 		let data = {};
 
-		const rejectUnauthorized = ConfigHandler.getRejectUnauthorized();
+		const rejectUnauthorized = UI5Plugin.getInstance().configHandler.getRejectUnauthorized();
 		const agent = new https.Agent({
 			rejectUnauthorized: !!rejectUnauthorized
 		});

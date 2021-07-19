@@ -1,11 +1,12 @@
 import { SAPNodeDAO } from "../../../librarydata/SAPNodeDAO";
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
-import { IFieldsAndMethods, UIClassFactory } from "../../UIClassFactory";
+import { IFieldsAndMethods } from "../../UIClassFactory";
 import { AcornSyntaxAnalyzer } from "../AcornSyntaxAnalyzer";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./FieldsAndMethodForPositionBeforeCurrentStrategy";
 import { FileReader } from "../../../utils/FileReader";
 import { TextDocument } from "../../abstraction/TextDocument";
+import { UI5Plugin } from "../../../../UI5Plugin";
 
 export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	getFieldsAndMethods(document: TextDocument, position: number) {
@@ -74,7 +75,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 				if (classNameOfCurrentObjectExpression) {
 					const methodName = callExpression.callee?.property?.name;
 					if (methodName) {
-						const UIClass = <CustomUIClass>UIClassFactory.getUIClass(classNameOfCurrentObjectExpression);
+						const UIClass = <CustomUIClass>UI5Plugin.getInstance().classFactory.getUIClass(classNameOfCurrentObjectExpression);
 						const UIMethod = UIClass.methods.find(method => method.name === methodName);
 						if (UIMethod?.acornParams) {
 							const acornParam = UIMethod.acornParams[indexOfArgument];
@@ -180,7 +181,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	private _getCurrentClassModels(currentClassName: string) {
 		let models: { type: string, name: string }[] = [];
 		if (currentClassName) {
-			const UIClass = UIClassFactory.getUIClass(currentClassName);
+			const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(currentClassName);
 			if (UIClass instanceof CustomUIClass) {
 				const callExpressions = UIClass.methods.reduce((accumulator: any[], UIMethod) => {
 					if (UIMethod.acornNode) {
@@ -245,7 +246,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 		methods: []
 	}) {
 
-		const UIClass = UIClassFactory.getUIClass(className);
+		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 		fieldsAndMethods.fields = fieldsAndMethods.fields.concat(UIClass.properties.map(property => ({
 			name: property.name,
 			type: property.type,
@@ -265,7 +266,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	public getStackOfNodesForInnerParamsForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
-		const UIClass = UIClassFactory.getUIClass(className);
+		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {

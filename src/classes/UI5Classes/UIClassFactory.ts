@@ -21,7 +21,7 @@ interface IUIClassMap {
 	[key: string]: AbstractUIClass;
 }
 export class UIClassFactory {
-	private static readonly _UIClasses: IUIClassMap = {
+	private readonly _UIClasses: IUIClassMap = {
 		Promise: new JSClass("Promise"),
 		array: new JSClass("array"),
 		string: new JSClass("string"),
@@ -29,7 +29,7 @@ export class UIClassFactory {
 		String: new JSClass("String")
 	};
 
-	private static _getInstance(className: string, documentText?: string) {
+	private _getInstance(className: string, documentText?: string) {
 		let returnClass: AbstractUIClass;
 		const isThisClassFromAProject = !!FileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
@@ -41,7 +41,7 @@ export class UIClassFactory {
 		return returnClass;
 	}
 
-	public static isClassAChildOfClassB(classA: string, classB: string): boolean {
+	public isClassAChildOfClassB(classA: string, classB: string): boolean {
 		let isExtendedBy = false;
 		const UIClass = this.getUIClass(classA);
 
@@ -54,7 +54,7 @@ export class UIClassFactory {
 		return isExtendedBy;
 	}
 
-	public static setNewContentForClassUsingDocument(document: TextDocument, force = false) {
+	public setNewContentForClassUsingDocument(document: TextDocument, force = false) {
 		const documentText = document.getText();
 		const currentClassName = FileReader.getClassNameFromPath(document.fileName);
 
@@ -63,7 +63,7 @@ export class UIClassFactory {
 		}
 	}
 
-	public static setNewCodeForClass(classNameDotNotation: string, classFileText: string, force = false) {
+	public setNewCodeForClass(classNameDotNotation: string, classFileText: string, force = false) {
 		const classDoesNotExist = !this._UIClasses[classNameDotNotation];
 		if (
 			force ||
@@ -76,7 +76,7 @@ export class UIClassFactory {
 			if (oldClass && oldClass instanceof CustomUIClass && oldClass.acornClassBody) {
 				this._clearAcornNodes(oldClass);
 			}
-			this._UIClasses[classNameDotNotation] = UIClassFactory._getInstance(classNameDotNotation, classFileText);
+			this._UIClasses[classNameDotNotation] = this._getInstance(classNameDotNotation, classFileText);
 
 			const UIClass = this._UIClasses[classNameDotNotation];
 			if (UIClass instanceof CustomUIClass) {
@@ -86,15 +86,15 @@ export class UIClassFactory {
 
 		}
 	}
-	private static _clearAcornNodes(oldClass: CustomUIClass) {
+
+	private _clearAcornNodes(oldClass: CustomUIClass) {
 		const allContent = AcornSyntaxAnalyzer.expandAllContent(oldClass.acornClassBody);
 		allContent.forEach((content: any) => {
-
 			delete content.expandedContent;
 		});
 	}
 
-	public static enrichTypesInCustomClass(UIClass: CustomUIClass) {
+	public enrichTypesInCustomClass(UIClass: CustomUIClass) {
 		// console.time(`Enriching ${UIClass.className} took`);
 		this._preloadParentIfNecessary(UIClass);
 		this._enrichMethodParamsWithEventType(UIClass);
@@ -108,13 +108,13 @@ export class UIClassFactory {
 		// console.timeEnd(`Enriching ${UIClass.className} took`);
 	}
 
-	private static _preloadParentIfNecessary(UIClass: CustomUIClass) {
+	private _preloadParentIfNecessary(UIClass: CustomUIClass) {
 		if (UIClass.parentClassNameDotNotation) {
 			this.getUIClass(UIClass.parentClassNameDotNotation);
 		}
 	}
 
-	private static _checkIfMembersAreUsedInXMLDocuments(CurrentUIClass: CustomUIClass) {
+	private _checkIfMembersAreUsedInXMLDocuments(CurrentUIClass: CustomUIClass) {
 		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(CurrentUIClass, [], true, true, true);
 		const XMLDocuments = [...viewsAndFragments.views, ...viewsAndFragments.fragments];
 		XMLDocuments.forEach(XMLDocument => {
@@ -138,8 +138,7 @@ export class UIClassFactory {
 		});
 	}
 
-
-	public static getFieldsAndMethodsForClass(className: string, returnDuplicates = true) {
+	public getFieldsAndMethodsForClass(className: string, returnDuplicates = true) {
 		const fieldsAndMethods: IFieldsAndMethods = {
 			className: className,
 			fields: [],
@@ -154,7 +153,7 @@ export class UIClassFactory {
 		return fieldsAndMethods;
 	}
 
-	public static getClassFields(className: string, returnDuplicates = true) {
+	public getClassFields(className: string, returnDuplicates = true) {
 		let fields: IUIField[] = [];
 		const UIClass = this.getUIClass(className);
 		fields = UIClass.fields;
@@ -176,7 +175,7 @@ export class UIClassFactory {
 		return fields;
 	}
 
-	public static getClassMethods(className: string, returnDuplicates = true, methods: IUIMethod[] = []) {
+	public getClassMethods(className: string, returnDuplicates = true, methods: IUIMethod[] = []) {
 		const UIClass = this.getUIClass(className);
 		methods.push(...UIClass.methods);
 		if (UIClass.parentClassNameDotNotation) {
@@ -197,7 +196,7 @@ export class UIClassFactory {
 		return methods;
 	}
 
-	public static getClassEvents(className: string, returnDuplicates = true) {
+	public getClassEvents(className: string, returnDuplicates = true) {
 		const UIClass = this.getUIClass(className);
 		let events: IUIEvent[] = UIClass.events;
 		if (UIClass.parentClassNameDotNotation) {
@@ -218,7 +217,7 @@ export class UIClassFactory {
 		return events;
 	}
 
-	public static getClassAggregations(className: string, returnDuplicates = true) {
+	public getClassAggregations(className: string, returnDuplicates = true) {
 		const UIClass = this.getUIClass(className);
 		let aggregations: IUIAggregation[] = UIClass.aggregations;
 		if (UIClass.parentClassNameDotNotation) {
@@ -238,7 +237,7 @@ export class UIClassFactory {
 		return aggregations;
 	}
 
-	public static getClassAssociations(className: string, returnDuplicates = true) {
+	public getClassAssociations(className: string, returnDuplicates = true) {
 		const UIClass = this.getUIClass(className);
 		let associations: IUIAssociation[] = UIClass.associations;
 		if (UIClass.parentClassNameDotNotation) {
@@ -258,7 +257,7 @@ export class UIClassFactory {
 		return associations;
 	}
 
-	public static getClassProperties(className: string, returnDuplicates = true) {
+	public getClassProperties(className: string, returnDuplicates = true) {
 		const UIClass = this.getUIClass(className);
 		let properties: IUIProperty[] = UIClass.properties;
 		if (UIClass.parentClassNameDotNotation) {
@@ -278,9 +277,9 @@ export class UIClassFactory {
 		return properties;
 	}
 
-	public static getUIClass(className: string) {
+	public getUIClass(className: string) {
 		if (!this._UIClasses[className]) {
-			this._UIClasses[className] = UIClassFactory._getInstance(className);
+			this._UIClasses[className] = this._getInstance(className);
 			const UIClass = this._UIClasses[className];
 			if (UIClass instanceof CustomUIClass) {
 				this.enrichTypesInCustomClass(UIClass);
@@ -290,14 +289,14 @@ export class UIClassFactory {
 		return this._UIClasses[className];
 	}
 
-	private static _enrichMethodParamsWithEventType(CurrentUIClass: CustomUIClass) {
+	private _enrichMethodParamsWithEventType(CurrentUIClass: CustomUIClass) {
 		// console.time(`Enriching types ${CurrentUIClass.className}`);
 		this._enrichMethodParamsWithEventTypeFromViewsAndFragments(CurrentUIClass);
 		this._enrichMethodParamsWithEventTypeFromAttachEvents(CurrentUIClass);
 		// console.timeEnd(`Enriching types ${CurrentUIClass.className}`);
 	}
 
-	private static _enrichMethodParamsWithEventTypeFromViewsAndFragments(CurrentUIClass: CustomUIClass) {
+	private _enrichMethodParamsWithEventTypeFromViewsAndFragments(CurrentUIClass: CustomUIClass) {
 		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(CurrentUIClass, [], true, true, true);
 		const XMLDocuments = [...viewsAndFragments.views, ...viewsAndFragments.fragments];
 		XMLDocuments.forEach(XMLDocument => {
@@ -319,7 +318,7 @@ export class UIClassFactory {
 		});
 	}
 
-	static getViewsAndFragmentsOfControlHierarchically(CurrentUIClass: CustomUIClass, checkedClasses: string[] = [], removeDuplicates = true, includeChildren = false, includeMentioned = false, includeParents = true): IViewsAndFragments {
+	getViewsAndFragmentsOfControlHierarchically(CurrentUIClass: CustomUIClass, checkedClasses: string[] = [], removeDuplicates = true, includeChildren = false, includeMentioned = false, includeParents = true): IViewsAndFragments {
 		if (checkedClasses.includes(CurrentUIClass.className)) {
 			return { fragments: [], views: [] };
 		}
@@ -388,7 +387,7 @@ export class UIClassFactory {
 		return viewsAndFragments;
 	}
 
-	private static _removeDuplicatesForViewsAndFragments(viewsAndFragments: IViewsAndFragments) {
+	private _removeDuplicatesForViewsAndFragments(viewsAndFragments: IViewsAndFragments) {
 		viewsAndFragments.views.forEach(view => {
 			viewsAndFragments.fragments.push(...FileReader.getFragmentsInXMLFile(view));
 		});
@@ -413,7 +412,7 @@ export class UIClassFactory {
 
 	}
 
-	static getViewsAndFragmentsRelatedTo(CurrentUIClass: CustomUIClass) {
+	getViewsAndFragmentsRelatedTo(CurrentUIClass: CustomUIClass) {
 		const viewsAndFragments: IViewsAndFragments = {
 			views: [],
 			fragments: []
@@ -431,7 +430,7 @@ export class UIClassFactory {
 		const fragments = FileReader.getAllFragments();
 		const allViews = FileReader.getAllViews();
 
-		//check for static mentioning
+		//check for mentioning
 		fragments.forEach(fragment => {
 			if (fragment.content.includes(`${CurrentUIClass.className}.`)) {
 				viewsAndFragments.fragments.push(fragment);
@@ -446,7 +445,7 @@ export class UIClassFactory {
 		return viewsAndFragments;
 	}
 
-	private static _getAllClassesWhereClassIsImported(className: string) {
+	private _getAllClassesWhereClassIsImported(className: string) {
 		return this.getAllCustomUIClasses().filter(UIClass => {
 			return UIClass.parentClassNameDotNotation !== className && !!UIClass.UIDefine.find(UIDefine => {
 				return UIDefine.classNameDotNotation === className;
@@ -454,7 +453,7 @@ export class UIClassFactory {
 		});
 	}
 
-	private static _getAllChildrenOfClass(UIClass: CustomUIClass, bFirstLevelinheritance = false) {
+	private _getAllChildrenOfClass(UIClass: CustomUIClass, bFirstLevelinheritance = false) {
 		return bFirstLevelinheritance ? this.getAllCustomUIClasses().filter(CurrentUIClass => {
 			return CurrentUIClass.parentClassNameDotNotation === UIClass.className;
 		}) : this.getAllCustomUIClasses().filter(CurrentUIClass => {
@@ -462,7 +461,7 @@ export class UIClassFactory {
 		});
 	}
 
-	public static getAllCustomUIClasses(): CustomUIClass[] {
+	public getAllCustomUIClasses(): CustomUIClass[] {
 		const allUIClasses = this.getAllExistentUIClasses();
 
 		return Object.keys(allUIClasses).filter(UIClassName => {
@@ -470,7 +469,7 @@ export class UIClassFactory {
 		}).map(UIClassName => allUIClasses[UIClassName] as CustomUIClass);
 	}
 
-	private static _getFragmentFromViewManifestExtensions(className: string, view: IView) {
+	private _getFragmentFromViewManifestExtensions(className: string, view: IView) {
 		const fragments: IFragment[] = [];
 		const viewName = FileReader.getClassNameFromPath(view.fsPath);
 		if (viewName) {
@@ -494,7 +493,7 @@ export class UIClassFactory {
 		return fragments;
 	}
 
-	private static _enrichMethodParamsWithEventTypeFromAttachEvents(UIClass: CustomUIClass) {
+	private _enrichMethodParamsWithEventTypeFromAttachEvents(UIClass: CustomUIClass) {
 		UIClass.methods.forEach(method => {
 			const eventData = AcornSyntaxAnalyzer.getEventHandlerDataFromJSClass(UIClass.className, method.name);
 			if (eventData) {
@@ -506,11 +505,11 @@ export class UIClassFactory {
 		});
 	}
 
-	public static getAllExistentUIClasses() {
+	public getAllExistentUIClasses() {
 		return this._UIClasses;
 	}
 
-	public static getDefaultModelForClass(className: string): string | undefined {
+	public getDefaultModelForClass(className: string): string | undefined {
 		let defaultModel;
 		const UIClass = this.getUIClass(className);
 		if (UIClass instanceof CustomUIClass) {
@@ -528,7 +527,7 @@ export class UIClassFactory {
 		return defaultModel;
 	}
 
-	public static isMethodOverriden(className: string, methodName: string) {
+	public isMethodOverriden(className: string, methodName: string) {
 		let isMethodOverriden = false;
 		let sameField = false;
 		const UIClass = this.getUIClass(className);
@@ -552,17 +551,17 @@ export class UIClassFactory {
 		return isMethodOverriden;
 	}
 
-	public static removeClass(className: string) {
+	public removeClass(className: string) {
 		delete this._UIClasses[className];
 	}
 
-	public static getParent(UIClass: AbstractUIClass) {
+	public getParent(UIClass: AbstractUIClass) {
 		if (UIClass.parentClassNameDotNotation) {
 			return this.getUIClass(UIClass.parentClassNameDotNotation);
 		}
 	}
 
-	public static setNewNameForClass(oldPath: string, newPath: string) {
+	public setNewNameForClass(oldPath: string, newPath: string) {
 		const oldName = FileReader.getClassNameFromPath(oldPath);
 		const newName = FileReader.getClassNameFromPath(newPath);
 		if (oldName && newName) {

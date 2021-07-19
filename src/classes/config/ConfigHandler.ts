@@ -1,23 +1,25 @@
-export class ConfigHandler {
-	static getUI5Version() {
+import { IConfigHandler } from "./IConfigHandler";
+
+export class ConfigHandler implements IConfigHandler {
+	getUI5Version() {
 		return "1.60.10";
 	}
-	static getExcludeFolderPatterns() {
+	getExcludeFolderPatterns() {
 		return [
 			"**/resources/**",
 			"**/dist/**/**",
 			"**/node_modules/**"
 		];
 	}
-	static getDataSource() {
+	getDataSource() {
 		return "https://ui5.sap.com/";
 	}
 
-	static getRejectUnauthorized() {
+	getRejectUnauthorized() {
 		return false;
 	}
 
-	static getLibsToLoad() {
+	getLibsToLoad() {
 		return [
 			"sap.m",
 			"sap.ui.comp",

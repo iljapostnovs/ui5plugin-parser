@@ -3,7 +3,7 @@ import { URLBuilder } from "../utils/URLBuilder";
 import { HTTPHandler } from "../utils/HTTPHandler";
 import { SAPNode } from "./SAPNode";
 import { UI5MetadataPreloader } from "./UI5MetadataDAO";
-import { ConfigHandler } from "../config/ConfigHandler";
+import { UI5Plugin } from "../../UI5Plugin";
 interface ILooseNodeObject {
 	[key: string]: SAPNode;
 }
@@ -55,7 +55,7 @@ export class SAPNodeDAO {
 	}
 
 	private _generateSAPNodes() {
-		const libs: any = ConfigHandler.getLibsToLoad();
+		const libs: any = UI5Plugin.getInstance().configHandler.getLibsToLoad();
 		const libMap: any = {};
 		libs.forEach((lib: any) => {
 			libMap[lib] = true;

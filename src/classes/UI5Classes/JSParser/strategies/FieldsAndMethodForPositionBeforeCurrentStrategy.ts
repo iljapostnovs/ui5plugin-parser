@@ -1,9 +1,10 @@
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
-import { IFieldsAndMethods, UIClassFactory } from "../../UIClassFactory";
+import { IFieldsAndMethods } from "../../UIClassFactory";
 import { FieldPropertyMethodGetterStrategy as FieldMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { AcornSyntaxAnalyzer } from "../AcornSyntaxAnalyzer";
 import { FileReader } from "../../../utils/FileReader";
 import { TextDocument } from "../../abstraction/TextDocument";
+import { UI5Plugin } from "../../../../UI5Plugin";
 
 export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethodGetterStrategy {
 	getFieldsAndMethods(document: TextDocument, position: number) {
@@ -74,14 +75,14 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 				}
 			}
 		} else if (className.startsWith("Promise<")) {
-			fieldsAndMethods = UIClassFactory.getFieldsAndMethodsForClass("Promise");
+			fieldsAndMethods = UI5Plugin.getInstance().classFactory.getFieldsAndMethodsForClass("Promise");
 			fieldsAndMethods.className = className;
 		} else {
 			if (className.endsWith("[]")) {
-				fieldsAndMethods = UIClassFactory.getFieldsAndMethodsForClass("array");
+				fieldsAndMethods = UI5Plugin.getInstance().classFactory.getFieldsAndMethodsForClass("array");
 				fieldsAndMethods.className = className;
 			} else {
-				fieldsAndMethods = UIClassFactory.getFieldsAndMethodsForClass(className);
+				fieldsAndMethods = UI5Plugin.getInstance().classFactory.getFieldsAndMethodsForClass(className);
 			}
 		}
 
@@ -116,7 +117,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 
 	public getStackOfNodesForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
-		const UIClass = UIClassFactory.getUIClass(className);
+		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {

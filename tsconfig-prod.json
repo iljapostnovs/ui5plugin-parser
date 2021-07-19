@@ -4,11 +4,13 @@
 		"target": "es2019",
 		"lib": ["ES2019"],
 		"outDir": "dist",
-		"sourceMap": true,
+		"sourceMap": false,
 		"strict": true,
 		"rootDir": "src",
 		"esModuleInterop": false,
 		"resolveJsonModule": true,
+		"declaration": true,
+
 	},
 	"exclude": [
 		"node_modules",

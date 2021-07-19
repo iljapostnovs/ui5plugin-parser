@@ -1,4 +1,4 @@
-import { ConfigHandler } from "../config/ConfigHandler";
+import { UI5Plugin } from "../../UI5Plugin";
 import { SAPNode } from "../librarydata/SAPNode";
 import { AbstractUIClass } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
 import { FileReader } from "./FileReader";
@@ -6,7 +6,7 @@ import { FileReader } from "./FileReader";
 export class URLBuilder {
 	private static _URLBuilderInstance?: URLBuilder;
 	private readonly _UI5Version: string;
-	private readonly _URLHost = ConfigHandler.getDataSource();
+	private readonly _URLHost = UI5Plugin.getInstance().configHandler.getDataSource();
 
 	private constructor(UI5Version: string) {
 		this._UI5Version = UI5Version;
@@ -14,7 +14,7 @@ export class URLBuilder {
 
 	static getInstance() {
 		if (!this._URLBuilderInstance) {
-			const UI5Version: any = ConfigHandler.getUI5Version();
+			const UI5Version: any = UI5Plugin.getInstance().configHandler.getUI5Version();
 			this._URLBuilderInstance = new URLBuilder(UI5Version);
 		}
 

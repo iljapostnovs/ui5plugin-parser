@@ -1,14 +1,13 @@
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
-import { UIClassFactory } from "../UI5Classes/UIClassFactory";
 import { CustomUIClass } from "../UI5Classes/UI5Parser/UIClass/CustomUIClass";
 import { TextDocumentTransformer } from "./TextDocumentTransformer";
 import { ITag, XMLParser } from "./XMLParser";
 import { ResourceModelData } from "../UI5Classes/ResourceModelData";
-import { ConfigHandler } from "../config/ConfigHandler";
 import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
+import { UI5Plugin } from "../../UI5Plugin";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
@@ -16,7 +15,7 @@ export class FileReader {
 	private static _manifests: IUIManifest[] = [];
 	private static readonly _viewCache: IViews = {};
 	private static readonly _fragmentCache: Fragments = {};
-	private static readonly _UI5Version: any = ConfigHandler.getUI5Version();
+	private static readonly _UI5Version: any = UI5Plugin.getInstance().configHandler.getUI5Version();
 	public static globalStoragePath: string | undefined;
 
 	public static setNewViewContentToCache(viewContent: string, fsPath: string, forceRefresh = false) {
@@ -172,7 +171,7 @@ export class FileReader {
 	private static _readFilesInWorkspace(wsFolder: WorkspaceFolder, path: string) {
 
 		const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
-		const exclusions: string[] = ConfigHandler.getExcludeFolderPatterns();
+		const exclusions: string[] = UI5Plugin.getInstance().configHandler.getExcludeFolderPatterns();
 		const exclusionPaths = exclusions.map(excludeString => {
 			return `${wsFolderFSPath}/${excludeString}`
 		});
@@ -198,9 +197,9 @@ export class FileReader {
 		}
 
 		if (!className) {
-			const UIClass = UIClassFactory.getUIClass(controllerClassName);
+			const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(controllerClassName);
 			if (UIClass instanceof CustomUIClass) {
-				const fragmentsAndViews = UIClassFactory.getViewsAndFragmentsOfControlHierarchically(UIClass);
+				const fragmentsAndViews = UI5Plugin.getInstance().classFactory.getViewsAndFragmentsOfControlHierarchically(UIClass);
 				const fragmentAndViewArray = [
 					...fragmentsAndViews.views,
 					...fragmentsAndViews.fragments
@@ -244,7 +243,7 @@ export class FileReader {
 
 	public static getFragmentsMentionedInClass(className: string) {
 		let fragments: IFragment[] = [];
-		const UIClass = UIClassFactory.getUIClass(className);
+		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			fragments = this.getAllFragments().filter(fragment => {
@@ -312,7 +311,7 @@ export class FileReader {
 			classNames.forEach(className => {
 				if (className) {
 					try {
-						UIClassFactory.getUIClass(className);
+						UI5Plugin.getInstance().classFactory.getUIClass(className);
 					} catch (error) {
 						console.error(`Error parsing ${className}: ${error.message}`);
 					}
@@ -321,10 +320,10 @@ export class FileReader {
 
 			classNames.forEach(className => {
 				if (className) {
-					const UIClass = UIClassFactory.getUIClass(className);
+					const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 					if (UIClass instanceof CustomUIClass) {
 						UIClass.relatedViewsAndFragments = undefined;
-						UIClassFactory.enrichTypesInCustomClass(UIClass);
+						UI5Plugin.getInstance().classFactory.enrichTypesInCustomClass(UIClass);
 					}
 				}
 			});
@@ -484,7 +483,7 @@ export class FileReader {
 	}
 
 	private static _getResponsibleClassNameForFragmentFromCustomUIClasses(viewOrFragment: IXMLFile) {
-		const allUIClasses = UIClassFactory.getAllCustomUIClasses();
+		const allUIClasses = UI5Plugin.getInstance().classFactory.getAllCustomUIClasses();
 		const fragmentName = this.getClassNameFromPath(viewOrFragment.fsPath);
 		const responsibleClass = allUIClasses.find(UIClass => {
 			return UIClass.classText.includes(`${fragmentName}`);

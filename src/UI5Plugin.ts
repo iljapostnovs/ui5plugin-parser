@@ -4,10 +4,18 @@ import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolde
 import { SAPIcons } from "./classes/UI5Classes/SAPIcons";
 import { UIClassFactory } from "./classes/UI5Classes/UIClassFactory";
 import { FileReader } from "./classes/utils/FileReader";
+import * as path from "path";
+import { ConfigHandler } from "./classes/config/ConfigHandler";
 export class UI5Plugin {
 	private static _instance?: UI5Plugin;
 	fileReader = FileReader;
-	classFactory = UIClassFactory;
+	classFactory = new UIClassFactory();
+	configHandler = new ConfigHandler();
+
+	private constructor() {
+		return this;
+	}
+
 	public static getInstance() {
 		if (!UI5Plugin._instance) {
 			UI5Plugin._instance = new UI5Plugin();
@@ -17,6 +25,7 @@ export class UI5Plugin {
 	}
 
 	public async initialize(wsFolders = [new WorkspaceFolder(process.cwd())]) {
+		FileReader.globalStoragePath = path.join(process.cwd(), "./node_modules/ui5plugin-parser/cache");
 		try {
 			await this._preloadAllNecessaryData(wsFolders);
 		} catch (error) {
@@ -26,6 +35,7 @@ export class UI5Plugin {
 
 	private async _preloadAllNecessaryData(wsFolders: WorkspaceFolder[]) {
 		await this._preloadUI5Metadata();
+		this.fileReader.rereadAllManifests(wsFolders);
 		this.fileReader.readAllFiles(wsFolders);
 	}
 

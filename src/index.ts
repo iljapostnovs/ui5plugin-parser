@@ -1,10 +1,9 @@
 import { UI5Plugin } from "./UI5Plugin";
 
-async function Initialize() {
-	const UI5PluginInstance = UI5Plugin.getInstance();
-	await UI5PluginInstance.initialize();
-	const masterController = UI5PluginInstance.classFactory.getUIClass("com.test.renametest.controller.Master");
-	debugger;
-}
-
-Initialize();
+// const test = UI5Plugin.getInstance();
+// (async function() {
+// 	await test.initialize();
+// 	const testclass = test.classFactory.getUIClass("com.test.memberrename.RenameTest");
+// 	debugger;
+// })();
+export = UI5Plugin;
