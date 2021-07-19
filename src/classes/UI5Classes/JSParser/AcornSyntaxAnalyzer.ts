@@ -8,6 +8,17 @@ import { InnerPropertiesStrategy } from "./strategies/InnerPropertiesStrategy";
 import { XMLParser } from "../../utils/XMLParser";
 import { SAPNodeDAO } from "../../librarydata/SAPNodeDAO";
 import { TextDocument } from "../abstraction/TextDocument";
+
+export interface IAcornPosition {
+	line: number,
+	column: number
+}
+
+export interface IAcornLocation {
+	start: IAcornPosition,
+	end: IAcornPosition
+}
+
 import { UI5Plugin } from "../../../UI5Plugin";
 export class AcornSyntaxAnalyzer {
 	static getFieldsAndMethodsOfTheCurrentVariable(document: TextDocument, position: number) {

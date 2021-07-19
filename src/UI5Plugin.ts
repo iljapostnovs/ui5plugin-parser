@@ -8,9 +8,9 @@ import * as path from "path";
 import { ConfigHandler } from "./classes/config/ConfigHandler";
 export class UI5Plugin {
 	private static _instance?: UI5Plugin;
-	fileReader = new FileReader();
-	classFactory = new UIClassFactory();
-	configHandler = new ConfigHandler();
+	readonly fileReader = new FileReader();
+	readonly classFactory = new UIClassFactory();
+	readonly configHandler = new ConfigHandler();
 
 	private constructor() {
 		return this;

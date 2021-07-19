@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { AcornSyntaxAnalyzer } from "../../JSParser/AcornSyntaxAnalyzer";
+import { AcornSyntaxAnalyzer, IAcornLocation, IAcornPosition } from "../../JSParser/AcornSyntaxAnalyzer";
 import * as path from "path";
 import { AbstractUIClass, IUIField, IUIAggregation, IUIEvent, IUIMethod, IUIProperty, IUIAssociation, IUIEventParam, IUIMethodParam, IMember } from "./AbstractUIClass";
 import * as commentParser from "comment-parser";
 import { IViewsAndFragments } from "../../UIClassFactory";
 import LineColumn = require("line-column");
-import { IAcornPosition } from "../../adapters/PositionAdapter";
-import { IAcornLocation } from "../../adapters/RangeAdapter";
 import { UI5Plugin } from "../../../../UI5Plugin";
 const acornLoose = require("acorn-loose");
 
