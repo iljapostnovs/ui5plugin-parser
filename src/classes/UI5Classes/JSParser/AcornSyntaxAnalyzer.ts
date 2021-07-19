@@ -1,5 +1,5 @@
 import { IFieldsAndMethods } from "../UIClassFactory";
-import { FileReader, IXMLFile } from "../../utils/FileReader";
+import { IXMLFile } from "../../utils/FileReader";
 import { IUIField, IUIMethod } from "../UI5Parser/UIClass/AbstractUIClass";
 import { ICustomClassUIMethod, CustomUIClass, ICustomClassUIField } from "../UI5Parser/UIClass/CustomUIClass";
 import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./strategies/FieldsAndMethodForPositionBeforeCurrentStrategy";
@@ -404,7 +404,7 @@ export class AcornSyntaxAnalyzer {
 			this.declarationStack = [];
 		}
 		let modelClassName = "";
-		const manifest = FileReader.getManifestForClass(className);
+		const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(className);
 		if (manifest && manifest.content["sap.ui5"]?.models) {
 			const modelEntry = manifest.content["sap.ui5"].models[modelName];
 			if (modelEntry?.type) {
@@ -468,13 +468,13 @@ export class AcornSyntaxAnalyzer {
 	private static _getClassNameOfTheRouterFromManifest(className: string) {
 		let routerClassName = "";
 
-		const manifest = FileReader.getManifestForClass(className);
+		const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(className);
 		if (manifest && manifest.content["sap.ui5"]?.routing?.config?.routerClass) {
 			routerClassName = manifest.content["sap.ui5"].routing.config.routerClass;
 		}
 
 		if (!routerClassName) {
-			const manifests = FileReader.getAllManifests();
+			const manifests = UI5Plugin.getInstance().fileReader.getAllManifests();
 			const manifest = manifests.find(manifest => {
 				return manifest.content["sap.ui5"]?.routing?.config?.routerClass;
 			});
@@ -488,7 +488,7 @@ export class AcornSyntaxAnalyzer {
 
 	private static _getClassNameOfTheComponent(className: string) {
 		let componentClassName = "";
-		const manifest = FileReader.getManifestForClass(className);
+		const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(className);
 		if (manifest && manifest.content["sap.app"]?.id) {
 			componentClassName = `${manifest.content["sap.app"]?.id}.Component`;
 		}
@@ -535,7 +535,7 @@ export class AcornSyntaxAnalyzer {
 		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 		if (UIClass instanceof CustomUIClass) {
 			const currentClassEventHandlerName = this._getEventHandlerName(node, className);
-			const viewOfTheController = FileReader.getViewForController(className);
+			const viewOfTheController = UI5Plugin.getInstance().fileReader.getViewForController(className);
 			if (viewOfTheController && currentClassEventHandlerName) {
 				eventHandlerData = this._getEventHandlerDataFromXMLText(viewOfTheController, currentClassEventHandlerName);
 				if (!eventHandlerData) {
@@ -547,7 +547,7 @@ export class AcornSyntaxAnalyzer {
 				}
 			}
 			if (currentClassEventHandlerName && !eventHandlerData) {
-				// const fragmentsOfTheController = FileReader.getFragmentsForClass(className);
+				// const fragmentsOfTheController = UI5Plugin.getInstance().fileReader.getFragmentsForClass(className);
 				const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 				if (UIClass instanceof CustomUIClass) {
 					const fragmentsOfTheController = UI5Plugin.getInstance().classFactory.getViewsAndFragmentsOfControlHierarchically(UIClass, [], true, true, true).fragments;
@@ -823,7 +823,7 @@ export class AcornSyntaxAnalyzer {
 			stack.splice(0, 2);
 			const controlId = callExpression.arguments[0]?.value;
 			if (controlId) {
-				className = FileReader.getClassNameFromView(currentControllerName, controlId) || "";
+				className = UI5Plugin.getInstance().fileReader.getClassNameFromView(currentControllerName, controlId) || "";
 			}
 		}
 

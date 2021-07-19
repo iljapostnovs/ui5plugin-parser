@@ -2,14 +2,13 @@ import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
 import { IFieldsAndMethods } from "../../UIClassFactory";
 import { FieldPropertyMethodGetterStrategy as FieldMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { AcornSyntaxAnalyzer } from "../AcornSyntaxAnalyzer";
-import { FileReader } from "../../../utils/FileReader";
 import { TextDocument } from "../../abstraction/TextDocument";
 import { UI5Plugin } from "../../../../UI5Plugin";
 
 export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethodGetterStrategy {
 	getFieldsAndMethods(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const className = FileReader.getClassNameFromPath(document.fileName);
+		const className = UI5Plugin.getInstance().fileReader.getClassNameFromPath(document.fileName);
 		const UIClassName = className && this.getClassNameOfTheVariableAtPosition(className, position);
 		if (UIClassName) {
 			fieldsAndMethods = this.destructueFieldsAndMethodsAccordingToMapParams(UIClassName);

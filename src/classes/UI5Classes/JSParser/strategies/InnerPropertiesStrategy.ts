@@ -4,7 +4,6 @@ import { IFieldsAndMethods } from "../../UIClassFactory";
 import { AcornSyntaxAnalyzer } from "../AcornSyntaxAnalyzer";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./FieldsAndMethodForPositionBeforeCurrentStrategy";
-import { FileReader } from "../../../utils/FileReader";
 import { TextDocument } from "../../abstraction/TextDocument";
 import { UI5Plugin } from "../../../../UI5Plugin";
 
@@ -17,7 +16,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	private _acornGetPropertiesForParamsInCurrentPosition(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = FileReader.getClassNameFromPath(document.fileName);
+		const currentClassName = UI5Plugin.getInstance().fileReader.getClassNameFromPath(document.fileName);
 
 		if (currentClassName) {
 			const stack = this.getStackOfNodesForInnerParamsForPosition(currentClassName, position);
@@ -34,7 +33,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	private _getFieldsAndMethodsForNewExpression(newExpression: any, document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = FileReader.getClassNameFromPath(document.fileName);
+		const currentClassName = UI5Plugin.getInstance().fileReader.getClassNameFromPath(document.fileName);
 		if (position && currentClassName) {
 			const argument = AcornSyntaxAnalyzer.findAcornNode(newExpression.arguments, position);
 			const indexOfArgument = newExpression.arguments.indexOf(argument);
@@ -64,7 +63,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	private _getFieldsAndMethodsForCallExpression(callExpression: any, document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = FileReader.getClassNameFromPath(document.fileName);
+		const currentClassName = UI5Plugin.getInstance().fileReader.getClassNameFromPath(document.fileName);
 		if (currentClassName && position) {
 			const argument = AcornSyntaxAnalyzer.findAcornNode(callExpression.arguments, position);
 			const indexOfArgument = callExpression.arguments.indexOf(argument);
@@ -164,9 +163,9 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	private _getManifestModels(document: TextDocument) {
 		let models: { type: string, name: string }[] = [];
 		const fileName = document.fileName;
-		const currentClassName = fileName && FileReader.getClassNameFromPath(fileName);
+		const currentClassName = fileName && UI5Plugin.getInstance().fileReader.getClassNameFromPath(fileName);
 		if (currentClassName) {
-			const manifest = FileReader.getManifestForClass(currentClassName);
+			const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(currentClassName);
 			if (manifest && manifest.content["sap.ui5"]?.models) {
 				models = Object.keys(manifest.content["sap.ui5"]?.models).map(key => ({
 					type: manifest.content["sap.ui5"]?.models[key].type,

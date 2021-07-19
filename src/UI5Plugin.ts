@@ -8,7 +8,7 @@ import * as path from "path";
 import { ConfigHandler } from "./classes/config/ConfigHandler";
 export class UI5Plugin {
 	private static _instance?: UI5Plugin;
-	fileReader = FileReader;
+	fileReader = new FileReader();
 	classFactory = new UIClassFactory();
 	configHandler = new ConfigHandler();
 
@@ -25,7 +25,7 @@ export class UI5Plugin {
 	}
 
 	public async initialize(wsFolders = [new WorkspaceFolder(process.cwd())]) {
-		FileReader.globalStoragePath = path.join(process.cwd(), "./node_modules/ui5plugin-parser/cache");
+		this.fileReader.globalStoragePath = path.join(process.cwd(), "./node_modules/ui5plugin-parser/cache");
 		try {
 			await this._preloadAllNecessaryData(wsFolders);
 		} catch (error) {

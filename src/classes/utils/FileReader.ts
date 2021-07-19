@@ -12,13 +12,13 @@ const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
 export class FileReader {
-	private static _manifests: IUIManifest[] = [];
-	private static readonly _viewCache: IViews = {};
-	private static readonly _fragmentCache: Fragments = {};
-	private static readonly _UI5Version: any = UI5Plugin.getInstance().configHandler.getUI5Version();
-	public static globalStoragePath: string | undefined;
+	private _manifests: IUIManifest[] = [];
+	private readonly _viewCache: IViews = {};
+	private readonly _fragmentCache: Fragments = {};
+	private readonly _UI5Version: any = UI5Plugin.getInstance().configHandler.getUI5Version();
+	public globalStoragePath: string | undefined;
 
-	public static setNewViewContentToCache(viewContent: string, fsPath: string, forceRefresh = false) {
+	public setNewViewContentToCache(viewContent: string, fsPath: string, forceRefresh = false) {
 		const viewName = this.getClassNameFromPath(fsPath);
 		if (viewName && (this._viewCache[viewName]?.content.length !== viewContent.length || forceRefresh || !this._viewCache[viewName])) {
 			if (this._viewCache[viewName]) {
@@ -41,7 +41,7 @@ export class FileReader {
 		}
 	}
 
-	public static setNewFragmentContentToCache(text: string, fsPath: string, forceRefresh = false) {
+	public setNewFragmentContentToCache(text: string, fsPath: string, forceRefresh = false) {
 		const fragmentName = this.getClassNameFromPath(fsPath);
 		if (fragmentName && (this._fragmentCache[fragmentName]?.content.length !== text.length || forceRefresh || !this._fragmentCache[fragmentName])) {
 			if (this._fragmentCache[fragmentName]) {
@@ -63,11 +63,11 @@ export class FileReader {
 		}
 	}
 
-	static getAllViews() {
+	getAllViews() {
 		return Object.keys(this._viewCache).map(key => this._viewCache[key]);
 	}
 
-	public static getDocumentTextFromCustomClassName(className: string, isFragment?: boolean) {
+	public getDocumentTextFromCustomClassName(className: string, isFragment?: boolean) {
 		let documentText;
 		const classPath = this.getClassFSPathFromClassName(className, isFragment);
 		if (classPath) {
@@ -77,7 +77,7 @@ export class FileReader {
 		return documentText;
 	}
 
-	public static getClassFSPathFromClassName(className: string, isFragment?: boolean) {
+	public getClassFSPathFromClassName(className: string, isFragment?: boolean) {
 		let classPath = this.convertClassNameToFSPath(className, false, isFragment);
 
 		if (classPath) {
@@ -93,7 +93,7 @@ export class FileReader {
 		return classPath;
 	}
 
-	public static convertClassNameToFSPath(className: string, isController = false, isFragment = false, isView = false, isFolder = false) {
+	public convertClassNameToFSPath(className: string, isController = false, isFragment = false, isView = false, isFolder = false) {
 		let FSPath;
 		let extension = ".js";
 		const manifest = this.getManifestForClass(className);
@@ -115,22 +115,22 @@ export class FileReader {
 		return FSPath;
 	}
 
-	public static getAllManifests() {
+	public getAllManifests() {
 		return this._manifests;
 	}
 
-	public static rereadAllManifests(wsFolders: WorkspaceFolder[]) {
+	public rereadAllManifests(wsFolders: WorkspaceFolder[]) {
 		this._manifests = [];
 		this._fetchAllWorkspaceManifests(wsFolders);
 	}
 
-	public static getManifestForClass(className = "") {
+	public getManifestForClass(className = "") {
 		const returnManifest = this._manifests.find(UIManifest => className.startsWith(UIManifest.componentName + "."));
 
 		return returnManifest;
 	}
 
-	private static _fetchAllWorkspaceManifests(wsFolders: WorkspaceFolder[]) {
+	private _fetchAllWorkspaceManifests(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const manifests = this.getManifestFSPathsInWorkspaceFolder(wsFolder);
 			for (const manifest of manifests) {
@@ -151,7 +151,7 @@ export class FileReader {
 		}
 	}
 
-	public static getManifestFSPathsInWorkspaceFolder(wsFolder: WorkspaceFolder) {
+	public getManifestFSPathsInWorkspaceFolder(wsFolder: WorkspaceFolder) {
 		const timeStart = new Date().getTime();
 		const manifestPaths = this._readFilesInWorkspace(wsFolder, "**/manifest.json");
 		const timeEnd = new Date().getTime();
@@ -168,7 +168,7 @@ export class FileReader {
 		return manifests;
 	}
 
-	private static _readFilesInWorkspace(wsFolder: WorkspaceFolder, path: string) {
+	private _readFilesInWorkspace(wsFolder: WorkspaceFolder, path: string) {
 
 		const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
 		const exclusions: string[] = UI5Plugin.getInstance().configHandler.getExcludeFolderPatterns();
@@ -183,7 +183,7 @@ export class FileReader {
 	}
 
 	//TODO: Refactor this
-	public static getClassNameFromView(controllerClassName: string, controlId: string) {
+	public getClassNameFromView(controllerClassName: string, controlId: string) {
 		let className: string | undefined;
 		const view = this.getViewForController(controllerClassName);
 		if (view) {
@@ -214,7 +214,7 @@ export class FileReader {
 		return className;
 	}
 
-	public static getViewForController(controllerName: string): IView | undefined {
+	public getViewForController(controllerName: string): IView | undefined {
 		let view = this.getAllViews().find(view => view.controllerName === controllerName);
 		if (!view) {
 			const swappedControllerName = this._swapControllerNameIfItWasReplacedInManifest(controllerName);
@@ -225,7 +225,7 @@ export class FileReader {
 		return view;
 	}
 
-	private static _swapControllerNameIfItWasReplacedInManifest(controllerName: string) {
+	private _swapControllerNameIfItWasReplacedInManifest(controllerName: string) {
 		const extensions = this.getManifestExtensionsForClass(controllerName);
 		const controllerReplacements = extensions && extensions["sap.ui.controllerReplacements"];
 
@@ -241,7 +241,7 @@ export class FileReader {
 		return controllerName;
 	}
 
-	public static getFragmentsMentionedInClass(className: string) {
+	public getFragmentsMentionedInClass(className: string) {
 		let fragments: IFragment[] = [];
 		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 
@@ -262,7 +262,7 @@ export class FileReader {
 		return fragments;
 	}
 
-	static getFragmentsInXMLFile(XMLFile: IXMLFile) {
+	getFragmentsInXMLFile(XMLFile: IXMLFile) {
 		const fragmentsInFragment: IFragment[] = [];
 		const fragments = XMLFile.fragments;
 		fragments.forEach(fragment => {
@@ -272,17 +272,17 @@ export class FileReader {
 		return fragments.concat(fragmentsInFragment);
 	}
 
-	public static getFirstFragmentForClass(className: string): IFragment | undefined {
+	public getFirstFragmentForClass(className: string): IFragment | undefined {
 		const fragment = this.getFragmentsMentionedInClass(className)[0];
 
 		return fragment;
 	}
 
-	public static getViewText(controllerName: string) {
+	public getViewText(controllerName: string) {
 		return this.getViewForController(controllerName)?.content;
 	}
 
-	private static _getClassOfControlIdFromView(XMLFile: IXMLFile & IIdClassMap, controlId: string) {
+	private _getClassOfControlIdFromView(XMLFile: IXMLFile & IIdClassMap, controlId: string) {
 		if (!XMLFile.idClassMap[controlId]) {
 			let controlClass = "";
 
@@ -297,17 +297,17 @@ export class FileReader {
 		return XMLFile.idClassMap[controlId];
 	}
 
-	static readAllFiles(wsFolders: WorkspaceFolder[]) {
+	readAllFiles(wsFolders: WorkspaceFolder[]) {
 		this._readAllFragmentsAndSaveInCache(wsFolders);
 		this._readAllViewsAndSaveInCache(wsFolders);
 		this._readAllJSFiles(wsFolders);
 		ResourceModelData.readTexts();
 	}
 
-	private static _readAllJSFiles(wsFolders: WorkspaceFolder[]) {
+	private _readAllJSFiles(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const classPaths = this._readFilesInWorkspace(wsFolder, "**/*.js");
-			const classNames = classPaths.map(path => FileReader.getClassNameFromPath(path));
+			const classNames = classPaths.map(path => UI5Plugin.getInstance().fileReader.getClassNameFromPath(path));
 			classNames.forEach(className => {
 				if (className) {
 					try {
@@ -330,7 +330,7 @@ export class FileReader {
 		}
 	}
 
-	private static _readAllViewsAndSaveInCache(wsFolders: WorkspaceFolder[]) {
+	private _readAllViewsAndSaveInCache(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const viewPaths = this._readFilesInWorkspace(wsFolder, "**/*.view.xml");
 			viewPaths.forEach(viewPath => {
@@ -341,7 +341,7 @@ export class FileReader {
 		}
 	}
 
-	private static _readAllFragmentsAndSaveInCache(wsFolders: WorkspaceFolder[]) {
+	private _readAllFragmentsAndSaveInCache(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const fragmentPaths = this._readFilesInWorkspace(wsFolder, "**/*.fragment.xml");
 			const fragmentData = fragmentPaths.map(path => {
@@ -357,7 +357,7 @@ export class FileReader {
 		}
 	}
 
-	public static getAllJSClassNamesFromProject(wsFolder: WorkspaceFolder) {
+	public getAllJSClassNamesFromProject(wsFolder: WorkspaceFolder) {
 		let classNames: string[] = [];
 		const classPaths = this._readFilesInWorkspace(wsFolder, "**/*.js");
 		classNames = classPaths.reduce((accumulator: string[], viewPath) => {
@@ -372,13 +372,13 @@ export class FileReader {
 		return classNames;
 	}
 
-	static getControllerNameFromView(viewContent: string) {
+	getControllerNameFromView(viewContent: string) {
 		const controllerNameResult = /(?<=controllerName=").*?(?=")/.exec(viewContent);
 		const controllerName = controllerNameResult ? controllerNameResult[0] : undefined;
 
 		return controllerName;
 	}
-	static getResponsibleClassForXMLDocument(document: TextDocument) {
+	getResponsibleClassForXMLDocument(document: TextDocument) {
 		const XMLDocument = TextDocumentTransformer.toXMLFile(document);
 		if (XMLDocument) {
 			return this.getResponsibleClassNameForViewOrFragment(XMLDocument);
@@ -386,7 +386,7 @@ export class FileReader {
 	}
 
 	//TODO: compare it to similar method?
-	static getResponsibleClassNameForViewOrFragment(viewOrFragment: IXMLFile) {
+	getResponsibleClassNameForViewOrFragment(viewOrFragment: IXMLFile) {
 		const isFragment = viewOrFragment.fsPath.endsWith(".fragment.xml");
 		const isView = viewOrFragment.fsPath.endsWith(".view.xml");
 		let responsibleClassName: string | undefined;
@@ -406,7 +406,7 @@ export class FileReader {
 			}
 
 			if (!responsibleClassName) {
-				const responsibleFragment = FileReader.getAllFragments().find(fragment => {
+				const responsibleFragment = UI5Plugin.getInstance().fileReader.getAllFragments().find(fragment => {
 					return fragment.fragments.find(fragment => fragment.fsPath === viewOrFragment.fsPath);
 				});
 				if (responsibleFragment) {
@@ -422,12 +422,12 @@ export class FileReader {
 		return responsibleClassName;
 	}
 
-	public static getManifestExtensionsForClass(className: string): any | undefined {
-		const manifest = FileReader.getManifestForClass(className);
+	public getManifestExtensionsForClass(className: string): any | undefined {
+		const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(className);
 		return manifest?.content["sap.ui5"]?.extends?.extensions;
 	}
 
-	private static _getResponsibleClassNameForFragmentFromManifestExtensions(viewOrFragment: IXMLFile) {
+	private _getResponsibleClassNameForFragmentFromManifestExtensions(viewOrFragment: IXMLFile) {
 		let responsibleClassName: string | undefined;
 		const fragmentName = this.getClassNameFromPath(viewOrFragment.fsPath);
 		if (fragmentName) {
@@ -466,7 +466,7 @@ export class FileReader {
 		return responsibleClassName;
 	}
 
-	private static _swapResponsibleControllerIfItIsExtendedInManifest(controllerName: string, sourceClassName: string) {
+	private _swapResponsibleControllerIfItIsExtendedInManifest(controllerName: string, sourceClassName: string) {
 		const extensions = this.getManifestExtensionsForClass(sourceClassName);
 		const controllerReplacements = extensions && extensions["sap.ui.controllerReplacements"];
 
@@ -482,7 +482,7 @@ export class FileReader {
 		return controllerName;
 	}
 
-	private static _getResponsibleClassNameForFragmentFromCustomUIClasses(viewOrFragment: IXMLFile) {
+	private _getResponsibleClassNameForFragmentFromCustomUIClasses(viewOrFragment: IXMLFile) {
 		const allUIClasses = UI5Plugin.getInstance().classFactory.getAllCustomUIClasses();
 		const fragmentName = this.getClassNameFromPath(viewOrFragment.fsPath);
 		const responsibleClass = allUIClasses.find(UIClass => {
@@ -492,7 +492,7 @@ export class FileReader {
 		return responsibleClass?.className;
 	}
 
-	public static getFragmentsFromXMLDocumentText(documentText: string) {
+	public getFragmentsFromXMLDocumentText(documentText: string) {
 		const fragments: IFragment[] = [];
 		const fragmentTags = this._getFragmentTags(documentText);
 		fragmentTags.forEach(fragmentTag => {
@@ -509,15 +509,15 @@ export class FileReader {
 		return fragments;
 	}
 
-	static getFragment(fragmentName: string): IFragment | undefined {
+	getFragment(fragmentName: string): IFragment | undefined {
 		return this._fragmentCache[fragmentName];
 	}
 
-	static getAllFragments() {
+	getAllFragments() {
 		return Object.keys(this._fragmentCache).map(key => this._fragmentCache[key]);
 	}
 
-	private static _getFragmentNameFromTag(fragmentTag: string) {
+	private _getFragmentNameFromTag(fragmentTag: string) {
 		let fragmentName;
 		const fragmentNameResult = /(?<=fragmentName=").*?(?=")/.exec(fragmentTag);
 		if (fragmentNameResult) {
@@ -526,11 +526,11 @@ export class FileReader {
 		return fragmentName;
 	}
 
-	private static _getFragmentTags(documentText: string) {
+	private _getFragmentTags(documentText: string) {
 		return documentText.match(/<.*?:Fragment\s(.|\s)*?\/>/g) || [];
 	}
 
-	public static getClassNameFromPath(fsPath: string) {
+	public getClassNameFromPath(fsPath: string) {
 		fsPath = fsPath.replace(/\//g, fileSeparator);
 		let className: string | undefined;
 		const manifests = this.getAllManifests();
@@ -550,7 +550,7 @@ export class FileReader {
 		return className;
 	}
 
-	static getCache(cacheType: FileReader.CacheType) {
+	getCache(cacheType: FileReader.CacheType) {
 		let cache;
 		const cachePath =
 			cacheType === FileReader.CacheType.Metadata ? this._getMetadataCachePath() :
@@ -570,7 +570,7 @@ export class FileReader {
 		return cache;
 	}
 
-	static setCache(cacheType: FileReader.CacheType, cache: string) {
+	setCache(cacheType: FileReader.CacheType, cache: string) {
 		const cachePath =
 			cacheType === FileReader.CacheType.Metadata ? this._getMetadataCachePath() :
 				cacheType === FileReader.CacheType.APIIndex ? this._getAPIIndexCachePath() :
@@ -586,7 +586,7 @@ export class FileReader {
 		}
 	}
 
-	static clearCache() {
+	clearCache() {
 		if (this.globalStoragePath) {
 			if (fs.existsSync(this.globalStoragePath)) {
 				const directory = this.globalStoragePath;
@@ -599,7 +599,7 @@ export class FileReader {
 		}
 	}
 
-	private static _ensureThatPluginCacheFolderExists() {
+	private _ensureThatPluginCacheFolderExists() {
 		if (this.globalStoragePath) {
 			if (!fs.existsSync(this.globalStoragePath)) {
 				fs.mkdirSync(this.globalStoragePath);
@@ -607,19 +607,19 @@ export class FileReader {
 		}
 	}
 
-	private static _getMetadataCachePath() {
+	private _getMetadataCachePath() {
 		return `${this.globalStoragePath}${fileSeparator}cache_${this._UI5Version}.json`;
 	}
 
-	private static _getAPIIndexCachePath() {
+	private _getAPIIndexCachePath() {
 		return `${this.globalStoragePath}${fileSeparator}cache_appindex_${this._UI5Version}.json`;
 	}
 
-	private static _getIconCachePath() {
+	private _getIconCachePath() {
 		return `${this.globalStoragePath}${fileSeparator}cache_icons_${this._UI5Version}.json`;
 	}
 
-	public static getResourceModelFiles() {
+	public getResourceModelFiles() {
 		const manifests = this.getAllManifests();
 		return manifests.map(manifest => {
 			return {
@@ -629,7 +629,7 @@ export class FileReader {
 		});
 	}
 
-	public static readResourceModelFile(manifest: IUIManifest) {
+	public readResourceModelFile(manifest: IUIManifest) {
 		let resourceModelFileContent = "";
 		const resourceModelFilePath = this.getResourceModelUriForManifest(manifest);
 		try {
@@ -641,16 +641,16 @@ export class FileReader {
 		return resourceModelFileContent;
 	}
 
-	public static getResourceModelUriForManifest(manifest: IUIManifest) {
+	public getResourceModelUriForManifest(manifest: IUIManifest) {
 		const i18nRelativePath = typeof manifest.content["sap.app"]?.i18n === "string" ? manifest.content["sap.app"]?.i18n : `i18n${fileSeparator}i18n.properties`;
 		const i18nPath = i18nRelativePath.replace(/\//g, fileSeparator);
 		return `${manifest.fsPath}${fileSeparator}${i18nPath}`;
 	}
 
-	public static removeFromCache(fsPath: string) {
+	public removeFromCache(fsPath: string) {
 		return this._removeViewFromCache(fsPath) || this._removeFragmentFromCache(fsPath);
 	}
-	private static _removeViewFromCache(fsPath: string) {
+	private _removeViewFromCache(fsPath: string) {
 		const className = this.getClassNameFromPath(fsPath);
 		if (fsPath.endsWith(".view.xml")) {
 			if (className) {
@@ -667,7 +667,7 @@ export class FileReader {
 		return false;
 	}
 
-	private static _removeFragmentFromCache(fsPath: string) {
+	private _removeFragmentFromCache(fsPath: string) {
 		const className = this.getClassNameFromPath(fsPath);
 		if (fsPath.endsWith(".fragment.xml") && className) {
 			if (this._fragmentCache[className]) {
@@ -683,7 +683,7 @@ export class FileReader {
 		return false;
 	}
 
-	static getXMLFile(className: string, fileType?: string) {
+	getXMLFile(className: string, fileType?: string) {
 		let xmlFile: IXMLFile | undefined;
 		if (fileType === "fragment" || !fileType) {
 			xmlFile = this.getFragment(className);
@@ -696,7 +696,7 @@ export class FileReader {
 		return xmlFile;
 	}
 
-	static replaceViewNames(oldName: string, newName: string) {
+	replaceViewNames(oldName: string, newName: string) {
 		const XMLFile = this.getXMLFile(oldName, "view");
 		const newFSPath = this.convertClassNameToFSPath(newName, false, false, true);
 		if (XMLFile && newFSPath) {
@@ -705,11 +705,11 @@ export class FileReader {
 		}
 	}
 
-	static removeView(viewName: string) {
+	removeView(viewName: string) {
 		delete this._viewCache[viewName];
 	}
 
-	static replaceFragmentNames(oldName: string, newName: string) {
+	replaceFragmentNames(oldName: string, newName: string) {
 		const fragment = this._fragmentCache[oldName];
 		const newFSPath = this.convertClassNameToFSPath(newName, false, true);
 		if (fragment && newFSPath) {

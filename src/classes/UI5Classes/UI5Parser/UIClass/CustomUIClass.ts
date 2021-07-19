@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { FileReader } from "../../../utils/FileReader";
 import { AcornSyntaxAnalyzer } from "../../JSParser/AcornSyntaxAnalyzer";
 import * as path from "path";
 import { AbstractUIClass, IUIField, IUIAggregation, IUIEvent, IUIMethod, IUIProperty, IUIAssociation, IUIEventParam, IUIMethodParam, IMember } from "./AbstractUIClass";
@@ -8,6 +7,7 @@ import { IViewsAndFragments } from "../../UIClassFactory";
 import LineColumn = require("line-column");
 import { IAcornPosition } from "../../adapters/PositionAdapter";
 import { IAcornLocation } from "../../adapters/RangeAdapter";
+import { UI5Plugin } from "../../../../UI5Plugin";
 const acornLoose = require("acorn-loose");
 
 interface IUIDefine {
@@ -78,7 +78,7 @@ export class CustomUIClass extends AbstractUIClass {
 	constructor(className: string, documentText?: string) {
 		super(className);
 
-		this.classFSPath = FileReader.getClassFSPathFromClassName(this.className);
+		this.classFSPath = UI5Plugin.getInstance().fileReader.getClassFSPathFromClassName(this.className);
 		this._readFileContainingThisClassCode(documentText); //todo: rename. not always reading anyore.
 		this.UIDefine = this._getUIDefine();
 		this.acornClassBody = this._getThisClassBodyAcorn();
@@ -304,7 +304,7 @@ export class CustomUIClass extends AbstractUIClass {
 
 	private _readFileContainingThisClassCode(documentText?: string) {
 		if (!documentText) {
-			documentText = FileReader.getDocumentTextFromCustomClassName(this.className);
+			documentText = UI5Plugin.getInstance().fileReader.getDocumentTextFromCustomClassName(this.className);
 		}
 		this.classText = documentText || "";
 		if (documentText) {
@@ -367,7 +367,7 @@ export class CustomUIClass extends AbstractUIClass {
 		let className = classPath.replace(/\//g, ".");
 
 		if (classPath?.startsWith(".")) {
-			const manifest = FileReader.getManifestForClass(this.className);
+			const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(this.className);
 
 			if (manifest && this.classFSPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);
@@ -450,7 +450,7 @@ export class CustomUIClass extends AbstractUIClass {
 
 	private _getParentNameFromManifest() {
 		let parentName: string | undefined;
-		const manifest = FileReader.getManifestForClass(this.className);
+		const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(this.className);
 		if (manifest?.content &&
 			manifest?.content["sap.ui5"]?.extends?.extensions &&
 			manifest?.content["sap.ui5"]?.extends?.extensions["sap.ui.controllerExtensions"]
