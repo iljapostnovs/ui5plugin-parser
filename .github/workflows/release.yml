@@ -23,7 +23,7 @@ jobs:
           draft: false
           prerelease: false
   deploy:
-    name: Deploy to marketplace
+    name: Publish npm package
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
