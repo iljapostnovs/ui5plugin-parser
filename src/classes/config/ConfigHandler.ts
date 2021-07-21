@@ -4,6 +4,7 @@ export class ConfigHandler implements IConfigHandler {
 	getUI5Version() {
 		return "1.60.10";
 	}
+
 	getExcludeFolderPatterns() {
 		return [
 			"**/resources/**",
@@ -11,6 +12,7 @@ export class ConfigHandler implements IConfigHandler {
 			"**/node_modules/**"
 		];
 	}
+
 	getDataSource() {
 		return "https://ui5.sap.com/";
 	}
