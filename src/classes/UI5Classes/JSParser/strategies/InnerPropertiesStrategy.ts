@@ -1,11 +1,11 @@
 import { SAPNodeDAO } from "../../../librarydata/SAPNodeDAO";
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
-import { IFieldsAndMethods } from "../../UIClassFactory";
 import { AcornSyntaxAnalyzer } from "../AcornSyntaxAnalyzer";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./FieldsAndMethodForPositionBeforeCurrentStrategy";
 import { TextDocument } from "../../abstraction/TextDocument";
 import { UI5Plugin } from "../../../../UI5Plugin";
+import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
 
 export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	getFieldsAndMethods(document: TextDocument, position: number) {

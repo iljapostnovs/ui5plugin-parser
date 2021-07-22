@@ -6,22 +6,9 @@ import { AcornSyntaxAnalyzer } from "./JSParser/AcornSyntaxAnalyzer";
 import { IFragment, IView } from "../utils/FileReader";
 import { TextDocument } from "./abstraction/TextDocument";
 import { UI5Plugin } from "../../UI5Plugin";
+import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./interfaces/IUIClassFactory";
 
-export interface IFieldsAndMethods {
-	className: string;
-	fields: IUIField[];
-	methods: IUIMethod[];
-}
-
-export interface IViewsAndFragments {
-	views: IView[];
-	fragments: IFragment[];
-}
-
-interface IUIClassMap {
-	[key: string]: AbstractUIClass;
-}
-export class UIClassFactory {
+export class UIClassFactory implements IUIClassFactory {
 	private readonly _UIClasses: IUIClassMap = {
 		Promise: new JSClass("Promise"),
 		array: new JSClass("array"),

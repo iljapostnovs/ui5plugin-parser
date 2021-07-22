@@ -1,9 +1,9 @@
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
-import { IFieldsAndMethods } from "../../UIClassFactory";
 import { FieldPropertyMethodGetterStrategy as FieldMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { AcornSyntaxAnalyzer } from "../AcornSyntaxAnalyzer";
 import { TextDocument } from "../../abstraction/TextDocument";
 import { UI5Plugin } from "../../../../UI5Plugin";
+import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
 
 export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethodGetterStrategy {
 	getFieldsAndMethods(document: TextDocument, position: number) {

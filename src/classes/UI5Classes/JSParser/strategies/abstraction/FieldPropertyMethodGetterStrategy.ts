@@ -1,5 +1,5 @@
 import { TextDocument } from "../../../abstraction/TextDocument";
-import { IFieldsAndMethods } from "../../../UIClassFactory";
+import { IFieldsAndMethods } from "../../../interfaces/IUIClassFactory";
 export abstract class FieldPropertyMethodGetterStrategy {
 	abstract getFieldsAndMethods(document: TextDocument, position: number): IFieldsAndMethods | undefined;
 

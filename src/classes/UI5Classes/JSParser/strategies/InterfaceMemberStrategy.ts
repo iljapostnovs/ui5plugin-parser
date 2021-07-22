@@ -1,9 +1,9 @@
-import { IFieldsAndMethods } from "../../UIClassFactory";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
 import { TextDocument } from "../../abstraction/TextDocument";
 import { ReusableMethods } from "../../../utils/ReusableMethods";
 import { UI5Plugin } from "../../../../UI5Plugin";
+import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
 export class InterfaceMemberStrategy extends FieldPropertyMethodGetterStrategy {
 	getFieldsAndMethods(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;

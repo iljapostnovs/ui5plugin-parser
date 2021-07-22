@@ -3,9 +3,9 @@ import { AcornSyntaxAnalyzer, IAcornLocation, IAcornPosition } from "../../JSPar
 import * as path from "path";
 import { AbstractUIClass, IUIField, IUIAggregation, IUIEvent, IUIMethod, IUIProperty, IUIAssociation, IUIEventParam, IUIMethodParam, IMember } from "./AbstractUIClass";
 import * as commentParser from "comment-parser";
-import { IViewsAndFragments } from "../../UIClassFactory";
 import LineColumn = require("line-column");
 import { UI5Plugin } from "../../../../UI5Plugin";
+import { IViewsAndFragments } from "../../interfaces/IUIClassFactory";
 const acornLoose = require("acorn-loose");
 
 interface IUIDefine {

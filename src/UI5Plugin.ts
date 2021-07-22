@@ -17,7 +17,7 @@ interface IConstructorParams {
 export class UI5Plugin {
 	private static _instance?: UI5Plugin;
 	private _isInitialized = false;
-	readonly configHandler: IConfigHandler = new ConfigHandler();
+	readonly configHandler: IConfigHandler;
 
 	get fileReader(): FileReader {
 		if (!this._isInitialized) {

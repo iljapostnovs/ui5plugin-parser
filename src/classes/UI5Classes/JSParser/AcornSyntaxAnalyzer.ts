@@ -1,4 +1,3 @@
-import { IFieldsAndMethods } from "../UIClassFactory";
 import { IXMLFile } from "../../utils/FileReader";
 import { IUIField, IUIMethod } from "../UI5Parser/UIClass/AbstractUIClass";
 import { ICustomClassUIMethod, CustomUIClass, ICustomClassUIField } from "../UI5Parser/UIClass/CustomUIClass";
@@ -20,6 +19,7 @@ export interface IAcornLocation {
 }
 
 import { UI5Plugin } from "../../../UI5Plugin";
+import { IFieldsAndMethods } from "../interfaces/IUIClassFactory";
 export class AcornSyntaxAnalyzer {
 	static getFieldsAndMethodsOfTheCurrentVariable(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
