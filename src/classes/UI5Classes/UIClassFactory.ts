@@ -4,7 +4,7 @@ import { StandardUIClass } from "./UI5Parser/UIClass/StandardUIClass";
 import { JSClass } from "./UI5Parser/UIClass/JSClass";
 import { IFragment, IView } from "../utils/FileReader";
 import { TextDocument } from "./abstraction/TextDocument";
-import { UI5Plugin } from "../../UI5Plugin";
+import { UI5Parser } from "../../UI5Parser";
 import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./interfaces/IUIClassFactory";
 import { ISyntaxAnalyser } from "./JSParser/ISyntaxAnalyser";
 
@@ -24,7 +24,7 @@ export class UIClassFactory implements IUIClassFactory {
 
 	private _getInstance(className: string, documentText?: string) {
 		let returnClass: AbstractUIClass;
-		const isThisClassFromAProject = !!UI5Plugin.getInstance().fileReader.getManifestForClass(className);
+		const isThisClassFromAProject = !!UI5Parser.getInstance().fileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className);
 		} else {
@@ -49,7 +49,7 @@ export class UIClassFactory implements IUIClassFactory {
 
 	public setNewContentForClassUsingDocument(document: TextDocument, force = false) {
 		const documentText = document.getText();
-		const currentClassName = UI5Plugin.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		const currentClassName = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
 
 		if (currentClassName && documentText) {
 			this.setNewCodeForClass(currentClassName, documentText, force);
@@ -382,11 +382,11 @@ export class UIClassFactory implements IUIClassFactory {
 
 	private _removeDuplicatesForViewsAndFragments(viewsAndFragments: IViewsAndFragments) {
 		viewsAndFragments.views.forEach(view => {
-			viewsAndFragments.fragments.push(...UI5Plugin.getInstance().fileReader.getFragmentsInXMLFile(view));
+			viewsAndFragments.fragments.push(...UI5Parser.getInstance().fileReader.getFragmentsInXMLFile(view));
 		});
 
 		viewsAndFragments.fragments.forEach(fragment => {
-			viewsAndFragments.fragments.push(...UI5Plugin.getInstance().fileReader.getFragmentsInXMLFile(fragment));
+			viewsAndFragments.fragments.push(...UI5Parser.getInstance().fileReader.getFragmentsInXMLFile(fragment));
 		});
 
 		viewsAndFragments.fragments = viewsAndFragments.fragments.reduce((accumulator: IFragment[], fragment) => {
@@ -411,17 +411,17 @@ export class UIClassFactory implements IUIClassFactory {
 			fragments: []
 		};
 
-		viewsAndFragments.fragments = UI5Plugin.getInstance().fileReader.getFragmentsMentionedInClass(CurrentUIClass.className);
+		viewsAndFragments.fragments = UI5Parser.getInstance().fileReader.getFragmentsMentionedInClass(CurrentUIClass.className);
 		const views = [];
-		const view = UI5Plugin.getInstance().fileReader.getViewForController(CurrentUIClass.className);
+		const view = UI5Parser.getInstance().fileReader.getViewForController(CurrentUIClass.className);
 		if (view) {
 			views.push(view);
 			viewsAndFragments.fragments.push(...view.fragments);
 		}
 		viewsAndFragments.views = views;
 
-		const fragments = UI5Plugin.getInstance().fileReader.getAllFragments();
-		const allViews = UI5Plugin.getInstance().fileReader.getAllViews();
+		const fragments = UI5Parser.getInstance().fileReader.getAllFragments();
+		const allViews = UI5Parser.getInstance().fileReader.getAllViews();
 
 		//check for mentioning
 		fragments.forEach(fragment => {
@@ -464,18 +464,18 @@ export class UIClassFactory implements IUIClassFactory {
 
 	private _getFragmentFromViewManifestExtensions(className: string, view: IView) {
 		const fragments: IFragment[] = [];
-		const viewName = UI5Plugin.getInstance().fileReader.getClassNameFromPath(view.fsPath);
+		const viewName = UI5Parser.getInstance().fileReader.getClassNameFromPath(view.fsPath);
 		if (viewName) {
-			const extensions = UI5Plugin.getInstance().fileReader.getManifestExtensionsForClass(className);
+			const extensions = UI5Parser.getInstance().fileReader.getManifestExtensionsForClass(className);
 			const viewExtension = extensions && extensions["sap.ui.viewExtensions"] && extensions["sap.ui.viewExtensions"][viewName];
 			if (viewExtension) {
 				Object.keys(viewExtension).forEach(key => {
 					const extension = viewExtension[key];
 					if (extension.type === "XML" && extension.className === "sap.ui.core.Fragment") {
 						const fragmentName = extension.fragmentName;
-						const fragment = UI5Plugin.getInstance().fileReader.getFragment(fragmentName);
+						const fragment = UI5Parser.getInstance().fileReader.getFragment(fragmentName);
 						if (fragment) {
-							const fragmentsInFragment: IFragment[] = UI5Plugin.getInstance().fileReader.getFragmentsInXMLFile(fragment);
+							const fragmentsInFragment: IFragment[] = UI5Parser.getInstance().fileReader.getFragmentsInXMLFile(fragment);
 							fragments.push(fragment, ...fragmentsInFragment);
 						}
 					}
@@ -555,15 +555,15 @@ export class UIClassFactory implements IUIClassFactory {
 	}
 
 	public setNewNameForClass(oldPath: string, newPath: string) {
-		const oldName = UI5Plugin.getInstance().fileReader.getClassNameFromPath(oldPath);
-		const newName = UI5Plugin.getInstance().fileReader.getClassNameFromPath(newPath);
+		const oldName = UI5Parser.getInstance().fileReader.getClassNameFromPath(oldPath);
+		const newName = UI5Parser.getInstance().fileReader.getClassNameFromPath(newPath);
 		if (oldName && newName) {
 			const oldClass = this._UIClasses[oldName];
 			this._UIClasses[newName] = oldClass;
 			oldClass.className = newName;
 
 			if (oldClass instanceof CustomUIClass) {
-				const newClassFSPath = UI5Plugin.getInstance().fileReader.convertClassNameToFSPath(newName, oldClass.classFSPath?.endsWith(".controller.js"));
+				const newClassFSPath = UI5Parser.getInstance().fileReader.convertClassNameToFSPath(newName, oldClass.classFSPath?.endsWith(".controller.js"));
 				if (newClassFSPath) {
 					oldClass.classFSPath = newClassFSPath;
 				}
@@ -578,9 +578,9 @@ export class UIClassFactory implements IUIClassFactory {
 
 			const UIClass = this._UIClasses[newName];
 			if (UIClass instanceof CustomUIClass && UIClass.classFSPath?.endsWith(".controller.js")) {
-				const view = UI5Plugin.getInstance().fileReader.getViewForController(oldName);
+				const view = UI5Parser.getInstance().fileReader.getViewForController(oldName);
 				if (view) {
-					UI5Plugin.getInstance().fileReader.removeView(view.name);
+					UI5Parser.getInstance().fileReader.removeView(view.name);
 				}
 			}
 		}

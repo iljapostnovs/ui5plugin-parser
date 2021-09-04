@@ -2,7 +2,7 @@ import { AbstractUIClass, IUIMethod, IUIProperty, IUIEvent, IUIAggregation, IUIA
 import { SAPNodeDAO } from "../../../librarydata/SAPNodeDAO";
 import { MainLooper } from "../../JSParser/MainLooper";
 import { URLBuilder } from "../../../utils/URLBuilder";
-import { UI5Plugin } from "../../../../UI5Plugin";
+import { UI5Parser } from "../../../../UI5Parser";
 
 const aXmlnsData = [{
 	tag: "xmlns",
@@ -319,7 +319,7 @@ export class StandardUIClass extends AbstractUIClass {
 
 	private _generateAdditionalDescriptionFrom(className: string) {
 		let additionalDescription = "";
-		const isThisClassFromAProject = !!UI5Plugin.getInstance().fileReader.getManifestForClass(className);
+		const isThisClassFromAProject = !!UI5Parser.getInstance().fileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			const SAPNode = this._findSAPNode(className);
 			additionalDescription = SAPNode?.getProperties().reduce((accumulator: string, property: any) => {
@@ -335,7 +335,7 @@ export class StandardUIClass extends AbstractUIClass {
 	protected generateTypeValues(type: string) {
 		let typeValues = super.generateTypeValues(type);
 
-		const isThisClassFromAProject = !!UI5Plugin.getInstance().fileReader.getManifestForClass(type);
+		const isThisClassFromAProject = !!UI5Parser.getInstance().fileReader.getManifestForClass(type);
 		if (typeValues.length === 0 && !isThisClassFromAProject) {
 			const typeNode = this._findSAPNode(type);
 			const metadata = typeNode?.getMetadata();

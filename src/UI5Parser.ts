@@ -17,8 +17,8 @@ interface IConstructorParams {
 	configHandler?: IConfigHandler
 }
 
-export class UI5Plugin {
-	private static _instance?: UI5Plugin;
+export class UI5Parser {
+	private static _instance?: UI5Parser;
 	readonly configHandler: IConfigHandler;
 
 	readonly classFactory: IUIClassFactory;
@@ -34,11 +34,11 @@ export class UI5Plugin {
 	}
 
 	public static getInstance(params?: IConstructorParams) {
-		if (!UI5Plugin._instance) {
-			UI5Plugin._instance = new UI5Plugin(params);
+		if (!UI5Parser._instance) {
+			UI5Parser._instance = new UI5Parser(params);
 		}
 
-		return UI5Plugin._instance;
+		return UI5Parser._instance;
 	}
 
 	public async initialize(wsFolders = [new WorkspaceFolder(process.cwd())]) {

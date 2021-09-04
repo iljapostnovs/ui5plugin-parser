@@ -1,4 +1,4 @@
-import { UI5Plugin } from "../../UI5Plugin";
+import { UI5Parser } from "../../UI5Parser";
 import { ITypeValue } from "./UI5Parser/UIClass/AbstractUIClass";
 
 interface IResourceModel {
@@ -9,7 +9,7 @@ export class ResourceModelData {
 	public static resourceModels: IResourceModel = {};
 
 	static async readTexts() {
-		const resourceModelFiles = UI5Plugin.getInstance().fileReader.getResourceModelFiles();
+		const resourceModelFiles = UI5Parser.getInstance().fileReader.getResourceModelFiles();
 		resourceModelFiles.forEach(resourceModelFile => {
 			this.resourceModels[resourceModelFile.componentName] = [];
 

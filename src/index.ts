@@ -1,2 +1,2 @@
-import { UI5Plugin } from "./UI5Plugin";
-export = UI5Plugin;
+import { UI5Parser } from "./UI5Parser";
+export = UI5Parser;

@@ -4,7 +4,7 @@ import * as path from "path";
 import { AbstractUIClass, IUIField, IUIAggregation, IUIEvent, IUIMethod, IUIProperty, IUIAssociation, IUIEventParam, IUIMethodParam, IMember } from "./AbstractUIClass";
 import * as commentParser from "comment-parser";
 import LineColumn = require("line-column");
-import { UI5Plugin } from "../../../../UI5Plugin";
+import { UI5Parser } from "../../../../UI5Parser";
 import { IViewsAndFragments } from "../../interfaces/IUIClassFactory";
 import { ISyntaxAnalyser } from "../../JSParser/ISyntaxAnalyser";
 const acornLoose = require("acorn-loose");
@@ -79,7 +79,7 @@ export class CustomUIClass extends AbstractUIClass {
 		super(className);
 
 		this.syntaxAnalyser = syntaxAnalyser;
-		this.classFSPath = UI5Plugin.getInstance().fileReader.getClassFSPathFromClassName(this.className);
+		this.classFSPath = UI5Parser.getInstance().fileReader.getClassFSPathFromClassName(this.className);
 		this._readFileContainingThisClassCode(documentText); //todo: rename. not always reading anyore.
 		this.UIDefine = this._getUIDefine();
 		this.acornClassBody = this._getThisClassBodyAcorn();
@@ -305,7 +305,7 @@ export class CustomUIClass extends AbstractUIClass {
 
 	private _readFileContainingThisClassCode(documentText?: string) {
 		if (!documentText) {
-			documentText = UI5Plugin.getInstance().fileReader.getDocumentTextFromCustomClassName(this.className);
+			documentText = UI5Parser.getInstance().fileReader.getDocumentTextFromCustomClassName(this.className);
 		}
 		this.classText = documentText || "";
 		if (documentText) {
@@ -368,7 +368,7 @@ export class CustomUIClass extends AbstractUIClass {
 		let className = classPath.replace(/\//g, ".");
 
 		if (classPath?.startsWith(".")) {
-			const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(this.className);
+			const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(this.className);
 
 			if (manifest && this.classFSPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);
@@ -451,7 +451,7 @@ export class CustomUIClass extends AbstractUIClass {
 
 	private _getParentNameFromManifest() {
 		let parentName: string | undefined;
-		const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(this.className);
+		const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(this.className);
 		if (manifest?.content &&
 			manifest?.content["sap.ui5"]?.extends?.extensions &&
 			manifest?.content["sap.ui5"]?.extends?.extensions["sap.ui.controllerExtensions"]
