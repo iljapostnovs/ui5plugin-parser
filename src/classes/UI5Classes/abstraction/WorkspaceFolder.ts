@@ -1,5 +1,5 @@
 export class WorkspaceFolder {
-	fsPath: string;
+	readonly fsPath: string;
 	constructor(fsPath: string) {
 		this.fsPath = fsPath;
 	}
