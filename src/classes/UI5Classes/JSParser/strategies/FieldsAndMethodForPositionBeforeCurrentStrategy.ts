@@ -1,7 +1,7 @@
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
 import { FieldPropertyMethodGetterStrategy as FieldMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { TextDocument } from "../../abstraction/TextDocument";
-import { UI5Plugin } from "../../../../UI5Plugin";
+import { UI5Parser } from "../../../../UI5Parser";
 import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
 import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
 
@@ -14,7 +14,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 
 	getFieldsAndMethods(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const className = UI5Plugin.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		const className = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
 		const UIClassName = className && this.getClassNameOfTheVariableAtPosition(className, position);
 		if (UIClassName) {
 			fieldsAndMethods = this.destructueFieldsAndMethodsAccordingToMapParams(UIClassName);
@@ -80,14 +80,14 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 				}
 			}
 		} else if (className.startsWith("Promise<")) {
-			fieldsAndMethods = UI5Plugin.getInstance().classFactory.getFieldsAndMethodsForClass("Promise");
+			fieldsAndMethods = UI5Parser.getInstance().classFactory.getFieldsAndMethodsForClass("Promise");
 			fieldsAndMethods.className = className;
 		} else {
 			if (className.endsWith("[]")) {
-				fieldsAndMethods = UI5Plugin.getInstance().classFactory.getFieldsAndMethodsForClass("array");
+				fieldsAndMethods = UI5Parser.getInstance().classFactory.getFieldsAndMethodsForClass("array");
 				fieldsAndMethods.className = className;
 			} else {
-				fieldsAndMethods = UI5Plugin.getInstance().classFactory.getFieldsAndMethodsForClass(className);
+				fieldsAndMethods = UI5Parser.getInstance().classFactory.getFieldsAndMethodsForClass(className);
 			}
 		}
 
@@ -122,7 +122,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 
 	public getStackOfNodesForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
-		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
+		const UIClass = UI5Parser.getInstance().classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {

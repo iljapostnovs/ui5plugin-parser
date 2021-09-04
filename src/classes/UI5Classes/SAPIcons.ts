@@ -1,4 +1,4 @@
-import { UI5Plugin } from "../../UI5Plugin";
+import { UI5Parser } from "../../UI5Parser";
 import { FileReader } from "../utils/FileReader";
 import { HTTPHandler } from "../utils/HTTPHandler";
 import { URLBuilder } from "../utils/URLBuilder";
@@ -7,10 +7,10 @@ export class SAPIcons {
 	public static icons: string[] = [];
 
 	static async preloadIcons() {
-		this.icons = UI5Plugin.getInstance().fileReader.getCache(FileReader.CacheType.Icons);
+		this.icons = UI5Parser.getInstance().fileReader.getCache(FileReader.CacheType.Icons);
 		if (!this.icons) {
 			this.icons = await this._loadIcons();
-			UI5Plugin.getInstance().fileReader.setCache(FileReader.CacheType.Icons, JSON.stringify(this.icons));
+			UI5Parser.getInstance().fileReader.setCache(FileReader.CacheType.Icons, JSON.stringify(this.icons));
 		}
 	}
 

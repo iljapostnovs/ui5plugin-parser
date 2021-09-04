@@ -1,5 +1,5 @@
 export class UI5Metadata {
-	public rawMetadata: any;
+	readonly rawMetadata: any;
 	constructor(metadata: any) {
 		this.rawMetadata = metadata;
 	}

@@ -3,7 +3,7 @@ import { FileReader } from "../utils/FileReader";
 import { HTTPHandler } from "../utils/HTTPHandler";
 import { SAPNode } from "./SAPNode";
 import { UI5Metadata } from "./UI5Metadata";
-import { UI5Plugin } from "../../UI5Plugin";
+import { UI5Parser } from "../../UI5Parser";
 
 interface ILooseObject {
 	[key: string]: any;
@@ -48,12 +48,12 @@ export class UI5MetadataPreloader {
 	}
 
 	private _loadCache() {
-		return UI5Plugin.getInstance().fileReader.getCache(FileReader.CacheType.Metadata);
+		return UI5Parser.getInstance().fileReader.getCache(FileReader.CacheType.Metadata);
 	}
 
 	private _writeCache() {
 		const cache = JSON.stringify(namespaceDesignTimes);
-		UI5Plugin.getInstance().fileReader.setCache(FileReader.CacheType.Metadata, cache);
+		UI5Parser.getInstance().fileReader.setCache(FileReader.CacheType.Metadata, cache);
 	}
 
 	private _getUniqueLibNames(node: SAPNode) {
