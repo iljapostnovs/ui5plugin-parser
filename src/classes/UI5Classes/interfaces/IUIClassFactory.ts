@@ -23,6 +23,7 @@ export interface IUIClassFactory {
 	removeClass(className: string): void;
 	getParent(UIClass: AbstractUIClass): AbstractUIClass | undefined;
 	setNewNameForClass(oldPath: string, newPath: string): void;
+	getViewsAndFragmentsOfControlHierarchically(CurrentUIClass: CustomUIClass, checkedClasses?: string[], removeDuplicates?: boolean, includeChildren?: boolean, includeMentioned?: boolean, includeParents?: boolean): IViewsAndFragments
 }
 
 export interface IUIClassMap {

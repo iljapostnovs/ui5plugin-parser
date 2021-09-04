@@ -1,6 +1,6 @@
 import { IConfigHandler } from "./IConfigHandler";
 
-export class ConfigHandler implements IConfigHandler {
+export class PackageConfigHandler implements IConfigHandler {
 	getUI5Version() {
 		return "1.60.10";
 	}

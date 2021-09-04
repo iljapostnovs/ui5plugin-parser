@@ -9,10 +9,13 @@ interface ILooseNodeObject {
 }
 
 export class SAPNodeDAO {
-	private static readonly _nodePath: string = URLBuilder.getInstance().getAPIIndexUrl();
+	static nodePath: string;
 	private _nodes: any;
 	private static readonly _SAPNodes: SAPNode[] = [];
 	private static readonly _flatSAPNodes: ILooseNodeObject = {};
+	constructor() {
+		SAPNodeDAO.nodePath = URLBuilder.getInstance().getAPIIndexUrl();
+	}
 
 	public async getAllNodes() {
 		if (SAPNodeDAO._SAPNodes.length === 0) {
@@ -127,7 +130,7 @@ export class SAPNodeDAO {
 	}
 
 	private async _fetchApiIndex() {
-		const data: any = await HTTPHandler.get(SAPNodeDAO._nodePath);
+		const data: any = await HTTPHandler.get(SAPNodeDAO.nodePath);
 		this._nodes = data;
 	}
 

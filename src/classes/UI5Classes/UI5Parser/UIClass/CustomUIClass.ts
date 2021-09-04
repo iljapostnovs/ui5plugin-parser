@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { AcornSyntaxAnalyzer, IAcornLocation, IAcornPosition } from "../../JSParser/AcornSyntaxAnalyzer";
+import { IAcornLocation, IAcornPosition } from "../../JSParser/AcornSyntaxAnalyzer";
 import * as path from "path";
 import { AbstractUIClass, IUIField, IUIAggregation, IUIEvent, IUIMethod, IUIProperty, IUIAssociation, IUIEventParam, IUIMethodParam, IMember } from "./AbstractUIClass";
 import * as commentParser from "comment-parser";
 import LineColumn = require("line-column");
 import { UI5Plugin } from "../../../../UI5Plugin";
 import { IViewsAndFragments } from "../../interfaces/IUIClassFactory";
+import { ISyntaxAnalyser } from "../../JSParser/ISyntaxAnalyser";
 const acornLoose = require("acorn-loose");
 
 interface IUIDefine {
@@ -72,10 +73,12 @@ export class CustomUIClass extends AbstractUIClass {
 	public classBodyAcornVariableName: string | undefined;
 	public classFSPath: string | undefined;
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
+	private readonly syntaxAnalyser: ISyntaxAnalyser;
 
-	constructor(className: string, documentText?: string) {
+	constructor(className: string, syntaxAnalyser: ISyntaxAnalyser, documentText?: string) {
 		super(className);
 
+		this.syntaxAnalyser = syntaxAnalyser;
 		this.classFSPath = UI5Plugin.getInstance().fileReader.getClassFSPathFromClassName(this.className);
 		this._readFileContainingThisClassCode(documentText); //todo: rename. not always reading anyore.
 		this.UIDefine = this._getUIDefine();
@@ -576,7 +579,7 @@ export class CustomUIClass extends AbstractUIClass {
 			});
 			this.acornClassBody.properties?.forEach((property: any) => {
 				if (property.value?.type === "FunctionExpression" || property.value?.type === "ArrowFunctionExpression") {
-					const assignmentExpressions = AcornSyntaxAnalyzer.expandAllContent(property.value.body).filter((node: any) => node.type === "AssignmentExpression");
+					const assignmentExpressions = this.syntaxAnalyser.expandAllContent(property.value.body).filter((node: any) => node.type === "AssignmentExpression");
 					assignmentExpressions?.forEach((node: any) => {
 						if (this.isAssignmentStatementForThisVariable(node)) {
 							const field = this.fields.find(field => field.name === node.left.property.name);
@@ -1354,14 +1357,14 @@ export class CustomUIClass extends AbstractUIClass {
 					});
 
 					if (typeDoc) {
-						const variableDeclaration = AcornSyntaxAnalyzer.getAcornVariableDeclarationAtIndex(this, indexOfBottomLine);
+						const variableDeclaration = this.syntaxAnalyser.getAcornVariableDeclarationAtIndex(this, indexOfBottomLine);
 						if (variableDeclaration?.declarations && variableDeclaration.declarations[0]) {
 							variableDeclaration.declarations[0]._acornSyntaxAnalyserType = typeDoc.type;
 						}
 					}
 
 					if (typeDoc || visibilityDoc || ui5ignored || isAbstract || isStatic) {
-						const assignmentExpression = AcornSyntaxAnalyzer.getAcornAssignmentExpressionAtIndex(this, indexOfBottomLine);
+						const assignmentExpression = this.syntaxAnalyser.getAcornAssignmentExpressionAtIndex(this, indexOfBottomLine);
 						if (assignmentExpression) {
 							const leftNode = assignmentExpression.left;
 							if (leftNode?.object?.type === "ThisExpression" && leftNode?.property?.type === "Identifier") {

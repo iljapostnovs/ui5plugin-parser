@@ -2,13 +2,18 @@ import { AbstractUIClass, IUIAggregation, IUIAssociation, IUIEvent, IUIField, IU
 import { CustomUIClass } from "./UI5Parser/UIClass/CustomUIClass";
 import { StandardUIClass } from "./UI5Parser/UIClass/StandardUIClass";
 import { JSClass } from "./UI5Parser/UIClass/JSClass";
-import { AcornSyntaxAnalyzer } from "./JSParser/AcornSyntaxAnalyzer";
 import { IFragment, IView } from "../utils/FileReader";
 import { TextDocument } from "./abstraction/TextDocument";
 import { UI5Plugin } from "../../UI5Plugin";
 import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./interfaces/IUIClassFactory";
+import { ISyntaxAnalyser } from "./JSParser/ISyntaxAnalyser";
 
 export class UIClassFactory implements IUIClassFactory {
+	private readonly syntaxAnalyser: ISyntaxAnalyser;
+	constructor(syntaxAnalyser: ISyntaxAnalyser) {
+		this.syntaxAnalyser = syntaxAnalyser;
+	}
+
 	private readonly _UIClasses: IUIClassMap = {
 		Promise: new JSClass("Promise"),
 		array: new JSClass("array"),
@@ -23,7 +28,7 @@ export class UIClassFactory implements IUIClassFactory {
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className);
 		} else {
-			returnClass = new CustomUIClass(className, documentText);
+			returnClass = new CustomUIClass(className, this.syntaxAnalyser, documentText);
 		}
 
 		return returnClass;
@@ -76,7 +81,7 @@ export class UIClassFactory implements IUIClassFactory {
 	}
 
 	private _clearAcornNodes(oldClass: CustomUIClass) {
-		const allContent = AcornSyntaxAnalyzer.expandAllContent(oldClass.acornClassBody);
+		const allContent = this.syntaxAnalyser.expandAllContent(oldClass.acornClassBody);
 		allContent.forEach((content: any) => {
 			delete content.expandedContent;
 		});
@@ -88,10 +93,10 @@ export class UIClassFactory implements IUIClassFactory {
 		this._enrichMethodParamsWithEventType(UIClass);
 		this._checkIfMembersAreUsedInXMLDocuments(UIClass);
 		UIClass.methods.forEach(method => {
-			AcornSyntaxAnalyzer.findMethodReturnType(method, UIClass.className, false, true);
+			this.syntaxAnalyser.findMethodReturnType(method, UIClass.className, false, true);
 		});
 		UIClass.fields.forEach(field => {
-			AcornSyntaxAnalyzer.findFieldType(field, UIClass.className, false, true);
+			this.syntaxAnalyser.findFieldType(field, UIClass.className, false, true);
 		});
 		// console.timeEnd(`Enriching ${UIClass.className} took`);
 	}
@@ -483,7 +488,7 @@ export class UIClassFactory implements IUIClassFactory {
 
 	private _enrichMethodParamsWithEventTypeFromAttachEvents(UIClass: CustomUIClass) {
 		UIClass.methods.forEach(method => {
-			const eventData = AcornSyntaxAnalyzer.getEventHandlerDataFromJSClass(UIClass.className, method.name);
+			const eventData = this.syntaxAnalyser.getEventHandlerDataFromJSClass(UIClass.className, method.name);
 			if (eventData) {
 				method.isEventHandler = true;
 				if (method?.acornNode?.params && method?.acornNode?.params[0]) {
@@ -501,7 +506,7 @@ export class UIClassFactory implements IUIClassFactory {
 		let defaultModel;
 		const UIClass = this.getUIClass(className);
 		if (UIClass instanceof CustomUIClass) {
-			const defaultModelOfClass = AcornSyntaxAnalyzer.getClassNameOfTheModelFromManifest("", className, true);
+			const defaultModelOfClass = this.syntaxAnalyser.getClassNameOfTheModelFromManifest("", className, true);
 			if (defaultModelOfClass) {
 				const modelUIClass = this.getUIClass(defaultModelOfClass);
 				if (modelUIClass instanceof CustomUIClass) {

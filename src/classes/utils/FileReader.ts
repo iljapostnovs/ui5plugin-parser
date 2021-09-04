@@ -7,7 +7,8 @@ import { ITag, XMLParser } from "./XMLParser";
 import { ResourceModelData } from "../UI5Classes/ResourceModelData";
 import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
-import { UI5Plugin } from "../../UI5Plugin";
+import { IConfigHandler } from "../config/IConfigHandler";
+import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
@@ -15,8 +16,16 @@ export class FileReader {
 	private _manifests: IUIManifest[] = [];
 	private readonly _viewCache: IViews = {};
 	private readonly _fragmentCache: Fragments = {};
-	private readonly _UI5Version: any = UI5Plugin.getInstance().configHandler.getUI5Version();
+	private readonly _UI5Version: string;
 	public globalStoragePath: string | undefined;
+	private readonly _configHandler: IConfigHandler;
+	private readonly _classFactory: IUIClassFactory;
+
+	constructor(configHandler: IConfigHandler, classFactory: IUIClassFactory) {
+		this._configHandler = configHandler;
+		this._UI5Version = configHandler.getUI5Version();
+		this._classFactory = classFactory;
+	}
 
 	public setNewViewContentToCache(viewContent: string, fsPath: string, forceRefresh = false) {
 		const viewName = this.getClassNameFromPath(fsPath);
@@ -143,7 +152,7 @@ export class FileReader {
 						content: UI5Manifest
 					};
 					this._manifests.push(UIManifest);
-				} catch (error) {
+				} catch (error: any) {
 					console.error(`Couldn't read manifest.json. Error message: ${error?.message || ""}`);
 					throw error;
 				}
@@ -171,7 +180,7 @@ export class FileReader {
 	private _readFilesInWorkspace(wsFolder: WorkspaceFolder, path: string) {
 
 		const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
-		const exclusions: string[] = UI5Plugin.getInstance().configHandler.getExcludeFolderPatterns();
+		const exclusions: string[] = this._configHandler.getExcludeFolderPatterns();
 		const exclusionPaths = exclusions.map(excludeString => {
 			return `${wsFolderFSPath}/${excludeString}`
 		});
@@ -197,9 +206,9 @@ export class FileReader {
 		}
 
 		if (!className) {
-			const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(controllerClassName);
+			const UIClass = this._classFactory.getUIClass(controllerClassName);
 			if (UIClass instanceof CustomUIClass) {
-				const fragmentsAndViews = UI5Plugin.getInstance().classFactory.getViewsAndFragmentsOfControlHierarchically(UIClass);
+				const fragmentsAndViews = this._classFactory.getViewsAndFragmentsOfControlHierarchically(UIClass);
 				const fragmentAndViewArray = [
 					...fragmentsAndViews.views,
 					...fragmentsAndViews.fragments
@@ -243,7 +252,7 @@ export class FileReader {
 
 	public getFragmentsMentionedInClass(className: string) {
 		let fragments: IFragment[] = [];
-		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
+		const UIClass = this._classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			fragments = this.getAllFragments().filter(fragment => {
@@ -307,12 +316,12 @@ export class FileReader {
 	private _readAllJSFiles(wsFolders: WorkspaceFolder[]) {
 		for (const wsFolder of wsFolders) {
 			const classPaths = this._readFilesInWorkspace(wsFolder, "**/*.js");
-			const classNames = classPaths.map(path => UI5Plugin.getInstance().fileReader.getClassNameFromPath(path));
+			const classNames = classPaths.map(path => this.getClassNameFromPath(path));
 			classNames.forEach(className => {
 				if (className) {
 					try {
-						UI5Plugin.getInstance().classFactory.getUIClass(className);
-					} catch (error) {
+						this._classFactory.getUIClass(className);
+					} catch (error: any) {
 						console.error(`Error parsing ${className}: ${error.message}`);
 					}
 				}
@@ -320,10 +329,10 @@ export class FileReader {
 
 			classNames.forEach(className => {
 				if (className) {
-					const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
+					const UIClass = this._classFactory.getUIClass(className);
 					if (UIClass instanceof CustomUIClass) {
 						UIClass.relatedViewsAndFragments = undefined;
-						UI5Plugin.getInstance().classFactory.enrichTypesInCustomClass(UIClass);
+						this._classFactory.enrichTypesInCustomClass(UIClass);
 					}
 				}
 			});
@@ -406,7 +415,7 @@ export class FileReader {
 			}
 
 			if (!responsibleClassName) {
-				const responsibleFragment = UI5Plugin.getInstance().fileReader.getAllFragments().find(fragment => {
+				const responsibleFragment = this.getAllFragments().find(fragment => {
 					return fragment.fragments.find(fragment => fragment.fsPath === viewOrFragment.fsPath);
 				});
 				if (responsibleFragment) {
@@ -423,7 +432,7 @@ export class FileReader {
 	}
 
 	public getManifestExtensionsForClass(className: string): any | undefined {
-		const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(className);
+		const manifest = this.getManifestForClass(className);
 		return manifest?.content["sap.ui5"]?.extends?.extensions;
 	}
 
@@ -483,7 +492,7 @@ export class FileReader {
 	}
 
 	private _getResponsibleClassNameForFragmentFromCustomUIClasses(viewOrFragment: IXMLFile) {
-		const allUIClasses = UI5Plugin.getInstance().classFactory.getAllCustomUIClasses();
+		const allUIClasses = this._classFactory.getAllCustomUIClasses();
 		const fragmentName = this.getClassNameFromPath(viewOrFragment.fsPath);
 		const responsibleClass = allUIClasses.find(UIClass => {
 			return UIClass.classText.includes(`${fragmentName}`);
@@ -602,7 +611,9 @@ export class FileReader {
 	private _ensureThatPluginCacheFolderExists() {
 		if (this.globalStoragePath) {
 			if (!fs.existsSync(this.globalStoragePath)) {
-				fs.mkdirSync(this.globalStoragePath);
+				fs.mkdirSync(this.globalStoragePath, {
+					recursive: true
+				});
 			}
 		}
 	}

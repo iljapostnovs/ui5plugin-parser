@@ -1,5 +1,4 @@
 import { UI5Plugin } from "./UI5Plugin";
-
 const test = UI5Plugin.getInstance();
 (async function() {
 	await test.initialize();

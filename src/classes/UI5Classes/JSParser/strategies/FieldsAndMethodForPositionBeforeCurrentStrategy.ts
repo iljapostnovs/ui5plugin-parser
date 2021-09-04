@@ -1,11 +1,17 @@
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
 import { FieldPropertyMethodGetterStrategy as FieldMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
-import { AcornSyntaxAnalyzer } from "../AcornSyntaxAnalyzer";
 import { TextDocument } from "../../abstraction/TextDocument";
 import { UI5Plugin } from "../../../../UI5Plugin";
 import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
+import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
 
 export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethodGetterStrategy {
+	private readonly syntaxAnalyser: ISyntaxAnalyser;
+	constructor(syntaxAnalyser: ISyntaxAnalyser) {
+		super();
+		this.syntaxAnalyser = syntaxAnalyser;
+	}
+
 	getFieldsAndMethods(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
 		const className = UI5Plugin.getInstance().fileReader.getClassNameFromPath(document.fileName);
@@ -108,7 +114,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 		let classNameOfTheCurrentVariable;
 		const stack = this.getStackOfNodesForPosition(className, position, checkForLastPosition);
 		if (stack.length > 0) {
-			classNameOfTheCurrentVariable = AcornSyntaxAnalyzer.findClassNameForStack(stack, className, undefined, clearStack);
+			classNameOfTheCurrentVariable = this.syntaxAnalyser.findClassNameForStack(stack, className, undefined, clearStack);
 		}
 
 		return classNameOfTheCurrentVariable;
@@ -127,7 +133,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 				const methodBody = methodNode.body?.body || [methodNode];
 				const methodsParams = methodNode?.params || [];
 				const method = methodBody.concat(methodsParams);
-				const nodeWithCurrentPosition = AcornSyntaxAnalyzer.findAcornNode(method, position - 1);
+				const nodeWithCurrentPosition = this.syntaxAnalyser.findAcornNode(method, position - 1);
 
 				if (nodeWithCurrentPosition) {
 					this._generateStackOfNodes(nodeWithCurrentPosition, position, stack, checkForLastPosition);
@@ -135,7 +141,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 			} else {
 				const UIDefineBody = UIClass.getUIDefineAcornBody();
 				if (UIDefineBody) {
-					const nodeWithCurrentPosition = AcornSyntaxAnalyzer.findAcornNode(UIDefineBody, position - 1);
+					const nodeWithCurrentPosition = this.syntaxAnalyser.findAcornNode(UIDefineBody, position - 1);
 					if (nodeWithCurrentPosition) {
 						this._generateStackOfNodes(nodeWithCurrentPosition, position, stack, checkForLastPosition);
 					}
@@ -153,7 +159,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 			stack.unshift(node);
 		}
 
-		const innerNode: any = AcornSyntaxAnalyzer.findInnerNode(node, position);
+		const innerNode: any = this.syntaxAnalyser.findInnerNode(node, position);
 
 		if (innerNode) {
 			this._generateStackOfNodes(innerNode, position, stack, checkForLastPosition);

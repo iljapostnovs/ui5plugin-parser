@@ -1,20 +1,22 @@
 import { UI5Plugin } from "../../UI5Plugin";
+import { IConfigHandler } from "../config/IConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
 import { AbstractUIClass } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
 
 export class URLBuilder {
-	private static _URLBuilderInstance?: URLBuilder;
+	private static _URLBuilderInstance: URLBuilder;
 	private readonly _UI5Version: string;
-	private readonly _URLHost = UI5Plugin.getInstance().configHandler.getDataSource();
+	private readonly _URLHost;
 
-	private constructor(UI5Version: string) {
+	private constructor(UI5Version: string, configHandler: IConfigHandler) {
+		this._URLHost = configHandler.getDataSource();
 		this._UI5Version = UI5Version;
 	}
 
-	static getInstance() {
-		if (!this._URLBuilderInstance) {
-			const UI5Version: any = UI5Plugin.getInstance().configHandler.getUI5Version();
-			this._URLBuilderInstance = new URLBuilder(UI5Version);
+	static getInstance(configHandler?: IConfigHandler) {
+		if (!this._URLBuilderInstance && configHandler) {
+			const UI5Version: any = configHandler.getUI5Version();
+			this._URLBuilderInstance = new URLBuilder(UI5Version, configHandler);
 		}
 
 		return this._URLBuilderInstance;
