@@ -1,12 +1,18 @@
 import { IConfigHandler } from "./IConfigHandler";
 
 export class PackageConfigHandler implements IConfigHandler {
+	private readonly _package: any | undefined;
+	constructor() {
+		const packagePath = `${process.cwd()}/package.json`;
+		this._package = require(packagePath);
+	}
+
 	getUI5Version() {
-		return "1.60.10";
+		return this._package?.ui5?.ui5parser?.ui5version || "1.60.10";
 	}
 
 	getExcludeFolderPatterns() {
-		return [
+		return this._package?.ui5?.ui5parser?.excludeFolderPatterns || [
 			"**/resources/**",
 			"**/dist/**/**",
 			"**/node_modules/**"
@@ -14,15 +20,15 @@ export class PackageConfigHandler implements IConfigHandler {
 	}
 
 	getDataSource() {
-		return "https://ui5.sap.com/";
+		return this._package?.ui5?.ui5parser?.dataSource || "https://ui5.sap.com/";
 	}
 
 	getRejectUnauthorized() {
-		return false;
+		return this._package?.ui5?.ui5parser?.rejectUnauthorized || false;
 	}
 
 	getLibsToLoad() {
-		return [
+		return this._package?.ui5?.ui5parser?.libsToLoad || [
 			"sap.m",
 			"sap.ui.comp",
 			"sap.f",
