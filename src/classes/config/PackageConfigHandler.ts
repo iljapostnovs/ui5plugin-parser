@@ -1,9 +1,10 @@
 import { IConfigHandler } from "./IConfigHandler";
+import { join } from "path";
 
 export class PackageConfigHandler implements IConfigHandler {
 	private readonly _package: any | undefined;
 	constructor() {
-		const packagePath = `${process.cwd()}/package.json`;
+		const packagePath = join(process.cwd(), "/package.json");
 		this._package = require(packagePath);
 	}
 
