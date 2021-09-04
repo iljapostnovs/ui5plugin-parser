@@ -1,9 +1,9 @@
 import { URLBuilder } from "../utils/URLBuilder";
 import { FileReader } from "../utils/FileReader";
-import { UI5Plugin } from "../../UI5Plugin";
 import { HTTPHandler } from "../utils/HTTPHandler";
 import { SAPNode } from "./SAPNode";
 import { UI5Metadata } from "./UI5Metadata";
+import { UI5Plugin } from "../../UI5Plugin";
 
 interface ILooseObject {
 	[key: string]: any;
@@ -30,16 +30,9 @@ export class UI5MetadataPreloader {
 			this._nodes.forEach((node: SAPNode) => {
 				this._getUniqueLibNames(node);
 			});
-			const libQuantity = Object.keys(this._libNames).length;
-			const incrementStep = 50 / libQuantity;
 
 			for (const i in this._libNames) {
-				promises.push(metadataDAO.getMetadataForLib(i).then(() => {
-					UI5Plugin.getInstance().initializationProgress?.report({
-						message: i,
-						increment: incrementStep
-					});
-				}));
+				promises.push(metadataDAO.getMetadataForLib(i));
 			}
 
 			return Promise.all(promises).then(() => {
@@ -49,21 +42,18 @@ export class UI5MetadataPreloader {
 			});
 		} else {
 			namespaceDesignTimes = cache;
-			UI5Plugin.getInstance().initializationProgress?.report({
-				increment: 50
-			});
 			UI5MetadataPreloader._resolveLibPreload(cache);
 			return new Promise(resolve => resolve(cache));
 		}
 	}
 
 	private _loadCache() {
-		return FileReader.getCache(FileReader.CacheType.Metadata);
+		return UI5Plugin.getInstance().fileReader.getCache(FileReader.CacheType.Metadata);
 	}
 
 	private _writeCache() {
 		const cache = JSON.stringify(namespaceDesignTimes);
-		FileReader.setCache(FileReader.CacheType.Metadata, cache);
+		UI5Plugin.getInstance().fileReader.setCache(FileReader.CacheType.Metadata, cache);
 	}
 
 	private _getUniqueLibNames(node: SAPNode) {

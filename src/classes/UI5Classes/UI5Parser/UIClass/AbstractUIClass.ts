@@ -99,7 +99,7 @@ export abstract class AbstractUIClass implements IAbstract {
 		} else if (type === "sap.ui.core.URI") {
 			typeValues = SAPIcons.icons.map(icon => ({ text: icon, description: icon }));
 		} else if (type === "string") {
-			// const currentComponentName = FileReader.getComponentNameOfAppInCurrentWorkspaceFolder();
+			// const currentComponentName = UI5Plugin.getInstance().fileReader.getComponentNameOfAppInCurrentWorkspaceFolder();
 			// if (currentComponentName) {
 			// 	typeValues = ResourceModelData.resourceModels[currentComponentName];
 			// }

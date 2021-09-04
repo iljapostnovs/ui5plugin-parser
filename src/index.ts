@@ -1,3 +1,2 @@
-export class UI5ClassParser {
-
-}
+import { UI5Plugin } from "./UI5Plugin";
+export = UI5Plugin;

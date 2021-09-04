@@ -1,20 +1,22 @@
+import { UI5Plugin } from "../../UI5Plugin";
+import { IConfigHandler } from "../config/IConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
 import { AbstractUIClass } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
-import { FileReader } from "./FileReader";
 
 export class URLBuilder {
-	private static _URLBuilderInstance?: URLBuilder;
+	private static _URLBuilderInstance: URLBuilder;
 	private readonly _UI5Version: string;
-	private readonly _URLHost = vscode.workspace.getConfiguration("ui5.plugin").get("dataSource");
+	private readonly _URLHost;
 
-	private constructor(UI5Version: string) {
+	private constructor(UI5Version: string, configHandler: IConfigHandler) {
+		this._URLHost = configHandler.getDataSource();
 		this._UI5Version = UI5Version;
 	}
 
-	static getInstance() {
-		if (!this._URLBuilderInstance) {
-			const UI5Version: any = vscode.workspace.getConfiguration("ui5.plugin").get("ui5version");
-			this._URLBuilderInstance = new URLBuilder(UI5Version);
+	static getInstance(configHandler?: IConfigHandler) {
+		if (!this._URLBuilderInstance && configHandler) {
+			const UI5Version: any = configHandler.getUI5Version();
+			this._URLBuilderInstance = new URLBuilder(UI5Version, configHandler);
 		}
 
 		return this._URLBuilderInstance;
@@ -23,7 +25,7 @@ export class URLBuilder {
 	getMarkupUrlForClassApi(SAPClass: SAPNode | AbstractUIClass) {
 		const className = SAPClass instanceof SAPNode ? SAPClass.getName() : SAPClass instanceof AbstractUIClass ? SAPClass.className : "";
 
-		if (FileReader.getManifestForClass(className) || this._isStandardClass(className)) {
+		if (UI5Plugin.getInstance().fileReader.getManifestForClass(className) || this._isStandardClass(className)) {
 			return "";
 		}
 
@@ -31,7 +33,7 @@ export class URLBuilder {
 	}
 
 	getMarkupUrlForPropertiesApi(SAPClass: AbstractUIClass) {
-		if (FileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
+		if (UI5Plugin.getInstance().fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
 			return "";
 		}
 
@@ -39,7 +41,7 @@ export class URLBuilder {
 	}
 
 	getMarkupUrlForAggregationApi(SAPClass: AbstractUIClass) {
-		if (FileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
+		if (UI5Plugin.getInstance().fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
 			return "";
 		}
 
@@ -47,7 +49,7 @@ export class URLBuilder {
 	}
 
 	getMarkupUrlForAssociationApi(SAPClass: AbstractUIClass) {
-		if (FileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
+		if (UI5Plugin.getInstance().fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
 			return "";
 		}
 
@@ -55,7 +57,7 @@ export class URLBuilder {
 	}
 
 	getMarkupUrlForEventsApi(SAPClass: AbstractUIClass, eventName = "Events") {
-		if (FileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
+		if (UI5Plugin.getInstance().fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
 			return "";
 		}
 
@@ -65,7 +67,7 @@ export class URLBuilder {
 	getMarkupUrlForMethodApi(SAPClass: AbstractUIClass | SAPNode, methodName: string) {
 		const className = SAPClass instanceof SAPNode ? SAPClass.getName() : SAPClass instanceof AbstractUIClass ? SAPClass.className : "";
 
-		if (FileReader.getManifestForClass(className) || this._isStandardClass(className)) {
+		if (UI5Plugin.getInstance().fileReader.getManifestForClass(className) || this._isStandardClass(className)) {
 			return "";
 		}
 
@@ -75,7 +77,7 @@ export class URLBuilder {
 	getUrlForClassApi(SAPClass: SAPNode | AbstractUIClass) {
 		const className = SAPClass instanceof SAPNode ? SAPClass.getName() : SAPClass instanceof AbstractUIClass ? SAPClass.className : "";
 
-		if (FileReader.getManifestForClass(className) || this._isStandardClass(className)) {
+		if (UI5Plugin.getInstance().fileReader.getManifestForClass(className) || this._isStandardClass(className)) {
 			return "";
 		}
 
@@ -104,7 +106,7 @@ export class URLBuilder {
 
 	getUrlForMethodApi(SAPClass: AbstractUIClass | SAPNode, methodName: string) {
 		const className = SAPClass instanceof SAPNode ? SAPClass.getName() : SAPClass instanceof AbstractUIClass ? SAPClass.className : "";
-		if (FileReader.getManifestForClass(className) || this._isStandardClass(className)) {
+		if (UI5Plugin.getInstance().fileReader.getManifestForClass(className) || this._isStandardClass(className)) {
 			return "";
 		}
 

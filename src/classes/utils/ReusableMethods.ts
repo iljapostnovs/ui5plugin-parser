@@ -1,10 +1,10 @@
-import * as vscode from "vscode";
-import { ICustomClassUIMethod, CustomUIClass } from "../../UI5Classes/UI5Parser/UIClass/CustomUIClass";
+import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
+import { CustomUIClass, ICustomClassUIMethod } from "../UI5Classes/UI5Parser/UIClass/CustomUIClass";
+import { TextDocumentTransformer } from "./TextDocumentTransformer";
 
-import { TextDocumentTransformer } from "../../utils/TextDocumentTransformer";
 export class ReusableMethods {
-	static getPositionOfTheLastUIDefine(document: vscode.TextDocument) {
-		let position: vscode.Position | undefined;
+	static getPositionOfTheLastUIDefine(document: TextDocument) {
+		let position: number | undefined;
 		const UIClass = TextDocumentTransformer.toCustomUIClass(document);
 		if (UIClass) {
 			const mainFunction = UIClass.fileContent?.body[0]?.expression;
@@ -17,8 +17,9 @@ export class ReusableMethods {
 			} else {
 				insertPosition = mainFunction?.arguments[0]?.start;
 			}
-
-			position = document.positionAt(insertPosition);
+			if (insertPosition) {
+				position = insertPosition;
+			}
 		}
 
 		return position;

@@ -1,20 +1,20 @@
-import { IFieldsAndMethods, UIClassFactory } from "../../UIClassFactory";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
-import { FileReader } from "../../../utils/FileReader";
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
 import { ReusableMethods } from "../../../utils/ReusableMethods";
 import { TextDocument } from "../../abstraction/TextDocument";
+import { UI5Plugin } from "../../../../UI5Plugin";
+import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
 export class ParentMethodStrategy extends FieldPropertyMethodGetterStrategy {
 	getFieldsAndMethods(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const className = FileReader.getClassNameFromPath(document.fileName);
+		const className = UI5Plugin.getInstance().fileReader.getClassNameFromPath(document.fileName);
 		if (className) {
-			const UIClass = UIClassFactory.getUIClass(className);
+			const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 			if (UIClass instanceof CustomUIClass && UIClass.parentClassNameDotNotation) {
 				const positionAtClassBodyPropertyName = ReusableMethods.getIfPositionIsInPropertyName(UIClass, position);
 				if (positionAtClassBodyPropertyName) {
-					const fields = UIClassFactory.getClassFields(UIClass.parentClassNameDotNotation, false);
-					const methods = UIClassFactory.getClassMethods(UIClass.parentClassNameDotNotation, false);
+					const fields = UI5Plugin.getInstance().classFactory.getClassFields(UIClass.parentClassNameDotNotation, false);
+					const methods = UI5Plugin.getInstance().classFactory.getClassMethods(UIClass.parentClassNameDotNotation, false);
 					fieldsAndMethods = {
 						className: "__override__",
 						fields: fields,

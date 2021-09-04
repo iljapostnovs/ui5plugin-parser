@@ -1,18 +1,21 @@
-import * as vscode from "vscode";
-import { FileReader } from "../utils/FileReader";
 import { URLBuilder } from "../utils/URLBuilder";
 import { HTTPHandler } from "../utils/HTTPHandler";
 import { SAPNode } from "./SAPNode";
 import { UI5MetadataPreloader } from "./UI5MetadataDAO";
+import { UI5Plugin } from "../../UI5Plugin";
+import { FileReader } from "../utils/FileReader";
 interface ILooseNodeObject {
 	[key: string]: SAPNode;
 }
 
 export class SAPNodeDAO {
-	private static readonly _nodePath: string = URLBuilder.getInstance().getAPIIndexUrl();
+	static nodePath: string;
 	private _nodes: any;
 	private static readonly _SAPNodes: SAPNode[] = [];
 	private static readonly _flatSAPNodes: ILooseNodeObject = {};
+	constructor() {
+		SAPNodeDAO.nodePath = URLBuilder.getInstance().getAPIIndexUrl();
+	}
 
 	public async getAllNodes() {
 		if (SAPNodeDAO._SAPNodes.length === 0) {
@@ -55,7 +58,7 @@ export class SAPNodeDAO {
 	}
 
 	private _generateSAPNodes() {
-		const libs: any = vscode.workspace.getConfiguration("ui5.plugin").get("libsToLoad");
+		const libs: any = UI5Plugin.getInstance().configHandler.getLibsToLoad();
 		const libMap: any = {};
 		libs.forEach((lib: any) => {
 			libMap[lib] = true;
@@ -118,16 +121,16 @@ export class SAPNodeDAO {
 	}
 
 	private _getApiIndexFromCache() {
-		return FileReader.getCache(FileReader.CacheType.APIIndex);
+		return UI5Plugin.getInstance().fileReader.getCache(FileReader.CacheType.APIIndex);
 	}
 
 	private _cacheApiIndex() {
 		const cache = JSON.stringify(this._nodes);
-		FileReader.setCache(FileReader.CacheType.APIIndex, cache);
+		UI5Plugin.getInstance().fileReader.setCache(FileReader.CacheType.APIIndex, cache);
 	}
 
 	private async _fetchApiIndex() {
-		const data: any = await HTTPHandler.get(SAPNodeDAO._nodePath);
+		const data: any = await HTTPHandler.get(SAPNodeDAO.nodePath);
 		this._nodes = data;
 	}
 

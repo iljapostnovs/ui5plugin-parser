@@ -1,6 +1,6 @@
-import { FileReader, ICommentPositions, IXMLFile } from "./FileReader";
+import { ICommentPositions, IXMLFile } from "./FileReader";
 import { IUIMethod } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
-import { UIClassFactory } from "../UI5Classes/UIClassFactory";
+import { UI5Plugin } from "../../UI5Plugin";
 
 export interface ITag {
 	text: string;
@@ -51,11 +51,11 @@ export class XMLParser {
 								const result = results[0].substring(0, results[0].length - 1).split(".").slice(1);
 								if (functionCallClassName) {
 									const handlerField = result[0];
-									const responsibleClassName = FileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
+									const responsibleClassName = UI5Plugin.getInstance().fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
 									if (responsibleClassName) {
-										const fields = UIClassFactory.getClassFields(responsibleClassName);
+										const fields = UI5Plugin.getInstance().classFactory.getClassFields(responsibleClassName);
 										const field = fields.find(field => field.name === handlerField);
-										if (field && field.type && !UIClassFactory.isClassAChildOfClassB(field.type, functionCallClassName)) {
+										if (field && field.type && !UI5Plugin.getInstance().classFactory.isClassAChildOfClassB(field.type, functionCallClassName)) {
 											return false;
 										}
 									}
@@ -67,7 +67,7 @@ export class XMLParser {
 								if (results) {
 									currentEventHandlerName = eventHandlerName;
 								} else {
-									const manifest = FileReader.getManifestForClass(currentEventHandlerName);
+									const manifest = UI5Plugin.getInstance().fileReader.getManifestForClass(currentEventHandlerName);
 									if (manifest) {
 										const parts = currentEventHandlerName.split(".");
 										currentEventHandlerName = parts.pop() || "";
@@ -520,10 +520,10 @@ export class XMLParser {
 
 	private static _getClassMethodsRecursively(className: string, onlyCustomMethods = true) {
 		let methods: IUIMethod[] = [];
-		const UIClass = UIClassFactory.getUIClass(className);
+		const UIClass = UI5Plugin.getInstance().classFactory.getUIClass(className);
 		methods = UIClass.methods;
 
-		const isThisClassFromAProject = !!FileReader.getManifestForClass(UIClass.parentClassNameDotNotation);
+		const isThisClassFromAProject = !!UI5Plugin.getInstance().fileReader.getManifestForClass(UIClass.parentClassNameDotNotation);
 		if (UIClass.parentClassNameDotNotation && (!onlyCustomMethods || isThisClassFromAProject)) {
 			methods = methods.concat(this._getClassMethodsRecursively(UIClass.parentClassNameDotNotation));
 		}
