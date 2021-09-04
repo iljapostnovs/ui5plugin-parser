@@ -8,8 +8,7 @@
 		"compile": "tsc",
 		"compile-prod": "rd /s /q \"dist\" && tsc --project tsconfig-prod.json",
 		"watch": "npm run compile",
-		"lint": "tslint -p ./",
-		"publish": "npm run compile-prod && npm publish"
+		"lint": "tslint -p ./"
 	},
 	"repository": {
 		"type": "git",
