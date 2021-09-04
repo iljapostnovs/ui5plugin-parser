@@ -9,38 +9,19 @@ import { PackageConfigHandler } from "./classes/config/PackageConfigHandler";
 import { IConfigHandler } from "./classes/config/IConfigHandler";
 import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
 import { URLBuilder } from "./classes/utils/URLBuilder";
+import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
 
 interface IConstructorParams {
 	fileReader?: FileReader,
-	classFactory?: UIClassFactory,
+	classFactory?: IUIClassFactory,
 	configHandler?: IConfigHandler
 }
 
 export class UI5Plugin {
 	private static _instance?: UI5Plugin;
-	private _isInitialized = false;
 	readonly configHandler: IConfigHandler;
 
-	// get fileReader(): FileReader {
-	// 	if (!this._isInitialized) {
-	// 		throw new Error("Plugin must be initialized first");
-	// 	}
-	// 	return this.fileReader;
-	// }
-	// set fileReader(fileReader: FileReader) {
-	// 	this.fileReader = fileReader;
-	// }
-	// get classFactory(): UIClassFactory {
-	// 	if (!this._isInitialized) {
-	// 		throw new Error("Plugin must be initialized first");
-	// 	}
-	// 	return this.classFactory;
-	// }
-	// set classFactory(classFactory: UIClassFactory) {
-	// 	this.classFactory = classFactory;
-	// }
-
-	readonly classFactory: UIClassFactory;
+	readonly classFactory: IUIClassFactory;
 	readonly fileReader: FileReader;
 	private constructor(params?: IConstructorParams) {
 		const syntaxAnalyser = new AcornSyntaxAnalyzer();
@@ -63,7 +44,6 @@ export class UI5Plugin {
 	public async initialize(wsFolders = [new WorkspaceFolder(process.cwd())]) {
 		this.fileReader.globalStoragePath = path.join(process.cwd(), "./node_modules/.cache/ui5plugin");
 		await this._preloadAllNecessaryData(wsFolders);
-		this._isInitialized = true;
 	}
 
 	private async _preloadAllNecessaryData(wsFolders: WorkspaceFolder[]) {
