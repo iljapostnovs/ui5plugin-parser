@@ -10,6 +10,7 @@ import { IConfigHandler } from "./classes/config/IConfigHandler";
 import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
 import { URLBuilder } from "./classes/utils/URLBuilder";
 import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
+import { XMLParser } from "./classes/utils/XMLParser";
 
 interface IConstructorParams {
 	fileReader?: FileReader,
@@ -23,6 +24,7 @@ export class UI5Parser {
 
 	readonly classFactory: IUIClassFactory;
 	readonly fileReader: FileReader;
+	readonly XMLParser: XMLParser = XMLParser;
 	private constructor(params?: IConstructorParams) {
 		const syntaxAnalyser = new AcornSyntaxAnalyzer();
 		this.classFactory = params?.classFactory || new UIClassFactory(syntaxAnalyser);
