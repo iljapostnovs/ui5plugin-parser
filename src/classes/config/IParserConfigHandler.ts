@@ -8,7 +8,7 @@ export interface IParserConfigHandler {
 	getLibsToLoad(): string[];
 }
 
-interface IUI5ParserEntry {
+interface IUI5ParserEntryFields {
 	ui5version?: string;
 	excludeFolderPatterns?: string[];
 	dataSource?: string;
@@ -16,8 +16,8 @@ interface IUI5ParserEntry {
 	libsToLoad?: string[];
 }
 
-interface IUI5ParserEntry {
-	ui5parser?: IUI5ParserEntry
+export interface IUI5ParserEntry {
+	ui5parser?: IUI5ParserEntryFields
 }
 
 export interface IUI5PackageConfigEntry {
