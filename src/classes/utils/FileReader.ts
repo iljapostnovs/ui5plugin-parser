@@ -7,7 +7,7 @@ import { ITag, XMLParser } from "./XMLParser";
 import { ResourceModelData } from "../UI5Classes/ResourceModelData";
 import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
-import { IConfigHandler } from "../config/IConfigHandler";
+import { IParserConfigHandler } from "../config/IConfigHandler";
 import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
@@ -18,10 +18,10 @@ export class FileReader {
 	private readonly _fragmentCache: Fragments = {};
 	private readonly _UI5Version: string;
 	public globalStoragePath: string | undefined;
-	private readonly _configHandler: IConfigHandler;
+	private readonly _configHandler: IParserConfigHandler;
 	private readonly _classFactory: IUIClassFactory;
 
-	constructor(configHandler: IConfigHandler, classFactory: IUIClassFactory) {
+	constructor(configHandler: IParserConfigHandler, classFactory: IUIClassFactory) {
 		this._configHandler = configHandler;
 		this._UI5Version = configHandler.getUI5Version();
 		this._classFactory = classFactory;

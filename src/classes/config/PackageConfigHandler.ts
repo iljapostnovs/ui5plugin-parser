@@ -1,8 +1,8 @@
-import { IConfigHandler } from "./IConfigHandler";
+import { IParserConfigHandler, IUI5PackageConfigEntry } from "./IConfigHandler";
 import { join } from "path";
 
-export class PackageConfigHandler implements IConfigHandler {
-	private readonly _package: any | undefined;
+export class PackageConfigHandler implements IParserConfigHandler {
+	private readonly _package: IUI5PackageConfigEntry | undefined;
 	constructor() {
 		const packagePath = join(process.cwd(), "/package.json");
 		this._package = require(packagePath);
