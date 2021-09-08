@@ -1,12 +1,12 @@
 import { UI5Parser } from "../../UI5Parser";
-import { IParserConfigHandler } from "../config/IConfigHandler";
+import { IParserConfigHandler } from "../config/IParserConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
 import { AbstractUIClass } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
 
 export class URLBuilder {
 	private static _URLBuilderInstance: URLBuilder;
 	private readonly _UI5Version: string;
-	private readonly _URLHost;
+	private readonly _URLHost: string;
 
 	private constructor(UI5Version: string, configHandler: IParserConfigHandler) {
 		this._URLHost = configHandler.getDataSource();

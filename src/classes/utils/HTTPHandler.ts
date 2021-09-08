@@ -13,8 +13,8 @@ export class HTTPHandler {
 
 		try {
 			data = (await axios.get(uri, options)).data;
-		} catch (error: any) {
-			console.error(`Error occurred sending HTTP Request. Message: "${error.message}". Response data: "${error.response?.data}"`);
+		} catch (error) {
+			console.error(`Error occurred sending HTTP Request. Message: "${(<any>error).message}". Response data: "${(<any>error).response?.data}"`);
 			throw error;
 		}
 

@@ -6,7 +6,7 @@ import { UIClassFactory } from "./classes/UI5Classes/UIClassFactory";
 import { FileReader } from "./classes/utils/FileReader";
 import * as path from "path";
 import { PackageConfigHandler } from "./classes/config/PackageConfigHandler";
-import { IParserConfigHandler } from "./classes/config/IConfigHandler";
+import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
 import { URLBuilder } from "./classes/utils/URLBuilder";
 import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";

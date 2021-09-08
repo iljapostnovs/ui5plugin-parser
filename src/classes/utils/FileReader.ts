@@ -7,8 +7,8 @@ import { ITag, XMLParser } from "./XMLParser";
 import { ResourceModelData } from "../UI5Classes/ResourceModelData";
 import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
-import { IParserConfigHandler } from "../config/IConfigHandler";
 import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
+import { IParserConfigHandler } from "../..";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
@@ -152,8 +152,8 @@ export class FileReader {
 						content: UI5Manifest
 					};
 					this._manifests.push(UIManifest);
-				} catch (error: any) {
-					console.error(`Couldn't read manifest.json. Error message: ${error?.message || ""}`);
+				} catch (error) {
+					console.error(`Couldn't read manifest.json. Error message: ${(<Error>error).message || ""}`);
 					throw error;
 				}
 			}
@@ -321,8 +321,8 @@ export class FileReader {
 				if (className) {
 					try {
 						this._classFactory.getUIClass(className);
-					} catch (error: any) {
-						console.error(`Error parsing ${className}: ${error.message}`);
+					} catch (error) {
+						console.error(`Error parsing ${className}: ${(<Error>error).message}`);
 					}
 				}
 			});

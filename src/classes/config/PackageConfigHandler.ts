@@ -1,4 +1,4 @@
-import { IParserConfigHandler, IUI5PackageConfigEntry } from "./IConfigHandler";
+import { IParserConfigHandler, IUI5PackageConfigEntry } from "./IParserConfigHandler";
 import { join } from "path";
 
 export class PackageConfigHandler implements IParserConfigHandler {
