@@ -11,7 +11,7 @@ import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolde
 
 export {
 	UI5Parser,
-	IParserConfigHandler as IConfigHandler,
+	IParserConfigHandler,
 	IUIClassFactory,
 	ISyntaxAnalyser,
 	FileReader,
