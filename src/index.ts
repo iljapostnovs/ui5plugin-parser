@@ -1,4 +1,4 @@
-import { IConfigHandler } from "./classes/config/IConfigHandler";
+import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
 import { ISyntaxAnalyser } from "./classes/UI5Classes/JSParser/ISyntaxAnalyser";
 import { UI5Parser } from "./UI5Parser";
@@ -11,7 +11,7 @@ import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolde
 
 export {
 	UI5Parser,
-	IConfigHandler,
+	IParserConfigHandler,
 	IUIClassFactory,
 	ISyntaxAnalyser,
 	FileReader,

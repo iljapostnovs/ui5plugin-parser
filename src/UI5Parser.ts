@@ -6,7 +6,7 @@ import { UIClassFactory } from "./classes/UI5Classes/UIClassFactory";
 import { FileReader } from "./classes/utils/FileReader";
 import * as path from "path";
 import { PackageConfigHandler } from "./classes/config/PackageConfigHandler";
-import { IConfigHandler } from "./classes/config/IConfigHandler";
+import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
 import { URLBuilder } from "./classes/utils/URLBuilder";
 import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
@@ -16,12 +16,12 @@ import { ISyntaxAnalyser } from ".";
 interface IConstructorParams {
 	fileReader?: FileReader,
 	classFactory?: IUIClassFactory,
-	configHandler?: IConfigHandler
+	configHandler?: IParserConfigHandler
 }
 
 export class UI5Parser {
 	private static _instance?: UI5Parser;
-	readonly configHandler: IConfigHandler;
+	readonly configHandler: IParserConfigHandler;
 
 	readonly classFactory: IUIClassFactory;
 	readonly fileReader: FileReader;
