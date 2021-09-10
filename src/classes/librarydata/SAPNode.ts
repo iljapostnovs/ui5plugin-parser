@@ -38,7 +38,7 @@ export class SAPNode {
 	}
 
 	public getIsDeprecated() {
-		return this.node.bIsDeprecated;
+		return this.node.bIsDeprecated || this.node.deprecated;
 	}
 
 	public getFields() {

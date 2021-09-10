@@ -80,10 +80,15 @@ export class StandardUIClass extends AbstractUIClass {
 				this._fullAssociations();
 				this._fillConstructor();
 				this._fillInterfaces();
+				this._fillDeprecated();
 
 				this._enrichWithXmlnsProperties();
 			}
 		}
+	}
+	private _fillDeprecated() {
+		const SAPNode = this._findSAPNode(this.className);
+		this.deprecated = SAPNode?.getIsDeprecated() || false;
 	}
 
 	private _addFieldsAndMethodsForFioriElements(className: string) {
