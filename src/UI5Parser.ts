@@ -45,8 +45,8 @@ export class UI5Parser {
 		return UI5Parser._instance;
 	}
 
-	public async initialize(wsFolders = [new WorkspaceFolder(process.cwd())]) {
-		this.fileReader.globalStoragePath = path.join(process.cwd(), "./node_modules/.cache/ui5plugin");
+	public async initialize(wsFolders = [new WorkspaceFolder(process.cwd())], globalStoragePath = path.join(__dirname, "./node_modules/.cache/ui5plugin")) {
+		this.fileReader.globalStoragePath = globalStoragePath;
 		await this._preloadAllNecessaryData(wsFolders);
 	}
 
