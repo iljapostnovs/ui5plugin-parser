@@ -77,6 +77,7 @@ export abstract class AbstractUIClass implements IAbstract {
 	public associations: IUIAssociation[] = [];
 	public interfaces: string[] = [];
 	public parentClassNameDotNotation = "";
+	public deprecated = false;
 
 	constructor(className: string) {
 		this.className = className;
