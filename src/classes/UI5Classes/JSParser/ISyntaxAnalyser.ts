@@ -22,6 +22,7 @@ export interface ISyntaxAnalyser {
 	findAcornNode(nodes: any[], position: number): any;
 	findClassNameForStack(stack: any[], currentClassName: string, primaryClassName?: string, clearStack?: boolean): string;
 	expandAllContent(node: any, content?: any[]): any[];
+	findMethodHierarchically(className: string, methodName: string): IUIMethod | undefined;
 	getEventHandlerDataFromJSClass(className: string, eventHandlerName: string): { className: string, eventName: string, node: any } | undefined;
 
 }
