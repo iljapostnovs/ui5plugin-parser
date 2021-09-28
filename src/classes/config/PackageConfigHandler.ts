@@ -5,7 +5,11 @@ export class PackageConfigHandler implements IParserConfigHandler {
 	private readonly _package: IUI5PackageConfigEntry | undefined;
 	constructor() {
 		const packagePath = join(process.cwd(), "/package.json");
-		this._package = require(packagePath);
+		try {
+			this._package = require(packagePath);
+		} catch (error) {
+			this._package = {};
+		}
 	}
 
 	getUI5Version() {
