@@ -3,8 +3,7 @@ import { join } from "path";
 
 export class PackageConfigHandler implements IParserConfigHandler {
 	private readonly _package: IUI5PackageConfigEntry | undefined;
-	constructor() {
-		const packagePath = join(process.cwd(), "/package.json");
+	constructor(packagePath = join(process.cwd(), "/package.json")) {
 		try {
 			this._package = require(packagePath);
 		} catch (error) {

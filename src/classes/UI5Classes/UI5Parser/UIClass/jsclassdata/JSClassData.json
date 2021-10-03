@@ -16,7 +16,8 @@
 				"visibility": "public",
 				"owner": "Promise",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "catch",
@@ -33,7 +34,8 @@
 				"visibility": "public",
 				"owner": "Promise",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "finally",
@@ -50,7 +52,8 @@
 				"visibility": "public",
 				"owner": "Promise",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "all",
@@ -67,7 +70,8 @@
 				"visibility": "public",
 				"owner": "Promise",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			}
 		],
 		"fields": []
@@ -89,7 +93,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "copyWithin",
@@ -118,7 +123,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "entries",
@@ -128,7 +134,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "every",
@@ -151,7 +158,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "fill",
@@ -180,7 +188,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "filter",
@@ -203,7 +212,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "find",
@@ -226,7 +236,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "findIndex",
@@ -249,7 +260,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "flat",
@@ -266,7 +278,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "flatMap",
@@ -289,7 +302,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "forEach",
@@ -312,7 +326,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "includes",
@@ -335,7 +350,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "isArray",
@@ -352,7 +368,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "indexOf",
@@ -375,7 +392,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "join",
@@ -392,7 +410,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "keys",
@@ -402,7 +421,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "lastIndexOf",
@@ -425,7 +445,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "map",
@@ -448,7 +469,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "pop",
@@ -458,7 +480,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "push",
@@ -475,7 +498,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "reduce",
@@ -498,7 +522,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "reduceRight",
@@ -521,7 +546,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "reverse",
@@ -531,7 +557,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "shift",
@@ -541,7 +568,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "slice",
@@ -564,7 +592,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "some",
@@ -587,7 +616,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "sort",
@@ -604,7 +634,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "splice",
@@ -627,7 +658,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "unshift",
@@ -644,7 +676,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "values",
@@ -654,7 +687,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			}
 		],
 		"fields": [
@@ -665,7 +699,8 @@
 				"visibility": "public",
 				"owner": "Array",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			}
 		]
 	},
@@ -686,7 +721,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "includes",
@@ -709,7 +745,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "endsWith",
@@ -732,7 +769,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "indexOf",
@@ -755,7 +793,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "slice",
@@ -778,7 +817,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "replace",
@@ -801,7 +841,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "replaceAll",
@@ -824,7 +865,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "split",
@@ -847,7 +889,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "substring",
@@ -870,7 +913,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "toUpperCase",
@@ -880,7 +924,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "toLowerCase",
@@ -890,7 +935,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "trim",
@@ -900,7 +946,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "trimEnd",
@@ -910,7 +957,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			},
 			{
 				"name": "trimStart",
@@ -920,7 +968,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			}
 		],
 		"fields": [
@@ -931,7 +980,8 @@
 				"visibility": "public",
 				"owner": "String",
 				"abstract": false,
-				"static": false
+				"static": false,
+				"deprecated": false
 			}
 		]
 	}

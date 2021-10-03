@@ -945,7 +945,8 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 									visibility: field.visibility,
 									owner: UIClass.className,
 									static: field.static,
-									abstract: field.abstract
+									abstract: field.abstract,
+									deprecated: false
 								});
 							}
 						}

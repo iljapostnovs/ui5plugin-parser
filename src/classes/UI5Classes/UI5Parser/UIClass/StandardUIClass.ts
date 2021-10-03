@@ -126,7 +126,8 @@ export class StandardUIClass extends AbstractUIClass {
 						isFromParent: false,
 						owner: this.className,
 						abstract: false,
-						static: false
+						static: false,
+						deprecated: method.deprecated || method.bIsDeprecated
 					};
 
 					return standardMethod;
@@ -144,7 +145,8 @@ export class StandardUIClass extends AbstractUIClass {
 					visibility: "public",
 					owner: this.className,
 					abstract: false,
-					static: false
+					static: false,
+					deprecated: false
 				}];
 			}
 		}
@@ -199,7 +201,8 @@ export class StandardUIClass extends AbstractUIClass {
 				visibility: method.visibility,
 				owner: this.className,
 				abstract: false,
-				static: false
+				static: false,
+				deprecated: method.deprecated || method.bIsDeprecated
 			};
 
 			this._removeFirstArgumentIfItIsEvent(classMethod);
@@ -285,7 +288,7 @@ export class StandardUIClass extends AbstractUIClass {
 
 	private _fillFields() {
 		const SAPNode = this._findSAPNode(this.className);
-		this.fields = SAPNode?.getFields().reduce((accumulator: IUIField[], { name, type, description, visibility }: any) => {
+		this.fields = SAPNode?.getFields().reduce((accumulator: IUIField[], { name, type, description, visibility, deprecated }: any) => {
 			const additionalDescription = this._generateAdditionalDescriptionFrom(type);
 			accumulator.push({
 				name: name,
@@ -294,7 +297,8 @@ export class StandardUIClass extends AbstractUIClass {
 				visibility: visibility,
 				owner: this.className,
 				abstract: false,
-				static: false
+				static: false,
+				deprecated: deprecated
 			});
 			return accumulator;
 		}, []) || [];
@@ -454,7 +458,8 @@ export class StandardUIClass extends AbstractUIClass {
 				visibility: "public",
 				owner: this.className,
 				abstract: false,
-				static: false
+				static: false,
+				deprecated: false
 			});
 		}
 	}

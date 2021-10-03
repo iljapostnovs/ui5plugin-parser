@@ -45,11 +45,8 @@ export class SAPNode {
 		const metadata = this.getMetadata();
 		const rawMetadata = metadata?.getRawMetadata();
 		const fields = rawMetadata?.properties?.filter((field: any) =>
-			!field.deprecatedText &&
-			(
-				field.visibility === "public" ||
-				field.visibility === "protected"
-			)
+			field.visibility === "public" ||
+			field.visibility === "protected"
 		) || [];
 		fields.forEach((field: any) => {
 			field.name = field.name.replace(rawMetadata?.name + "." || "", "");
@@ -62,6 +59,7 @@ export class SAPNode {
 				field.type = node.name || "string";
 				field.name = node.name.replace(`${this.node.type || this.node.name}.`, "");
 				field.description = node.description || ""
+				field.deprecated = node.deprecated || node.bIsDeprecated || false
 				return field;
 			});
 			fields.push(...nodeFields);

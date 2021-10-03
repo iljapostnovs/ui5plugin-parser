@@ -7,6 +7,7 @@ import LineColumn = require("line-column");
 import { UI5Parser } from "../../../../UI5Parser";
 import { IViewsAndFragments } from "../../interfaces/IUIClassFactory";
 import { ISyntaxAnalyser } from "../../JSParser/ISyntaxAnalyser";
+import { ICacheable } from "../../abstraction/ICacheable";
 const acornLoose = require("acorn-loose");
 
 interface IUIDefine {
@@ -59,7 +60,7 @@ export interface IViewsAndFragmentsCache extends IViewsAndFragments {
 		includeParents: boolean
 	}
 }
-export class CustomUIClass extends AbstractUIClass {
+export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	public methods: ICustomClassUIMethod[] = [];
 	public fields: ICustomClassUIField[] = [];
 	public classText = "";
@@ -74,6 +75,7 @@ export class CustomUIClass extends AbstractUIClass {
 	public classFSPath: string | undefined;
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
+	private readonly _cache: ILooseObject = {};
 
 	constructor(className: string, syntaxAnalyser: ISyntaxAnalyser, documentText?: string) {
 		super(className);
@@ -90,6 +92,14 @@ export class CustomUIClass extends AbstractUIClass {
 		this._enrichMethodParamsWithHungarianNotation();
 		this._fillIsAbstract();
 		this._enrichVariablesWithJSDocTypesAndVisibility();
+	}
+
+	setCache<Type>(cacheName: string, cacheValue: Type) {
+		this._cache[cacheName] = cacheValue;
+	}
+
+	getCache<Type>(cacheName: string): Type {
+		return <Type>this._cache[cacheName];
 	}
 
 	getMembers(): ICustomMember[] {
@@ -506,7 +516,8 @@ export class CustomUIClass extends AbstractUIClass {
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
-						abstract: false
+						abstract: false,
+						deprecated: false
 					};
 					this.methods.push(method);
 				} else if (property.value?.type === "Identifier" || property.value?.type === "Literal") {
@@ -519,7 +530,8 @@ export class CustomUIClass extends AbstractUIClass {
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
-						abstract: false
+						abstract: false,
+						deprecated: false
 					});
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "ObjectExpression") {
@@ -533,7 +545,8 @@ export class CustomUIClass extends AbstractUIClass {
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
-						abstract: false
+						abstract: false,
+						deprecated: false
 					});
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "MemberExpression") {
@@ -546,7 +559,8 @@ export class CustomUIClass extends AbstractUIClass {
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
-						abstract: false
+						abstract: false,
+						deprecated: false
 					});
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "ArrayExpression") {
@@ -559,7 +573,8 @@ export class CustomUIClass extends AbstractUIClass {
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
-						abstract: false
+						abstract: false,
+						deprecated: false
 					});
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "NewExpression") {
@@ -572,7 +587,8 @@ export class CustomUIClass extends AbstractUIClass {
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
-						abstract: false
+						abstract: false,
+						deprecated: false
 					});
 					this.acornMethodsAndFields.push(property);
 				}
@@ -596,7 +612,8 @@ export class CustomUIClass extends AbstractUIClass {
 									owner: this.className,
 									memberPropertyNode: node.left.property,
 									static: false,
-									abstract: false
+									abstract: false,
+									deprecated: false
 								});
 							}
 						}
@@ -624,7 +641,8 @@ export class CustomUIClass extends AbstractUIClass {
 				visibility: "public",
 				owner: this.className,
 				static: false,
-				abstract: false
+				abstract: false,
+				deprecated: false
 			});
 		}
 
@@ -725,7 +743,8 @@ export class CustomUIClass extends AbstractUIClass {
 						owner: this.className,
 						memberPropertyNode: node.expression.left.property,
 						static: isStatic,
-						abstract: false
+						abstract: false,
+						deprecated: false
 					};
 					this.methods.push(method);
 				} else if (isField) {
@@ -738,7 +757,8 @@ export class CustomUIClass extends AbstractUIClass {
 						owner: this.className,
 						memberPropertyNode: node.expression.left.property,
 						static: isStatic,
-						abstract: false
+						abstract: false,
+						deprecated: false
 					});
 				}
 			});
@@ -814,7 +834,8 @@ export class CustomUIClass extends AbstractUIClass {
 				isEventHandler: false,
 				owner: this.className,
 				static: false,
-				abstract: false
+				abstract: false,
+				deprecated: false
 			});
 
 			aMethods.push({
@@ -831,7 +852,8 @@ export class CustomUIClass extends AbstractUIClass {
 				isEventHandler: false,
 				owner: this.className,
 				static: false,
-				abstract: false
+				abstract: false,
+				deprecated: false
 			});
 		});
 	}
@@ -970,7 +992,8 @@ export class CustomUIClass extends AbstractUIClass {
 					isEventHandler: false,
 					owner: this.className,
 					static: false,
-					abstract: false
+					abstract: false,
+					deprecated: false
 				});
 			});
 
@@ -1028,7 +1051,8 @@ export class CustomUIClass extends AbstractUIClass {
 					isEventHandler: false,
 					owner: this.className,
 					static: false,
-					abstract: false
+					abstract: false,
+					deprecated: false
 				});
 			});
 		});
@@ -1096,7 +1120,8 @@ export class CustomUIClass extends AbstractUIClass {
 					isEventHandler: false,
 					owner: this.className,
 					static: false,
-					abstract: false
+					abstract: false,
+					deprecated: false
 				});
 			});
 
@@ -1345,10 +1370,11 @@ export class CustomUIClass extends AbstractUIClass {
 				const ui5ignored = comment.jsdoc?.tags?.find((tag: any) => tag.tag === "ui5ignore");
 				const isAbstract = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "abstract");
 				const isStatic = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "static");
+				const isDeprecated = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "deprecated");
 				const visibilityDoc = comment.jsdoc?.tags?.find((tag: any) => {
 					return visibility.includes(tag.tag);
 				});
-				if (typeDoc || visibilityDoc || ui5ignored || isAbstract || isStatic) {
+				if (typeDoc || visibilityDoc || ui5ignored || isAbstract || isStatic || isDeprecated) {
 					const lineDifference = comment.loc.end.line - comment.loc.start.line;
 					const nextLine = comment.loc.start.line + lineDifference + 1;
 					const indexOfBottomLine = classLineColumn.toIndex({
@@ -1363,7 +1389,7 @@ export class CustomUIClass extends AbstractUIClass {
 						}
 					}
 
-					if (typeDoc || visibilityDoc || ui5ignored || isAbstract || isStatic) {
+					if (typeDoc || visibilityDoc || ui5ignored || isAbstract || isStatic || isDeprecated) {
 						const assignmentExpression = this.syntaxAnalyser.getAcornAssignmentExpressionAtIndex(this, indexOfBottomLine);
 						if (assignmentExpression) {
 							const leftNode = assignmentExpression.left;
@@ -1383,6 +1409,9 @@ export class CustomUIClass extends AbstractUIClass {
 									}
 									if (ui5ignored) {
 										member.ui5ignored = true;
+									}
+									if (isDeprecated) {
+										member.deprecated = true;
 									}
 									if (isAbstract) {
 										member.abstract = true;
