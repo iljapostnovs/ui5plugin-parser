@@ -10,6 +10,7 @@ import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
 import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
 import { IParserConfigHandler } from "../..";
 import { IFileReader } from "./IFileReader";
+import { ICacheable } from "../UI5Classes/abstraction/ICacheable";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
@@ -38,6 +39,7 @@ export class FileReader implements IFileReader {
 				this._viewCache[viewName].fsPath = fsPath;
 				this._viewCache[viewName].fragments = this.getFragmentsFromXMLDocumentText(viewContent);
 				this._viewCache[viewName].XMLParserData = undefined;
+				(this._viewCache[viewName] as any)._cache = {};
 			} else {
 				this._viewCache[viewName] = {
 					controllerName: this.getControllerNameFromView(viewContent) || "",
@@ -45,8 +47,15 @@ export class FileReader implements IFileReader {
 					name: viewName || "",
 					content: viewContent,
 					fsPath: fsPath,
-					fragments: this.getFragmentsFromXMLDocumentText(viewContent)
+					fragments: this.getFragmentsFromXMLDocumentText(viewContent),
+					getCache: function <Type>(cacheName: string) {
+						return <Type>(this as any)._cache[cacheName];
+					},
+					setCache: function <Type>(cacheName: string, cacheValue: Type) {
+						(this as any)._cache[cacheName] = cacheValue;
+					}
 				};
+				(this._viewCache[viewName] as any)._cache = {};
 			}
 		}
 	}
@@ -61,14 +70,22 @@ export class FileReader implements IFileReader {
 				this._fragmentCache[fragmentName].idClassMap = {};
 				this._fragmentCache[fragmentName].fragments = this.getFragmentsFromXMLDocumentText(text);
 				this._fragmentCache[fragmentName].XMLParserData = undefined;
+				(this._fragmentCache[fragmentName] as any)._cache = {};
 			} else {
 				this._fragmentCache[fragmentName] = {
 					content: text,
 					fsPath: fsPath,
 					name: fragmentName,
 					idClassMap: {},
-					fragments: this.getFragmentsFromXMLDocumentText(text)
+					fragments: this.getFragmentsFromXMLDocumentText(text),
+					getCache: function <Type>(cacheName: string) {
+						return <Type>(this as any)._cache[cacheName];
+					},
+					setCache: function <Type>(cacheName: string, cacheValue: Type) {
+						(this as any)._cache[cacheName] = cacheValue;
+					}
 				};
+				(this._fragmentCache[fragmentName] as any)._cache = {};
 			}
 		}
 	}
@@ -765,7 +782,7 @@ export interface IView extends IXMLFile, IIdClassMap {
 }
 export interface IFragment extends IXMLFile, IIdClassMap {
 }
-export interface IXMLFile extends IXMLParserCacheable, IHasFragments {
+export interface IXMLFile extends IXMLParserCacheable, IHasFragments, ICacheable {
 	content: string;
 	fsPath: string;
 	name: string;
