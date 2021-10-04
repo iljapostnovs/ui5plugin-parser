@@ -1,7 +1,4 @@
-import { URLBuilder } from "../utils/URLBuilder";
-import { HTTPHandler } from "../utils/HTTPHandler";
 import { SAPNode } from "./SAPNode";
-import { UI5MetadataPreloader } from "./UI5MetadataDAO";
 import { UI5Parser } from "../../UI5Parser";
 import { FileReader } from "../utils/FileReader";
 interface ILooseNodeObject {
@@ -9,13 +6,9 @@ interface ILooseNodeObject {
 }
 
 export class SAPNodeDAO {
-	static nodePath: string;
 	private _nodes: any;
 	private static readonly _SAPNodes: SAPNode[] = [];
 	private static readonly _flatSAPNodes: ILooseNodeObject = {};
-	constructor() {
-		SAPNodeDAO.nodePath = URLBuilder.getInstance().getAPIIndexUrl();
-	}
 
 	public async getAllNodes() {
 		if (SAPNodeDAO._SAPNodes.length === 0) {
@@ -73,7 +66,9 @@ export class SAPNodeDAO {
 
 		this._recursiveFlatNodeGeneration(SAPNodeDAO._SAPNodes);
 
-		UI5MetadataPreloader.libsPreloaded.then(this._recursiveModuleAssignment.bind(this));
+		import("./UI5MetadataDAO").then(({ UI5MetadataPreloader }) => {
+			UI5MetadataPreloader.libsPreloaded.then(this._recursiveModuleAssignment.bind(this));
+		});
 	}
 
 	private _recursiveModuleAssignment() {
@@ -130,7 +125,10 @@ export class SAPNodeDAO {
 	}
 
 	private async _fetchApiIndex() {
-		const data: any = await HTTPHandler.get(SAPNodeDAO.nodePath);
+		const { URLBuilder } = await import("../utils/URLBuilder");
+		const { HTTPHandler } = await import("../utils/HTTPHandler");
+		const path = URLBuilder.getInstance().getAPIIndexUrl();
+		const data: any = await HTTPHandler.get(path);
 		this._nodes = data;
 	}
 
