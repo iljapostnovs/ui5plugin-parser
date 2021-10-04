@@ -1,5 +1,5 @@
 import { WorkspaceFolder, TextDocument } from "../..";
-import { IView, IXMLFile, IFragment, IUIManifest, IManifestPaths } from "./FileReader";
+import { IView, IXMLFile, IFragment, IUIManifest, IManifestPaths, FileReader } from "./FileReader";
 
 export interface IFileReader {
 	globalStoragePath: string | undefined
@@ -38,4 +38,9 @@ export interface IFileReader {
 	removeView(viewName: string): void
 	replaceFragmentNames(oldName: string, newName: string): void
 	getManifestForClass(className: string): IUIManifest | undefined
+	getXMLFile(className: string, fileType?: string): IXMLFile | undefined
+	getDocumentTextFromCustomClassName(className: string, isFragment?: boolean): string | undefined
+	getClassFSPathFromClassName(className: string, isFragment?: boolean): string | undefined
+	setCache(cacheType: FileReader.CacheType, cache: string): void
+	getCache(cacheType: FileReader.CacheType): any
 }
