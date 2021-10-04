@@ -22,6 +22,7 @@ export interface IStatic {
 export interface IMember extends IName, IAbstract, IStatic, IVisibility {
 	description: string;
 	owner: string;
+	deprecated: boolean;
 }
 
 export interface IVisibility {

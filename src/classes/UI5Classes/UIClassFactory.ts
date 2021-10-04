@@ -37,7 +37,8 @@ export class UIClassFactory implements IUIClassFactory {
 				type: property.type,
 				abstract: false,
 				owner: className,
-				static: false
+				static: false,
+				deprecated: false
 			}
 		});
 		this._UIClasses[className] = typeDefClass;

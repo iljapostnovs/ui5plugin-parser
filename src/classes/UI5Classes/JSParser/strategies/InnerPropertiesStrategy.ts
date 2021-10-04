@@ -98,7 +98,8 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 											visibility: "public",
 											owner: "",
 											abstract: false,
-											static: false
+											static: false,
+											deprecated: false
 										};
 									})
 								};
@@ -125,7 +126,8 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 										visibility: "public",
 										owner: "",
 										abstract: false,
-										static: false
+										static: false,
+										deprecated: false
 									};
 								})
 							};
@@ -155,7 +157,8 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 								visibility: "public",
 								owner: "",
 								abstract: false,
-								static: false
+								static: false,
+								deprecated: false
 							};
 						})
 					};
@@ -259,7 +262,8 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 			visibility: property.visibility,
 			owner: "",
 			abstract: false,
-			static: false
+			static: false,
+			deprecated: false
 		})));
 
 		if (UIClass.parentClassNameDotNotation) {

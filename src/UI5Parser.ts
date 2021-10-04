@@ -1,20 +1,15 @@
-import { SAPNodeDAO } from "./classes/librarydata/SAPNodeDAO";
-import { UI5MetadataPreloader } from "./classes/librarydata/UI5MetadataDAO";
 import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
-import { SAPIcons } from "./classes/UI5Classes/SAPIcons";
 import { UIClassFactory } from "./classes/UI5Classes/UIClassFactory";
 import { FileReader } from "./classes/utils/FileReader";
 import * as path from "path";
 import { PackageConfigHandler } from "./classes/config/PackageConfigHandler";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
-import { URLBuilder } from "./classes/utils/URLBuilder";
 import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
-import { XMLParser } from "./classes/utils/XMLParser";
-import { ISyntaxAnalyser } from ".";
+import { IFileReader, ISyntaxAnalyser } from ".";
 
 interface IConstructorParams {
-	fileReader?: FileReader,
+	fileReader?: IFileReader,
 	classFactory?: IUIClassFactory,
 	configHandler?: IParserConfigHandler
 }
@@ -24,15 +19,16 @@ export class UI5Parser {
 	readonly configHandler: IParserConfigHandler;
 
 	readonly classFactory: IUIClassFactory;
-	readonly fileReader: FileReader;
+	readonly fileReader: IFileReader;
 	readonly syntaxAnalyser: ISyntaxAnalyser;
-	readonly XMLParser: XMLParser = XMLParser;
 	private constructor(params?: IConstructorParams) {
 		this.syntaxAnalyser = new AcornSyntaxAnalyzer();
 		this.classFactory = params?.classFactory || new UIClassFactory(this.syntaxAnalyser);
 		this.configHandler = params?.configHandler || new PackageConfigHandler();
 		this.fileReader = params?.fileReader || new FileReader(this.configHandler, this.classFactory);
-		URLBuilder.getInstance(this.configHandler);
+		import("./classes/utils/URLBuilder").then(({ URLBuilder }) => {
+			URLBuilder.getInstance(this.configHandler);
+		});
 
 		return this;
 	}
@@ -57,10 +53,12 @@ export class UI5Parser {
 	}
 
 	private async _preloadUI5Metadata() {
+		const { SAPNodeDAO } = await import("./classes/librarydata/SAPNodeDAO");
 		const _nodeDAO = new SAPNodeDAO();
 		const SAPNodes = await _nodeDAO.getAllNodes();
-
-		const metadataPreloader: UI5MetadataPreloader = new UI5MetadataPreloader(SAPNodes);
+		const { SAPIcons } = await import("./classes/UI5Classes/SAPIcons");
+		const { UI5MetadataPreloader } = await import("./classes/librarydata/UI5MetadataDAO");
+		const metadataPreloader = new UI5MetadataPreloader(SAPNodes);
 		await Promise.all([
 			metadataPreloader.preloadLibs(),
 			SAPIcons.preloadIcons()
