@@ -9,10 +9,11 @@ import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
 import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
 import { IParserConfigHandler } from "../..";
+import { IFileReader } from "./IFileReader";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
-export class FileReader {
+export class FileReader implements IFileReader {
 	private _manifests: IUIManifest[] = [];
 	private readonly _viewCache: IViews = {};
 	private readonly _fragmentCache: Fragments = {};
@@ -745,13 +746,13 @@ export namespace FileReader {
 	}
 }
 
-interface IUIManifest {
+export interface IUIManifest {
 	fsPath: string;
 	componentName: string;
 	content: any;
 }
 
-interface IManifestPaths {
+export interface IManifestPaths {
 	fsPath: string;
 }
 
