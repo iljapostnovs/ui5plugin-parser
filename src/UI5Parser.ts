@@ -26,9 +26,6 @@ export class UI5Parser {
 		this.classFactory = params?.classFactory || new UIClassFactory(this.syntaxAnalyser);
 		this.configHandler = params?.configHandler || new PackageConfigHandler();
 		this.fileReader = params?.fileReader || new FileReader(this.configHandler, this.classFactory);
-		import("./classes/utils/URLBuilder").then(({ URLBuilder }) => {
-			URLBuilder.getInstance(this.configHandler);
-		});
 
 		return this;
 	}
@@ -53,6 +50,8 @@ export class UI5Parser {
 	}
 
 	private async _preloadUI5Metadata() {
+		const { URLBuilder } = await import("./classes/utils/URLBuilder");
+		URLBuilder.getInstance(this.configHandler);
 		const { SAPNodeDAO } = await import("./classes/librarydata/SAPNodeDAO");
 		const _nodeDAO = new SAPNodeDAO();
 		const SAPNodes = await _nodeDAO.getAllNodes();
