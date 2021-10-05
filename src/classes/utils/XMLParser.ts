@@ -267,17 +267,13 @@ export class XMLParser {
 				result = regExp.exec(document.content);
 			}
 
-			let i = 0;
-			while (i < document.content.length) {
-				comments[i] = true;
-				i++;
-			}
+			comments = new Array(document.content.length).fill(true);
 
 			commentResults.forEach(commentResult => {
 				const indexBegin = commentResult.index;
 				const indexEnd = indexBegin + commentResult[0].length;
 
-				for (let i = indexBegin; i <= indexEnd; i++) {
+				for (let i = indexBegin; i < indexEnd; i++) {
 					comments[i] = false;
 				}
 			});
@@ -587,7 +583,7 @@ export class XMLParser {
 		const tags: ITag[] = [];
 
 		while (i < XMLText.length) {
-			const thisIsTagEnd = XMLText[i] === ">" && !XMLParser.getIfPositionIsInString(XMLFile, i);
+			const thisIsTagEnd = XMLText[i] === ">" && !XMLParser.getIfPositionIsInString(XMLFile, i) && XMLParser.getIfPositionIsNotInComments(XMLFile, i + 1);
 			if (thisIsTagEnd) {
 				const indexOfTagBegining = this._getTagBeginingIndex(XMLFile, i);
 				tags.push({
@@ -650,7 +646,7 @@ export class XMLParser {
 		let i = position;
 		const XMLText = XMLFile.content;
 
-		while (i > 0 && (XMLText[i] !== "<" || XMLParser.getIfPositionIsInString(XMLFile, i))) {
+		while (i > 0 && (XMLText[i] !== "<" || XMLParser.getIfPositionIsInString(XMLFile, i) || !this.getIfPositionIsNotInComments(XMLFile, i - 1))) {
 			i--;
 		}
 

@@ -116,6 +116,10 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			if (!innerNode) {
 				innerNode = this.findAcornNode(node.params, position);
 			}
+		} else if (node.type === "Property") {
+			if (node.value) {
+				innerNode = this.findAcornNode([node.value], position);
+			}
 		} else if (node.type === "UnaryExpression") {
 			if (node.argument) {
 				innerNode = this.findAcornNode([node.argument], position);
@@ -1142,6 +1146,8 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			if (node.left) {
 				innerNodes.push(node.left);
 			}
+		} else if (node.type === "Property") {
+			innerNodes.push(node.value);
 		} else if (node.type === "ObjectExpression") {
 			innerNodes = node.properties.map((declaration: any) => declaration.value);
 		} else if (node.type === "FunctionDeclaration" || node.type === "FunctionExpression" || node.type === "ArrowFunctionExpression") {
