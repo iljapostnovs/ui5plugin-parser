@@ -83,6 +83,8 @@ export class StandardUIClass extends AbstractUIClass {
 				this._fillDeprecated();
 
 				this._enrichWithXmlnsProperties();
+			} else if (className === "sap.ui.core.FragmentDefinition") {
+				this._enrichWithXmlnsProperties();
 			}
 		}
 	}
