@@ -1,7 +1,7 @@
-import { IParserConfigHandler, IUI5PackageConfigEntry } from "./IParserConfigHandler";
+import { IParserConfigHandler } from "./IParserConfigHandler";
 import { join } from "path";
 
-export class PackageConfigHandler implements IParserConfigHandler {
+export class PackageParserConfigHandler implements IParserConfigHandler {
 	private readonly _package: IUI5PackageConfigEntry | undefined;
 	constructor(packagePath = join(process.cwd(), "/package.json")) {
 		try {
@@ -49,4 +49,20 @@ export class PackageConfigHandler implements IParserConfigHandler {
 			"sap.suite.ui.microchart"
 		].concat(additionalLibsToLoad);
 	}
+}
+
+export interface IUI5ParserEntryFields {
+	ui5version?: string;
+	excludeFolderPatterns?: string[];
+	dataSource?: string;
+	rejectUnauthorized?: boolean;
+	libsToLoad?: string[];
+}
+
+export interface IUI5ParserEntry {
+	ui5parser?: IUI5ParserEntryFields
+}
+
+export interface IUI5PackageConfigEntry {
+	ui5?: IUI5ParserEntry
 }
