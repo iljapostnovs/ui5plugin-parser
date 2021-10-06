@@ -15,9 +15,9 @@ await parser.initialize();
 It is possible to pass parameters to getInstance method, its signature allowes to pass an object which implements such an interface:
 ```ts
 interface IConstructorParams {
-    fileReader?: IFileReader;
-    classFactory?: IUIClassFactory;
-    configHandler?: IParserConfigHandler;
+  fileReader?: IFileReader;
+  classFactory?: IUIClassFactory;
+  configHandler?: IParserConfigHandler;
 }
 ```
 The only parameter which theoretically could be interesting to anybody is configHandler.
@@ -25,11 +25,11 @@ It is possible to implement ```IParserConfigHandler``` interface and provide you
 IParserConfigHandler looks as follows:
 ```ts
 interface IParserConfigHandler {
-    getUI5Version(): string;
-    getExcludeFolderPatterns(): string[];
-    getDataSource(): string;
-    getRejectUnauthorized(): boolean;
-    getLibsToLoad(): string[];
+  getUI5Version(): string;
+  getExcludeFolderPatterns(): string[];
+  getDataSource(): string;
+  getRejectUnauthorized(): boolean;
+  getLibsToLoad(): string[];
 }
 ```
 
