@@ -47,17 +47,17 @@ By default parser uses PackageParserConfigHandler, which reads the data from ```
 PackageParserConfigHandler uses ```IUI5PackageConfigEntry``` interface in order to get the config.
 ```ts
 interface IUI5PackageConfigEntry {
-	ui5?: IUI5ParserEntry
+  ui5?: IUI5ParserEntry
 }
 interface IUI5ParserEntry {
-	ui5parser?: IUI5ParserEntryFields
+  ui5parser?: IUI5ParserEntryFields
 }
 interface IUI5ParserEntryFields {
-	ui5version?: string;
-	excludeFolderPatterns?: string[];
-	dataSource?: string;
-	rejectUnauthorized?: boolean;
-	libsToLoad?: string[];
+  ui5version?: string;
+  excludeFolderPatterns?: string[];
+  dataSource?: string;
+  rejectUnauthorized?: boolean;
+  libsToLoad?: string[];
 }
 ```
 
@@ -65,33 +65,33 @@ interface IUI5ParserEntryFields {
 Default package.json config looks as follows:
 ```json
 {
-	"ui5": {
-		"ui5parser": {
-			"ui5version": "1.60.10",
-			"excludeFolderPatterns": [
-				"**/resources/**",
-				"**/dist/**/**",
-				"**/node_modules/**"
-			],
-			"dataSource": "https://ui5.sap.com/",
-			"rejectUnauthorized": false,
-			"libsToLoad": [
-				"sap.m",
-				"sap.ui.comp",
-				"sap.f",
-				"sap.ui.core",
-				"sap.ui.commons",
-				"sap.ui.export",
-				"sap.ui.layout",
-				"sap.ui.support",
-				"sap.ui.table",
-				"sap.ui.unified",
-				"sap.ushell",
-				"sap.tnt",
-				"sap.suite.ui.microchart"
-			]
-		}
-	}
+  "ui5": {
+    "ui5parser": {
+      "ui5version": "1.60.10",
+      "excludeFolderPatterns": [
+        "**/resources/**",
+        "**/dist/**/**",
+        "**/node_modules/**"
+      ],
+      "dataSource": "https://ui5.sap.com/",
+      "rejectUnauthorized": false,
+      "libsToLoad": [
+        "sap.m",
+        "sap.ui.comp",
+        "sap.f",
+        "sap.ui.core",
+        "sap.ui.commons",
+        "sap.ui.export",
+        "sap.ui.layout",
+        "sap.ui.support",
+        "sap.ui.table",
+        "sap.ui.unified",
+        "sap.ushell",
+        "sap.tnt",
+        "sap.suite.ui.microchart"
+      ]
+    }
+  }
 }
 ```
 Theese are default values, which can be overriden.
