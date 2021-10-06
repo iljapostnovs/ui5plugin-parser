@@ -3,7 +3,7 @@ import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory
 import { ISyntaxAnalyser } from "./classes/UI5Classes/JSParser/ISyntaxAnalyser";
 import { UI5Parser } from "./UI5Parser";
 import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
-import { PackageConfigHandler } from "./classes/config/PackageConfigHandler";
+import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
 import { XMLParser } from "./classes/utils/XMLParser";
 import { TextDocument } from "./classes/UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
@@ -16,7 +16,7 @@ export {
 	IFileReader,
 	ISyntaxAnalyser,
 	AcornSyntaxAnalyzer,
-	PackageConfigHandler,
+	PackageParserConfigHandler,
 	XMLParser,
 	TextDocument,
 	WorkspaceFolder

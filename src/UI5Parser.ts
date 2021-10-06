@@ -2,7 +2,7 @@ import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolde
 import { UIClassFactory } from "./classes/UI5Classes/UIClassFactory";
 import { FileReader } from "./classes/utils/FileReader";
 import * as path from "path";
-import { PackageConfigHandler } from "./classes/config/PackageConfigHandler";
+import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
 import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
@@ -24,7 +24,7 @@ export class UI5Parser {
 	private constructor(params?: IConstructorParams) {
 		this.syntaxAnalyser = new AcornSyntaxAnalyzer();
 		this.classFactory = params?.classFactory || new UIClassFactory(this.syntaxAnalyser);
-		this.configHandler = params?.configHandler || new PackageConfigHandler();
+		this.configHandler = params?.configHandler || new PackageParserConfigHandler();
 		this.fileReader = params?.fileReader || new FileReader(this.configHandler, this.classFactory);
 
 		return this;
