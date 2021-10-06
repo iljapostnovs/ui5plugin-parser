@@ -7,8 +7,8 @@ Primarely used by ui5plugin-linter package and Visual Studio Code SAPUI5 Extensi
 Parser is a singleton, so you should get an instance first and initialize right away.
 Initialization process reads the metadata of standard SAPUI5 classes and parses all projects in CWD (Current working directory).
 ```ts
-	const parser = UI5Parser.getInstance();
-	await parser.initialize();
+const parser = UI5Parser.getInstance();
+await parser.initialize();
 ```
 
 ### Constructor
