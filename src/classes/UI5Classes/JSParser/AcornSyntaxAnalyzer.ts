@@ -39,7 +39,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return fieldsAndMethods;
 	}
 
-	public findInnerNode(node: any, position: number) {
+	public findInnerNode(node: any, position: number): any | undefined {
 		let innerNode: any;
 		if (node.type === "VariableDeclaration") {
 			const declaration = this.findAcornNode(node.declarations, position - 1);
@@ -130,7 +130,12 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			node.type === "ForStatement" ||
 			node.type === "ForInStatement"
 		) {
-			innerNode = this.findAcornNode([node.body], position) || this.findAcornNode([node.test], position);
+			if (node.body) {
+				innerNode = this.findAcornNode([node.body], position);
+			}
+			if (!innerNode && node.test) {
+				innerNode = this.findAcornNode([node.test], position);
+			}
 		}
 
 		return innerNode;
