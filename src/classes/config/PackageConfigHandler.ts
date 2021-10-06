@@ -32,7 +32,8 @@ export class PackageConfigHandler implements IParserConfigHandler {
 	}
 
 	getLibsToLoad() {
-		return this._package?.ui5?.ui5parser?.libsToLoad || [
+		const additionalLibsToLoad = this._package?.ui5?.ui5parser?.libsToLoad || [];
+		return [
 			"sap.m",
 			"sap.ui.comp",
 			"sap.f",
@@ -46,6 +47,6 @@ export class PackageConfigHandler implements IParserConfigHandler {
 			"sap.ushell",
 			"sap.tnt",
 			"sap.suite.ui.microchart"
-		];
+		].concat(additionalLibsToLoad);
 	}
 }
