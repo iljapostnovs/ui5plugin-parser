@@ -11,6 +11,7 @@ import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
 import { IParserConfigHandler } from "../..";
 import { IFileReader } from "./IFileReader";
 import { ICacheable } from "../UI5Classes/abstraction/ICacheable";
+import { trueCasePathSync } from "true-case-path";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
@@ -98,7 +99,10 @@ export class FileReader implements IFileReader {
 		let documentText;
 		const classPath = this.getClassFSPathFromClassName(className, isFragment);
 		if (classPath) {
-			documentText = fs.readFileSync(classPath, "utf8");
+			const truePath = trueCasePathSync(classPath);
+			if (truePath === classPath) {
+				documentText = fs.readFileSync(classPath, "utf8");
+			}
 		}
 
 		return documentText;

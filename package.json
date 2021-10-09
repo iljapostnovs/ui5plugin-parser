@@ -1,6 +1,6 @@
 {
 	"name": "ui5plugin-parser",
-	"version": "0.5.2",
+	"version": "0.5.3",
 	"description": "UI5 Class parser",
 	"main": "dist/index.js",
 	"scripts": {
@@ -45,6 +45,7 @@
 		"comment-parser": "^1.2.4",
 		"fast-xml-parser": "^3.20.3",
 		"glob": "^7.2.0",
-		"line-column": "^1.0.2"
+		"line-column": "^1.0.2",
+		"true-case-path": "^2.2.1"
 	}
 }
