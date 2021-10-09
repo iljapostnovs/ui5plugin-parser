@@ -45,7 +45,6 @@
 		"comment-parser": "^1.2.4",
 		"fast-xml-parser": "^3.20.3",
 		"glob": "^7.2.0",
-		"line-column": "^1.0.2",
-		"true-case-path": "^2.2.1"
+		"line-column": "^1.0.2"
 	}
 }
