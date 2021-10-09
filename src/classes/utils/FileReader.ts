@@ -97,11 +97,25 @@ export class FileReader implements IFileReader {
 	public getDocumentTextFromCustomClassName(className: string, isFragment?: boolean) {
 		let documentText;
 		const classPath = this.getClassFSPathFromClassName(className, isFragment);
-		if (classPath) {
+		if (classPath && this._checkIfFileExistsCaseSensitive(classPath)) {
 			documentText = fs.readFileSync(classPath, "utf8");
 		}
 
 		return documentText;
+	}
+
+	private _checkIfFileExistsCaseSensitive(filepath: string): boolean {
+		const directoryName = path.dirname(filepath)
+		if (directoryName === path.dirname(directoryName)) {
+			return true;
+		}
+
+		const fileNames = fs.readdirSync(directoryName)
+		if (fileNames.indexOf(path.basename(filepath)) === -1) {
+			return false;
+		}
+
+		return this._checkIfFileExistsCaseSensitive(directoryName)
 	}
 
 	public getClassFSPathFromClassName(className: string, isFragment?: boolean) {
