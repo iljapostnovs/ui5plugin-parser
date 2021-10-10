@@ -1,11 +1,17 @@
 import { IParserConfigHandler } from "./IParserConfigHandler";
 import { join } from "path";
+import * as fs from "fs";
 
 export class PackageParserConfigHandler implements IParserConfigHandler {
+	static readonly packageCache: { [key: string]: IUI5PackageConfigEntry } = {};
 	private readonly _package: IUI5PackageConfigEntry | undefined;
 	constructor(packagePath = join(process.cwd(), "/package.json")) {
 		try {
-			this._package = require(packagePath);
+			if (PackageParserConfigHandler.packageCache[packagePath]) {
+				this._package = PackageParserConfigHandler.packageCache[packagePath];
+			} else {
+				this._package = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+			}
 		} catch (error) {
 			this._package = {};
 		}
