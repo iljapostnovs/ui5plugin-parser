@@ -4,13 +4,14 @@ import * as fs from "fs";
 
 export class PackageParserConfigHandler implements IParserConfigHandler {
 	static readonly packageCache: { [key: string]: IUI5PackageConfigEntry } = {};
-	private readonly _package: IUI5PackageConfigEntry | undefined;
+	private readonly _package: IUI5PackageConfigEntry;
 	constructor(packagePath = join(process.cwd(), "/package.json")) {
 		try {
 			if (PackageParserConfigHandler.packageCache[packagePath]) {
 				this._package = PackageParserConfigHandler.packageCache[packagePath];
 			} else {
-				this._package = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+				this._package = JSON.parse(fs.readFileSync(packagePath, "utf8")) || {};
+				PackageParserConfigHandler.packageCache[packagePath] = this._package;
 			}
 		} catch (error) {
 			this._package = {};
