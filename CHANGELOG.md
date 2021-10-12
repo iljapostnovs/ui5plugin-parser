@@ -1,3 +1,6 @@
+## 0.5.8 (12-10-2021)
+* Bugfix for finding type of the fields  if it is given in jsdoc
+
 ## 0.5.7 (12-10-2021)
 * Fix error on clear cache
 
