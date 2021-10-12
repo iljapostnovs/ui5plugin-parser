@@ -46,7 +46,8 @@ export class UI5Parser {
 
 	public clearCache(globalStoragePath = path.join(__dirname, "./node_modules/.cache/ui5plugin")) {
 		fs.rmSync(globalStoragePath, {
-			force: true
+			force: true,
+			recursive: true
 		});
 	}
 
