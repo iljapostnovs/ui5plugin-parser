@@ -1,3 +1,6 @@
+## 0.5.6 (12-10-2021)
+* Added possibility to clear cache
+
 ## 0.5.5 (11-10-2021)
 * Cache bugfixes
 
