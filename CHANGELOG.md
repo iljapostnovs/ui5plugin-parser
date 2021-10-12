@@ -1,3 +1,6 @@
+## 0.5.7 (12-10-2021)
+* Fix error on clear cache
+
 ## 0.5.6 (12-10-2021)
 * Added possibility to clear cache
 
