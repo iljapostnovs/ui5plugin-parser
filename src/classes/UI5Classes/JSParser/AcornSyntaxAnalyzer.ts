@@ -907,6 +907,9 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	}
 
 	public findFieldType(field: IUIField, className: string, includeParentMethods = true, clearStack = false) {
+		if (![undefined, "any"].includes(field.type)) {
+			return;
+		}
 		const UIClass = UI5Parser.getInstance().classFactory.getUIClass(className);
 		if (clearStack) {
 			this.declarationStack = [];
