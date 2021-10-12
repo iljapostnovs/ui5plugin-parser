@@ -2,6 +2,7 @@ import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolde
 import { UIClassFactory } from "./classes/UI5Classes/UIClassFactory";
 import { FileReader } from "./classes/utils/FileReader";
 import * as path from "path";
+import * as fs from "fs";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
@@ -41,6 +42,12 @@ export class UI5Parser {
 	public async initialize(wsFolders = [new WorkspaceFolder(process.cwd())], globalStoragePath = path.join(__dirname, "./node_modules/.cache/ui5plugin")) {
 		this.fileReader.globalStoragePath = globalStoragePath;
 		await this._preloadAllNecessaryData(wsFolders);
+	}
+
+	public clearCache(globalStoragePath = path.join(__dirname, "./node_modules/.cache/ui5plugin")) {
+		fs.rmSync(globalStoragePath, {
+			force: true
+		});
 	}
 
 	private async _preloadAllNecessaryData(wsFolders: WorkspaceFolder[]) {
