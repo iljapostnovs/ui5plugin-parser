@@ -99,7 +99,7 @@ export class SAPNode {
 	public getMethods(): any[] {
 		const metadata = this.getMetadata();
 		const rawMetadata: any = metadata?.getRawMetadata();
-		return rawMetadata?.methods?.filter((method: any) => !method.deprecated && (method.visibility === "public" || method.visibility === "protected")) || [];
+		return rawMetadata?.methods?.filter((method: any) => ["public", "protected"].includes(method.visibility)) || [];
 	}
 
 	public getMetadata() {

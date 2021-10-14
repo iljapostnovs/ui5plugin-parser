@@ -1,3 +1,6 @@
+## 0.5.11 (14-10-2021)
+* Remove filter for deprecated methods
+
 ## 0.5.10 (14-10-2021)
 * Remove console.log for "Libs are preloaded"
 * Add deprecated jsdoc support for class members
