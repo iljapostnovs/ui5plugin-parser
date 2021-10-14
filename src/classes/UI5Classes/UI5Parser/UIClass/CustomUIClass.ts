@@ -174,6 +174,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					const isIgnored = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "ui5ignore");
 					const isAbstract = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "abstract");
 					const isStatic = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "static");
+					const isDeprecated = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "deprecated");
 
 					const UIMethod = this.methods.find(method => method.name === methodName);
 					if (paramTags && UIMethod) {
@@ -208,6 +209,10 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 							UIMethod.static = true;
 						}
 
+						if (isDeprecated) {
+							UIMethod.deprecated = true;
+						}
+
 						if (paramTags) {
 							UIMethod.params.forEach((param, i) => {
 								const jsDocParam = paramTags[i];
@@ -234,6 +239,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					const ui5ignored = comment.jsdoc?.tags?.find((tag: any) => tag.tag === "ui5ignore");
 					const isAbstract = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "abstract");
 					const isStatic = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "static");
+					const isDeprecated = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "deprecated");
 					const UIField = this.fields.find(field => field.name === fieldName);
 					if (UIField) {
 						if (isPrivate || isPublic || isProtected) {
@@ -258,6 +264,10 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 						if (isStatic) {
 							UIField.static = true;
+						}
+
+						if (isDeprecated) {
+							UIField.deprecated = true;
 						}
 					}
 				}
