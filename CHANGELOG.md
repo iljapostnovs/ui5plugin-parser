@@ -1,3 +1,6 @@
+## 0.5.10 (14-10-2021)
+* Remove console.log for "Libs are preloaded"
+
 ## 0.5.9 (14-10-2021)
 * Bugfix for parsing byId method
 

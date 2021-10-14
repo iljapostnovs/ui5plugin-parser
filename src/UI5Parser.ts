@@ -70,6 +70,5 @@ export class UI5Parser {
 			metadataPreloader.preloadLibs(),
 			SAPIcons.preloadIcons()
 		]);
-		console.log("Libs are preloaded");
 	}
 }
