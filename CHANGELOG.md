@@ -1,3 +1,7 @@
+## 0.5.10 (14-10-2021)
+* Remove console.log for "Libs are preloaded"
+* Add deprecated jsdoc support for class members
+
 ## 0.5.9 (14-10-2021)
 * Bugfix for parsing byId method
 
