@@ -1,3 +1,6 @@
+## 0.5.9 (14-10-2021)
+* Bugfix for parsing byId method
+
 ## 0.5.8 (12-10-2021)
 * Bugfix for finding type of the fields  if it is given in jsdoc
 
