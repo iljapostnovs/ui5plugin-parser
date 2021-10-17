@@ -1,3 +1,6 @@
+## 0.5.12 (17-10-2021)
+* Bugfixes
+
 ## 0.5.11 (14-10-2021)
 * Remove filter for deprecated methods
 
