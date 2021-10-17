@@ -286,7 +286,8 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 					}
 
 					if (!className) {
-						stack = [];
+						//if clear stack, there is no type for such cases as mData.Calories.map(mCaloryData => new CaloryData(mCaloryData));
+						// stack = [];
 					}
 				}
 			} else if (currentNode.type === "Identifier") {
