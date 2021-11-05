@@ -1,5 +1,8 @@
+## 0.5.15 (05-11-2021)
+* Bugfixes
+
 ## 0.5.14 (05-11-2021)
-* Add RegExp parsing
+* Add regexp parsing
 
 ## 0.5.13 (05-11-2021)
 * Add template literal support
