@@ -1266,7 +1266,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			} else if (node?.type === "Literal") {
 				if (node?.value === null) {
 					className = "any";
-				} if (node?.regex) {
+				} else if (node?.regex) {
 					className = "RegExp";
 				} else {
 					className = typeof node.value;
