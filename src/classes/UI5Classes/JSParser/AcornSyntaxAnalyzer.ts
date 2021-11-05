@@ -124,6 +124,10 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			if (node.argument) {
 				innerNode = this.findAcornNode([node.argument], position);
 			}
+		} else if (node.type === "TemplateLiteral") {
+			if (node.expressions) {
+				innerNode = this.findAcornNode(node.expressions, position);
+			}
 		} else if (
 			node.type === "WhileStatement" ||
 			node.type === "DoWhileStatement" ||
@@ -1168,6 +1172,10 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		} else if (node.type === "UnaryExpression") {
 			if (node.argument) {
 				innerNodes.push(node.argument);
+			}
+		} else if (node.type === "TemplateLiteral") {
+			if (node.expressions) {
+				innerNodes.push(...node.expressions);
 			}
 		} else if (
 			node.type === "WhileStatement" ||

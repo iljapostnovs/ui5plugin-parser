@@ -1,3 +1,6 @@
+## 0.5.13 (05-11-2021)
+* Add template literal support
+
 ## 0.5.12 (17-10-2021)
 * Bugfixes
 
