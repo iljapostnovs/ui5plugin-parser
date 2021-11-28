@@ -50,9 +50,8 @@ export class XMLParser {
 							const results = new RegExp(`((\\..*?\\.)|("))${eventHandlerName}("|'|\\(|$)`).exec(currentEventHandlerName);
 							const filteredResults = results && results[0].split(".").filter(result => !!result);
 							if (filteredResults?.length === 2) {
-								const result = filteredResults[0].substring(0, filteredResults[0].length - 1).split(".").slice(1);
 								if (functionCallClassName) {
-									const handlerField = result[0];
+									const handlerField = filteredResults[0];
 									const responsibleClassName = UI5Parser.getInstance().fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
 									if (responsibleClassName) {
 										const fields = UI5Parser.getInstance().classFactory.getClassFields(responsibleClassName);
@@ -62,7 +61,7 @@ export class XMLParser {
 										}
 									}
 								}
-								currentEventHandlerName = result[1];
+								currentEventHandlerName = filteredResults[1].substring(0, filteredResults[1].length - 1); //removes "'"
 							} else if (filteredResults && filteredResults.length > 2) {
 								//maybe static classes e.g. com.test.formatter.test
 								const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(currentEventHandlerName);
@@ -781,7 +780,7 @@ export class XMLParser {
 			eventHandlerName = attributeValue;
 		}
 
-		return eventHandlerName;
+		return eventHandlerName || "";
 	}
 
 }
