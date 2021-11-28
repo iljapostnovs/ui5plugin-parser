@@ -1,3 +1,6 @@
+## 0.5.17 (29-11-2021)
+*  Minor bugfixes
+
 ## 0.5.16 (28-11-2021)
 * Improve reference finder
 
