@@ -46,9 +46,11 @@ export class XMLParser {
 						let currentEventHandlerName = this.getEventHandlerNameFromAttributeValue(attributeValue);
 
 						if (currentEventHandlerName !== eventHandlerName && currentEventHandlerName.includes(eventHandlerName)) {
-							const results = new RegExp(`((\\..*?\\.)|("))${eventHandlerName}("|'|\\()`).exec(currentEventHandlerName);
-							if (results && results[0].split(".").length > 2) {
-								const result = results[0].substring(0, results[0].length - 1).split(".").slice(1);
+							//TODO: refactoring
+							const results = new RegExp(`((\\..*?\\.)|("))${eventHandlerName}("|'|\\(|$)`).exec(currentEventHandlerName);
+							const filteredResults = results && results[0].split(".").filter(result => !!result);
+							if (filteredResults?.length === 2) {
+								const result = filteredResults[0].substring(0, filteredResults[0].length - 1).split(".").slice(1);
 								if (functionCallClassName) {
 									const handlerField = result[0];
 									const responsibleClassName = UI5Parser.getInstance().fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
@@ -61,6 +63,16 @@ export class XMLParser {
 									}
 								}
 								currentEventHandlerName = result[1];
+							} else if (filteredResults && filteredResults.length > 2) {
+								//maybe static classes e.g. com.test.formatter.test
+								const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(currentEventHandlerName);
+								if (manifest) {
+									const parts = currentEventHandlerName.split(".");
+									const staticEventHandlerName = parts.pop() || "";
+									if (parts.length > 0 && functionCallClassName && parts.join(".") === functionCallClassName) {
+										currentEventHandlerName = staticEventHandlerName;
+									}
+								}
 							}
 							if (currentEventHandlerName !== eventHandlerName && currentEventHandlerName.includes(eventHandlerName)) {
 								const results = new RegExp(`(\\.|"|')${eventHandlerName}("|'|\\()`).test(currentEventHandlerName);
@@ -68,11 +80,34 @@ export class XMLParser {
 									currentEventHandlerName = eventHandlerName;
 								} else {
 									const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(currentEventHandlerName);
+									const parts = currentEventHandlerName.split(".");
 									if (manifest) {
-										const parts = currentEventHandlerName.split(".");
 										currentEventHandlerName = parts.pop() || "";
+										if (parts.length > 0 && functionCallClassName && parts.join(".") !== functionCallClassName) {
+											return false;
+										}
+									} else if (parts.length === 2) {
+										//for require in XML
+										const allTags = XMLParser.getAllTags(viewOrFragment);
+										const requireAttributes = this.getAllAttributesWithRequire(allTags);
+										const className = parts.shift();
+										const methodName = parts.shift();
+										const classPath = className && this.getClassPathFromRequire(requireAttributes, className);
+										if (classPath) {
+											const className = classPath.replace(/\//g, ".");
+											if (functionCallClassName && methodName && functionCallClassName !== className) {
+												return false;
+											} else if (methodName) {
+												currentEventHandlerName = methodName;
+											}
+										}
 									}
 								}
+							}
+						} else if (functionCallClassName && currentEventHandlerName === eventHandlerName) {
+							const responsibleClassName = UI5Parser.getInstance().fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
+							if (responsibleClassName !== functionCallClassName) {
+								return false;
 							}
 						}
 
@@ -86,6 +121,33 @@ export class XMLParser {
 		}
 
 		return tagAndAttributes;
+	}
+	static getClassPathFromRequire(attributesWithRequire: string[], className: string) {
+		return attributesWithRequire.reduce((classPath: string, attribute) => {
+			if (!classPath) {
+				const attributeValue = XMLParser.getAttributeNameAndValue(attribute).attributeValue;
+				try {
+					const evaluatedValue = eval(`(${attributeValue})`);
+					if (typeof evaluatedValue === "object") {
+						classPath = evaluatedValue[className];
+					}
+				} catch (oError) {
+					classPath = "";
+				}
+			}
+			return classPath;
+		}, "");
+	}
+
+	static getAllAttributesWithRequire(tags: ITag[]) {
+		return tags.reduce((requireTags: string[], tag) => {
+			const attributes = XMLParser.getAttributesOfTheTag(tag);
+			const requireAttributes = attributes?.filter(attribute => XMLParser.getAttributeNameAndValue(attribute).attributeName.endsWith(":require"));
+			if (requireAttributes && requireAttributes.length > 0) {
+				requireTags.push(...requireAttributes);
+			}
+			return requireTags;
+		}, []);
 	}
 
 	static getAllIDsInCurrentView(XMLFile: IXMLFile) {
