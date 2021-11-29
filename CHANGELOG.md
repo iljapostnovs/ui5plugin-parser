@@ -1,3 +1,6 @@
+## 0.5.18 (29-11-2021)
+*  Make event handler params respect jsdocs
+
 ## 0.5.17 (29-11-2021)
 *  Minor bugfixes
 

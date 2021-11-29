@@ -331,7 +331,7 @@ export class UIClassFactory implements IUIClassFactory {
 						if (isMethodMentionedInTheView) {
 							method.mentionedInTheXMLDocument = true;
 							method.isEventHandler = true;
-							if (method?.acornNode?.params && method?.acornNode?.params[0]) {
+							if (method?.acornNode?.params && method?.acornNode?.params[0] && !method.acornNode.params[0].jsType) {
 								method.acornNode.params[0].jsType = "sap.ui.base.Event";
 							}
 						}
@@ -525,7 +525,7 @@ export class UIClassFactory implements IUIClassFactory {
 			const eventData = this.syntaxAnalyser.getEventHandlerDataFromJSClass(UIClass.className, method.name);
 			if (eventData) {
 				method.isEventHandler = true;
-				if (method?.acornNode?.params && method?.acornNode?.params[0]) {
+				if (method?.acornNode?.params && method?.acornNode?.params[0] && !method.acornNode.params[0].jsType) {
 					method.acornNode.params[0].jsType = "sap.ui.base.Event";
 				}
 			}
