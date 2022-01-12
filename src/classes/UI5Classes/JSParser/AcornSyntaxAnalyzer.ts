@@ -746,7 +746,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	private _getClassNameIfNodeIsParamOfArrayMethod(identifierNode: any, currentClassName: string) {
 		let className = "";
 
-		if (!this.declarationStack.includes(identifierNode)) {
+		if (!this.declarationStack.includes(identifierNode) || (this.declarationStack.length === 1 && this.declarationStack[0] === identifierNode)) {
 			const UIClass = UI5Parser.getInstance().classFactory.getUIClass(currentClassName);
 			this.declarationStack.push(identifierNode);
 			if (UIClass instanceof CustomUIClass) {
