@@ -1,3 +1,6 @@
+## 0.5.19 (12-01-2021)
+*  Acorn syntax analyzer bugfix
+
 ## 0.5.18 (29-11-2021)
 *  Make event handler params respect jsdocs
 
