@@ -1,3 +1,6 @@
+## 0.5.20 (13-04-2021)
+*  Add cmd: support for XML Parser
+
 ## 0.5.19 (12-01-2021)
 *  Acorn syntax analyzer bugfix
 

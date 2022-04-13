@@ -445,7 +445,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				if (method.acornNode) {
 					const content = this.expandAllContent(method.acornNode);
 					const memberExpression: any = content.find(
-						content => this._checkOfThisIsCorrectSetModel(content, modelName, className)
+						content => this._checkOfThisIsCorrectSetModel(content, modelName, method.owner || className)
 					);
 					methodFound = !!memberExpression;
 				}
@@ -456,7 +456,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			if (method?.acornNode) {
 				const content = this.expandAllContent(method.acornNode);
 				const memberExpression = content.find(content =>
-					this._checkOfThisIsCorrectSetModel(content, modelName, className)
+					this._checkOfThisIsCorrectSetModel(content, modelName, method.owner || className)
 				);
 				if (memberExpression && memberExpression.arguments[0]) {
 					this.declarationStack = stackCopy;
@@ -464,8 +464,8 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
 					if (!this.declarationStack.includes(model)) {
 						this.declarationStack.push(model);
-						const stack = strategy.getStackOfNodesForPosition(className, model.end, true);
-						modelClassName = this.findClassNameForStack(stack, className) || "";
+						const stack = strategy.getStackOfNodesForPosition(method.owner || className, model.end, true);
+						modelClassName = this.findClassNameForStack(stack, method.owner || className) || "";
 					} else {
 						this.declarationStack = [];
 					}
@@ -479,7 +479,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		let bIsSetModelMethod =
 			content.type === "CallExpression" &&
 			content.callee?.property?.name === "setModel" &&
-			(content.arguments[1] && content.arguments[1].value || "") === modelName;
+			(content.arguments[1]?.value || "") === modelName;
 
 		if (bIsSetModelMethod) {
 			const position = content.callee.property.start;
