@@ -766,9 +766,6 @@ export class XMLParser {
 	public static getEventHandlerNameFromAttributeValue(attributeValue: string) {
 		let eventHandlerName = attributeValue;
 
-		if (eventHandlerName.startsWith("cmd:")) {
-			eventHandlerName = eventHandlerName.replace("cmd:", "")
-		}
 		if (eventHandlerName.startsWith(".")) {
 			eventHandlerName = eventHandlerName.replace(".", "");
 		}
