@@ -1,3 +1,6 @@
+## 0.5.21 (23-04-2021)
+*  Bugfixes for cmd: support
+
 ## 0.5.20 (13-04-2021)
 *  Add cmd: support for XML Parser
 
