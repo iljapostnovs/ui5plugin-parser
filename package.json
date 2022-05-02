@@ -1,6 +1,6 @@
 {
 	"name": "ui5plugin-parser",
-	"version": "0.5.21",
+	"version": "0.5.22",
 	"description": "UI5 Class parser",
 	"main": "dist/index.js",
 	"scripts": {
@@ -32,12 +32,12 @@
 		"@types/axios": "^0.14.0",
 		"@types/glob": "^7.2.0",
 		"@types/line-column": "^1.0.0",
-		"@types/node": "^17.0.23",
-		"@typescript-eslint/eslint-plugin": "^5.19.0",
-		"@typescript-eslint/parser": "^5.19.0",
-		"eslint": "^8.13.0",
-		"ts-loader": "^9.2.8",
-		"typescript": "^4.6.3"
+		"@types/node": "^17.0.31",
+		"@typescript-eslint/eslint-plugin": "^5.21.0",
+		"@typescript-eslint/parser": "^5.21.0",
+		"eslint": "^8.14.0",
+		"ts-loader": "^9.3.0",
+		"typescript": "^4.6.4"
 	},
 	"dependencies": {
 		"acorn-loose": "^8.3.0",
