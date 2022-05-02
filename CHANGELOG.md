@@ -1,3 +1,6 @@
+## 0.5.22 (02-05-2021)
+*  Bugfixes for parsing class metadata
+
 ## 0.5.21 (23-04-2021)
 *  Bugfixes for cmd: support
 

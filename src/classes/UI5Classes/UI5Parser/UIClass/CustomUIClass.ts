@@ -158,7 +158,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 			this.acornMethodsAndFields = this.acornMethodsAndFields.concat(methods);
 
 			methods?.forEach((method: any) => {
-				const methodName = method.key.name;
+				const methodName = method.key.name || method.key.value;
 				const params = method.value.params;
 				const comment = this.comments.find(comment => {
 					const positionDifference = method.start - comment.end;
@@ -226,7 +226,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 			});
 
 			fields.forEach((field: any) => {
-				const fieldName = field.key.name;
+				const fieldName = field.key.name || field.key.value;
 				const comment = this.comments.find(comment => {
 					const positionDifference = field.start - comment.end;
 					return positionDifference < 15 && positionDifference > 0;
@@ -512,14 +512,15 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 		if (this.acornClassBody?.properties) {
 
 			this.acornClassBody.properties.forEach((property: any) => {
+				const name = property.key?.name || property.key?.value;
 				if (property.value?.type === "FunctionExpression" || property.value?.type === "ArrowFunctionExpression") {
 					const method: ICustomClassUIMethod = {
-						name: property.key.name,
+						name: name,
 						params: this._generateParamTextForMethod(property.value.params),
 						returnType: property.returnType || property.value.async ? "Promise" : "void",
 						position: property.start,
 						description: "",
-						visibility: property.key.name?.startsWith("_") ? "private" : "public",
+						visibility: name?.startsWith("_") ? "private" : "public",
 						acornParams: property.value.params,
 						acornNode: property.value,
 						isEventHandler: false,
@@ -532,11 +533,11 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					this.methods.push(method);
 				} else if (property.value?.type === "Identifier" || property.value?.type === "Literal") {
 					this.fields.push({
-						name: property.key.name,
+						name: name,
 						type: property.jsType,
 						acornNode: property,
 						description: property.jsType || "",
-						visibility: property.key.name?.startsWith("_") ? "private" : "public",
+						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
@@ -546,12 +547,12 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "ObjectExpression") {
 					this.fields.push({
-						name: property.key.name,
+						name: name,
 						type: "map",
 						description: "map",
 						acornNode: property,
 						customData: this._generateCustomDataForObject(property.value),
-						visibility: property.key?.name?.startsWith("_") ? "private" : "public",
+						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
@@ -561,11 +562,11 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "MemberExpression") {
 					this.fields.push({
-						name: property.key.name,
+						name: name,
 						type: undefined,
 						description: "",
 						acornNode: property,
-						visibility: property.key?.name?.startsWith("_") ? "private" : "public",
+						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
@@ -575,11 +576,11 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "ArrayExpression") {
 					this.fields.push({
-						name: property.key?.name,
+						name: name,
 						type: "any[]",
 						description: "",
 						acornNode: property,
-						visibility: property.key?.name?.startsWith("_") ? "private" : "public",
+						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
@@ -589,11 +590,11 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "NewExpression") {
 					this.fields.push({
-						name: property.key?.name,
+						name: name,
 						type: undefined,
 						description: "",
 						acornNode: property,
-						visibility: property.key?.name?.startsWith("_") ? "private" : "public",
+						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
 						memberPropertyNode: property.key,
 						static: false,
@@ -875,6 +876,9 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 			returnType: string;
 		}
 		this.aggregations?.forEach(aggregation => {
+			if (!aggregation.singularName) {
+				return;
+			}
 			const aggregationWithFirstBigLetter = `${aggregation.singularName[0].toUpperCase()}${aggregation.singularName.substring(1, aggregation.singularName.length)}`;
 
 			let aMethods: method[] = [];
@@ -995,7 +999,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 			aMethods.forEach(method => {
 				additionalMethods.push({
 					name: method.name,
-					description: `Generic method from ${aggregation.name} aggregation`,
+					description: `Generic method from "${aggregation.name}" aggregation`,
 					params: method.params,
 					returnType: method.returnType,
 					visibility: aggregation.visibility,
@@ -1149,11 +1153,11 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 	private _fillUI5Metadata() {
 		if (this.acornClassBody?.properties) {
-			const metadataExists = !!this.acornClassBody.properties?.find((property: any) => property.key?.name === "metadata");
-			const customMetadataExists = !!this.acornClassBody.properties?.find((property: any) => property.key?.name === "customMetadata");
+			const metadataExists = !!this.acornClassBody.properties?.find((property: any) => property.key?.name === "metadata" || property.key?.value === "metadata");
+			const customMetadataExists = !!this.acornClassBody.properties?.find((property: any) => property.key?.name === "customMetadata" || property.key?.value === "customMetadata");
 
 			if (metadataExists) {
-				const metadataObject = this.acornClassBody.properties?.find((property: any) => property.key?.name === "metadata");
+				const metadataObject = this.acornClassBody.properties?.find((property: any) => property.key?.name === "metadata" || property.key?.value === "metadata");
 
 				this._fillAggregations(metadataObject);
 				this._fillEvents(metadataObject);
@@ -1163,7 +1167,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 			}
 
 			if (customMetadataExists) {
-				const customMetadataObject = this.acornClassBody.properties?.find((property: any) => property.key?.name === "customMetadata");
+				const customMetadataObject = this.acornClassBody.properties?.find((property: any) => property.key?.name === "customMetadata" || property.key?.value === "customMetadata");
 
 				this._fillByAssociations(customMetadataObject);
 				this._fillCustomInterfaces(customMetadataObject);
@@ -1172,7 +1176,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	}
 
 	private _fillInterfaces(metadata: any) {
-		const interfaces = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "interfaces");
+		const interfaces = metadata.value?.properties?.find((metadataNode: any) => [metadataNode.key.name, metadataNode.key.value].includes("interfaces"));
 		if (interfaces) {
 			const interfaceNamesDotNotation = interfaces.value?.elements?.map((element: any) => element.value) || [];
 			this.interfaces.push(...interfaceNamesDotNotation);
@@ -1180,7 +1184,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	}
 
 	private _fillCustomInterfaces(customMetadata: any) {
-		const interfaces = customMetadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "interfaces");
+		const interfaces = customMetadata.value?.properties?.find((metadataNode: any) => [metadataNode.key.name, metadataNode.key.value].includes("interfaces"));
 		if (interfaces) {
 			const interfaceNames: string[] = interfaces.value?.elements?.map((element: any) => element.name) || [];
 			const interfaceNamesDotNotation =
@@ -1198,27 +1202,27 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	}
 
 	private _fillAggregations(metadata: any) {
-		const aggregations = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "aggregations");
+		const aggregations = metadata.value?.properties?.find((metadataNode: any) => [metadataNode.key.name, metadataNode.key.value].includes("aggregations"));
 
 		if (aggregations) {
-			this.aggregations = aggregations.value?.properties?.map((aggregationNode: any) => {
-				const aggregationName = aggregationNode.key.name;
+			this.aggregations = aggregations.value?.properties?.filter((node: any) => !!node.key.name || !!node.key.value).map((aggregationNode: any) => {
+				const aggregationName = aggregationNode.key.name || aggregationNode.key.value;
 				const aggregationProps = aggregationNode.value.properties;
 
 				let aggregationType: undefined | string = undefined;
-				const aggregationTypeProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "type");
+				const aggregationTypeProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "type" || aggregationProperty.key.value === "type");
 				if (aggregationTypeProp) {
 					aggregationType = aggregationTypeProp.value.value;
 				}
 
 				let multiple = true;
-				const multipleProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "multiple");
+				const multipleProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "multiple" || aggregationProperty.key.value === "multiple");
 				if (multipleProp) {
 					multiple = multipleProp.value.value;
 				}
 
 				let singularName = "";
-				const singularNameProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "singularName");
+				const singularNameProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "singularName" || aggregationProperty.key.value === "singularName");
 				if (singularNameProp) {
 					singularName = singularNameProp.value.value;
 				}
@@ -1227,7 +1231,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 				}
 
 				let visibility = "public";
-				const visibilityProp = aggregationProps?.find((associationProperty: any) => associationProperty.key.name === "visibility");
+				const visibilityProp = aggregationProps?.find((associationProperty: any) => associationProperty.key.name === "visibility" || associationProperty.key.value === "visibility");
 				if (visibilityProp) {
 					visibility = visibilityProp.value.value;
 				}
@@ -1247,32 +1251,31 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	}
 
 	private _fillEvents(metadata: any) {
-		const eventMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "events");
+		const eventMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "events" || metadataNode.key.value === "events");
 
 		if (eventMetadataNode) {
-
 			const events = eventMetadataNode.value?.properties;
-			this.events = events?.map((eventNode: any) => {
+			this.events = events?.filter((node: any) => !!node.key.name || !!node.key.value).map((eventNode: any) => {
 				let visibility = "public";
-				const visibilityProp = eventNode.value?.properties?.find((node: any) => node.key.name === "visibility");
+				const visibilityProp = eventNode.value?.properties?.find((node: any) => node.key.name === "visibility" || node.key.value === "visibility");
 				if (visibilityProp) {
 					visibility = visibilityProp.value.value;
 				}
 
 				let eventParams: IUIEventParam[] = [];
-				const params = eventNode.value?.properties?.find((node: any) => node.key.name === "parameters");
+				const params = eventNode.value?.properties?.find((node: any) => node.key.name === "parameters" || node.key.value === "parameters");
 				if (params) {
 					eventParams = params.value?.properties?.map((param: any) => {
-						const type = param.value?.properties?.find((param: any) => param.key.name === "type")?.value?.value || "";
+						const type = param.value?.properties?.find((param: any) => param.key.name === "type" || param.key.value === "type")?.value?.value || "";
 						const eventParam: IUIEventParam = {
-							name: param.key.name,
+							name: param.key.name || param.key.value,
 							type: type
 						};
 						return eventParam;
 					}) || [];
 				}
 				const UIEvent: IUIEvent = {
-					name: eventNode.key.name,
+					name: eventNode.key.name || eventNode.key.value,
 					description: "",
 					visibility: visibility,
 					params: eventParams
@@ -1284,23 +1287,22 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	}
 
 	private _fillProperties(metadata: any) {
-		const propertiesMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "properties");
+		const propertiesMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "properties" || metadataNode.key.value === "properties");
 
 		if (propertiesMetadataNode) {
 			const properties = propertiesMetadataNode?.value?.properties || [];
-			this.properties = properties.map((propertyNode: any) => {
-
+			this.properties = properties.filter((node: any) => !!node.key.name || !!node.key.value).map((propertyNode: any) => {
 				const propertyName = propertyNode.key.name || propertyNode.key.value;
 				const propertyProps = propertyNode.value.properties;
 
 				let propertyType: undefined | string = undefined;
-				const propertyTypeProp = propertyProps?.find((property: any) => property.key.name === "type");
+				const propertyTypeProp = propertyProps?.find((property: any) => property.key.name === "type" || property.key.value === "type");
 				if (propertyTypeProp) {
 					propertyType = propertyTypeProp.value.value;
 				}
 
 				let visibility = "public";
-				const visibilityProp = propertyProps?.find((associationProperty: any) => associationProperty.key.name === "visibility");
+				const visibilityProp = propertyProps?.find((associationProperty: any) => associationProperty.key.name === "visibility" || associationProperty.key.value === "visibility");
 				if (visibilityProp) {
 					visibility = visibilityProp.value.value;
 				}
@@ -1319,29 +1321,28 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	}
 
 	private _fillByAssociations(metadata: any) {
-		const associationMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "associations");
+		const associationMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "associations" || metadataNode.key.value === "associations");
 
 		if (associationMetadataNode) {
 			const associations = associationMetadataNode.value?.properties || [];
-			this.associations = this.associations.concat(associations.map((associationNode: any) => {
-
-				const associationName = associationNode.key.name;
+			this.associations = this.associations.concat(associations.filter((node: any) => !!node.key.name || !!node.key.value).map((associationNode: any) => {
+				const associationName = associationNode.key.name || associationNode.key.value;
 				const associationProps = associationNode.value.properties;
 
 				let associationType: undefined | string = undefined;
-				const associationTypeProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "type");
+				const associationTypeProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "type" || associationProperty.key.value === "type");
 				if (associationTypeProp) {
 					associationType = associationTypeProp.value.value;
 				}
 
 				let multiple = true;
-				const multipleProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "multiple");
+				const multipleProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "multiple" || associationProperty.key.value === "multiple");
 				if (multipleProp) {
 					multiple = multipleProp.value.value;
 				}
 
 				let singularName = "";
-				const singularNameProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "singularName");
+				const singularNameProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "singularName" || associationProperty.key.value === "singularName");
 				if (singularNameProp) {
 					singularName = singularNameProp.value.value;
 				}
@@ -1350,7 +1351,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 				}
 
 				let visibility = "public";
-				const visibilityProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "visibility");
+				const visibilityProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "visibility" || associationProperty.key.value === "visibility");
 				if (visibilityProp) {
 					visibility = visibilityProp.value.value;
 				}
