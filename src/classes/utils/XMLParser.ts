@@ -13,7 +13,8 @@ export interface IHierarchicalTag extends ITag {
 	tags: IHierarchicalTag[]
 }
 export enum PositionType {
-	InTheTagAttributes = "1",
+	InExistingAttribute = "1",
+	InNewAttribute = "7",
 	Content = "2",
 	InTheString = "3",
 	InTheClassName = "4",
@@ -534,7 +535,23 @@ export class XMLParser {
 			const positionInTheAttributes = /\s/.test(tagText);
 
 			if (positionIsInsideTheClassTag && positionInTheAttributes) {
-				positionType = PositionType.InTheTagAttributes;
+				positionType = PositionType.InExistingAttribute;
+
+				let attributeIsNew = false;
+
+				let j = currentPosition;
+				while (j < XMLText.length && XMLText[j] !== "=") {
+					j++;
+				}
+				const restOfTheAttribute = XMLText.substring(currentPosition, j);
+
+				if (/\s/.test(restOfTheAttribute)) {
+					attributeIsNew = true;
+				}
+
+				if (attributeIsNew) {
+					positionType = PositionType.InNewAttribute;
+				}
 			} else if (positionIsInsideTheClassTag) {
 				positionType = PositionType.InTheClassName;
 			} else {
