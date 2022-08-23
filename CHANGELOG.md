@@ -1,3 +1,6 @@
+## 0.5.23 (23-08-2022)
+*  Add new tag position
+
 ## 0.5.22 (02-05-2021)
 *  Bugfixes for parsing class metadata
 
