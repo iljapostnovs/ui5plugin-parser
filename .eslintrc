@@ -30,7 +30,6 @@
 		"func-call-spacing": "off",
 		"@typescript-eslint/func-call-spacing": ["error"],
 		"indent": "off",
-		"@typescript-eslint/indent": ["error", "tab"],
 		"no-empty-function": "off",
 		"@typescript-eslint/no-empty-function": ["error"],
 		"no-extra-semi": "off",

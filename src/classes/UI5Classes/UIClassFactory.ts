@@ -1,4 +1,12 @@
-import { AbstractUIClass, IUIAggregation, IUIAssociation, IUIEvent, IUIField, IUIMethod, IUIProperty } from "./UI5Parser/UIClass/AbstractUIClass";
+import {
+	AbstractUIClass,
+	IUIAggregation,
+	IUIAssociation,
+	IUIEvent,
+	IUIField,
+	IUIMethod,
+	IUIProperty
+} from "./UI5Parser/UIClass/AbstractUIClass";
 import { CustomUIClass } from "./UI5Parser/UIClass/CustomUIClass";
 import { StandardUIClass } from "./UI5Parser/UIClass/StandardUIClass";
 import { JSClass } from "./UI5Parser/UIClass/JSClass";
@@ -39,7 +47,7 @@ export class UIClassFactory implements IUIClassFactory {
 				owner: className,
 				static: false,
 				deprecated: false
-			}
+			};
 		});
 		this._UIClasses[className] = typeDefClass;
 	}
@@ -106,7 +114,6 @@ export class UIClassFactory implements IUIClassFactory {
 				this.enrichTypesInCustomClass(UIClass);
 			}
 			// console.timeEnd(`Class parsing for ${classNameDotNotation} took`);
-
 		}
 	}
 
@@ -138,7 +145,13 @@ export class UIClassFactory implements IUIClassFactory {
 	}
 
 	private _checkIfMembersAreUsedInXMLDocuments(CurrentUIClass: CustomUIClass) {
-		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(CurrentUIClass, [], true, true, true);
+		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(
+			CurrentUIClass,
+			[],
+			true,
+			true,
+			true
+		);
 		const XMLDocuments = [...viewsAndFragments.views, ...viewsAndFragments.fragments];
 		XMLDocuments.forEach(XMLDocument => {
 			CurrentUIClass.methods.forEach(method => {
@@ -208,7 +221,9 @@ export class UIClassFactory implements IUIClassFactory {
 		//remove duplicates
 		if (!returnDuplicates) {
 			methods = methods.reduce((accumulator: IUIMethod[], method: IUIMethod) => {
-				const methodInAccumulator = accumulator.find(accumulatorMethod => accumulatorMethod.name === method.name);
+				const methodInAccumulator = accumulator.find(
+					accumulatorMethod => accumulatorMethod.name === method.name
+				);
 				if (!methodInAccumulator) {
 					accumulator.push(method);
 				}
@@ -250,7 +265,9 @@ export class UIClassFactory implements IUIClassFactory {
 		if (!returnDuplicates) {
 			//remove duplicates
 			aggregations = aggregations.reduce((accumulator: IUIAggregation[], aggregation: IUIAggregation) => {
-				const aggregationInAccumulator = accumulator.find(accumulatorAggregation => accumulatorAggregation.name === aggregation.name);
+				const aggregationInAccumulator = accumulator.find(
+					accumulatorAggregation => accumulatorAggregation.name === aggregation.name
+				);
 				if (!aggregationInAccumulator) {
 					accumulator.push(aggregation);
 				}
@@ -270,7 +287,9 @@ export class UIClassFactory implements IUIClassFactory {
 		if (!returnDuplicates) {
 			//remove duplicates
 			associations = associations.reduce((accumulator: IUIAssociation[], association: IUIAssociation) => {
-				const associationInAccumulator = accumulator.find(accumulatorAssociation => accumulatorAssociation.name === association.name);
+				const associationInAccumulator = accumulator.find(
+					accumulatorAssociation => accumulatorAssociation.name === association.name
+				);
 				if (!associationInAccumulator) {
 					accumulator.push(association);
 				}
@@ -290,7 +309,9 @@ export class UIClassFactory implements IUIClassFactory {
 		if (!returnDuplicates) {
 			//remove duplicates
 			properties = properties.reduce((accumulator: IUIProperty[], property: IUIProperty) => {
-				const propertyInAccumulator = accumulator.find(accumulatorProperty => accumulatorProperty.name === property.name);
+				const propertyInAccumulator = accumulator.find(
+					accumulatorProperty => accumulatorProperty.name === property.name
+				);
 				if (!propertyInAccumulator) {
 					accumulator.push(property);
 				}
@@ -320,7 +341,13 @@ export class UIClassFactory implements IUIClassFactory {
 	}
 
 	private _enrichMethodParamsWithEventTypeFromViewsAndFragments(CurrentUIClass: CustomUIClass) {
-		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(CurrentUIClass, [], true, true, true);
+		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(
+			CurrentUIClass,
+			[],
+			true,
+			true,
+			true
+		);
 		const XMLDocuments = [...viewsAndFragments.views, ...viewsAndFragments.fragments];
 		XMLDocuments.forEach(XMLDocument => {
 			CurrentUIClass.methods.forEach(method => {
@@ -331,8 +358,8 @@ export class UIClassFactory implements IUIClassFactory {
 						if (isMethodMentionedInTheView) {
 							method.mentionedInTheXMLDocument = true;
 							method.isEventHandler = true;
-							if (method?.acornNode?.params && method?.acornNode?.params[0] && !method.acornNode.params[0].jsType) {
-								method.acornNode.params[0].jsType = "sap.ui.base.Event";
+							if (method?.node?.params && method?.node?.params[0] && !method.node.params[0].jsType) {
+								method.node.params[0].jsType = "sap.ui.base.Event";
 							}
 						}
 					}
@@ -341,7 +368,14 @@ export class UIClassFactory implements IUIClassFactory {
 		});
 	}
 
-	getViewsAndFragmentsOfControlHierarchically(CurrentUIClass: CustomUIClass, checkedClasses: string[] = [], removeDuplicates = true, includeChildren = false, includeMentioned = false, includeParents = true): IViewsAndFragments {
+	getViewsAndFragmentsOfControlHierarchically(
+		CurrentUIClass: CustomUIClass,
+		checkedClasses: string[] = [],
+		removeDuplicates = true,
+		includeChildren = false,
+		includeMentioned = false,
+		includeParents = true
+	): IViewsAndFragments {
 		if (checkedClasses.includes(CurrentUIClass.className)) {
 			return { fragments: [], views: [] };
 		}
@@ -349,10 +383,12 @@ export class UIClassFactory implements IUIClassFactory {
 		if (CurrentUIClass.relatedViewsAndFragments) {
 			const cache = CurrentUIClass.relatedViewsAndFragments.find(viewAndFragment => {
 				const flags = viewAndFragment.flags;
-				return flags.removeDuplicates === removeDuplicates &&
+				return (
+					flags.removeDuplicates === removeDuplicates &&
 					flags.includeChildren === includeChildren &&
 					flags.includeMentioned === includeMentioned &&
 					flags.includeParents === includeParents
+				);
 			});
 
 			if (cache) {
@@ -365,7 +401,11 @@ export class UIClassFactory implements IUIClassFactory {
 
 		const relatedClasses: CustomUIClass[] = [];
 		if (includeParents) {
-			const parentUIClasses = this.getAllCustomUIClasses().filter(UIClass => this.isClassAChildOfClassB(CurrentUIClass.className, UIClass.className) && CurrentUIClass !== UIClass);
+			const parentUIClasses = this.getAllCustomUIClasses().filter(
+				UIClass =>
+					this.isClassAChildOfClassB(CurrentUIClass.className, UIClass.className) &&
+					CurrentUIClass !== UIClass
+			);
 			relatedClasses.push(...parentUIClasses);
 		}
 		if (includeChildren) {
@@ -378,19 +418,31 @@ export class UIClassFactory implements IUIClassFactory {
 				relatedClasses.push(...this._getAllChildrenOfClass(importinClass));
 			});
 		}
-		const relatedViewsAndFragments = relatedClasses.reduce((accumulator: IViewsAndFragments, relatedUIClass: CustomUIClass) => {
-			const relatedFragmentsAndViews = this.getViewsAndFragmentsOfControlHierarchically(relatedUIClass, checkedClasses, false, false, includeMentioned, false);
-			accumulator.fragments = accumulator.fragments.concat(relatedFragmentsAndViews.fragments);
-			accumulator.views = accumulator.views.concat(relatedFragmentsAndViews.views);
-			return accumulator;
-		}, {
-			views: [],
-			fragments: []
-		});
+		const relatedViewsAndFragments = relatedClasses.reduce(
+			(accumulator: IViewsAndFragments, relatedUIClass: CustomUIClass) => {
+				const relatedFragmentsAndViews = this.getViewsAndFragmentsOfControlHierarchically(
+					relatedUIClass,
+					checkedClasses,
+					false,
+					false,
+					includeMentioned,
+					false
+				);
+				accumulator.fragments = accumulator.fragments.concat(relatedFragmentsAndViews.fragments);
+				accumulator.views = accumulator.views.concat(relatedFragmentsAndViews.views);
+				return accumulator;
+			},
+			{
+				views: [],
+				fragments: []
+			}
+		);
 		viewsAndFragments.fragments = viewsAndFragments.fragments.concat(relatedViewsAndFragments.fragments);
 		viewsAndFragments.views = viewsAndFragments.views.concat(relatedViewsAndFragments.views);
 		viewsAndFragments.views.forEach(view => {
-			viewsAndFragments.fragments.push(...this._getFragmentFromViewManifestExtensions(CurrentUIClass.className, view));
+			viewsAndFragments.fragments.push(
+				...this._getFragmentFromViewManifestExtensions(CurrentUIClass.className, view)
+			);
 		});
 
 		if (removeDuplicates) {
@@ -436,7 +488,6 @@ export class UIClassFactory implements IUIClassFactory {
 			}
 			return accumulator;
 		}, []);
-
 	}
 
 	getViewsAndFragmentsRelatedTo(CurrentUIClass: CustomUIClass) {
@@ -445,7 +496,9 @@ export class UIClassFactory implements IUIClassFactory {
 			fragments: []
 		};
 
-		viewsAndFragments.fragments = UI5Parser.getInstance().fileReader.getFragmentsMentionedInClass(CurrentUIClass.className);
+		viewsAndFragments.fragments = UI5Parser.getInstance().fileReader.getFragmentsMentionedInClass(
+			CurrentUIClass.className
+		);
 		const views = [];
 		const view = UI5Parser.getInstance().fileReader.getViewForController(CurrentUIClass.className);
 		if (view) {
@@ -474,26 +527,36 @@ export class UIClassFactory implements IUIClassFactory {
 
 	private _getAllClassesWhereClassIsImported(className: string) {
 		return this.getAllCustomUIClasses().filter(UIClass => {
-			return UIClass.parentClassNameDotNotation !== className && !!UIClass.UIDefine.find(UIDefine => {
-				return UIDefine.classNameDotNotation === className;
-			});
+			return (
+				UIClass.parentClassNameDotNotation !== className &&
+				!!UIClass.UIDefine.find(UIDefine => {
+					return UIDefine.classNameDotNotation === className;
+				})
+			);
 		});
 	}
 
 	private _getAllChildrenOfClass(UIClass: CustomUIClass, bFirstLevelinheritance = false) {
-		return bFirstLevelinheritance ? this.getAllCustomUIClasses().filter(CurrentUIClass => {
-			return CurrentUIClass.parentClassNameDotNotation === UIClass.className;
-		}) : this.getAllCustomUIClasses().filter(CurrentUIClass => {
-			return this.isClassAChildOfClassB(CurrentUIClass.className, UIClass.className) && UIClass.className !== CurrentUIClass.className;
-		});
+		return bFirstLevelinheritance
+			? this.getAllCustomUIClasses().filter(CurrentUIClass => {
+					return CurrentUIClass.parentClassNameDotNotation === UIClass.className;
+			})
+			: this.getAllCustomUIClasses().filter(CurrentUIClass => {
+					return (
+						this.isClassAChildOfClassB(CurrentUIClass.className, UIClass.className) &&
+						UIClass.className !== CurrentUIClass.className
+					);
+			});
 	}
 
 	public getAllCustomUIClasses(): CustomUIClass[] {
 		const allUIClasses = this.getAllExistentUIClasses();
 
-		return Object.keys(allUIClasses).filter(UIClassName => {
-			return allUIClasses[UIClassName] instanceof CustomUIClass;
-		}).map(UIClassName => allUIClasses[UIClassName] as CustomUIClass);
+		return Object.keys(allUIClasses)
+			.filter(UIClassName => {
+				return allUIClasses[UIClassName] instanceof CustomUIClass;
+			})
+			.map(UIClassName => allUIClasses[UIClassName] as CustomUIClass);
 	}
 
 	private _getFragmentFromViewManifestExtensions(className: string, view: IView) {
@@ -501,7 +564,8 @@ export class UIClassFactory implements IUIClassFactory {
 		const viewName = UI5Parser.getInstance().fileReader.getClassNameFromPath(view.fsPath);
 		if (viewName) {
 			const extensions = UI5Parser.getInstance().fileReader.getManifestExtensionsForClass(className);
-			const viewExtension = extensions && extensions["sap.ui.viewExtensions"] && extensions["sap.ui.viewExtensions"][viewName];
+			const viewExtension =
+				extensions && extensions["sap.ui.viewExtensions"] && extensions["sap.ui.viewExtensions"][viewName];
 			if (viewExtension) {
 				Object.keys(viewExtension).forEach(key => {
 					const extension = viewExtension[key];
@@ -509,7 +573,8 @@ export class UIClassFactory implements IUIClassFactory {
 						const fragmentName = extension.fragmentName;
 						const fragment = UI5Parser.getInstance().fileReader.getFragment(fragmentName);
 						if (fragment) {
-							const fragmentsInFragment: IFragment[] = UI5Parser.getInstance().fileReader.getFragmentsInXMLFile(fragment);
+							const fragmentsInFragment: IFragment[] =
+								UI5Parser.getInstance().fileReader.getFragmentsInXMLFile(fragment);
 							fragments.push(fragment, ...fragmentsInFragment);
 						}
 					}
@@ -525,8 +590,8 @@ export class UIClassFactory implements IUIClassFactory {
 			const eventData = this.syntaxAnalyser.getEventHandlerDataFromJSClass(UIClass.className, method.name);
 			if (eventData) {
 				method.isEventHandler = true;
-				if (method?.acornNode?.params && method?.acornNode?.params[0] && !method.acornNode.params[0].jsType) {
-					method.acornNode.params[0].jsType = "sap.ui.base.Event";
+				if (method?.node?.params && method?.node?.params[0] && !method.node.params[0].jsType) {
+					method.node.params[0].jsType = "sap.ui.base.Event";
 				}
 			}
 		});
@@ -616,9 +681,12 @@ export class UIClassFactory implements IUIClassFactory {
 			oldClass.className = newName;
 
 			if (oldClass instanceof CustomUIClass) {
-				const newClassFSPath = UI5Parser.getInstance().fileReader.convertClassNameToFSPath(newName, oldClass.classFSPath?.endsWith(".controller.js"));
+				const newClassFSPath = UI5Parser.getInstance().fileReader.convertClassNameToFSPath(
+					newName,
+					oldClass.fsPath?.endsWith(".controller.js")
+				);
 				if (newClassFSPath) {
-					oldClass.classFSPath = newClassFSPath;
+					oldClass.fsPath = newClassFSPath;
 				}
 			}
 
@@ -630,7 +698,7 @@ export class UIClassFactory implements IUIClassFactory {
 			this.removeClass(oldName);
 
 			const UIClass = this._UIClasses[newName];
-			if (UIClass instanceof CustomUIClass && UIClass.classFSPath?.endsWith(".controller.js")) {
+			if (UIClass instanceof CustomUIClass && UIClass.fsPath?.endsWith(".controller.js")) {
 				const view = UI5Parser.getInstance().fileReader.getViewForController(oldName);
 				if (view) {
 					UI5Parser.getInstance().fileReader.removeView(view.name);

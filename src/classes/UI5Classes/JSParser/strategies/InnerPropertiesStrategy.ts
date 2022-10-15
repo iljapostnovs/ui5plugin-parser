@@ -192,8 +192,8 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 			const UIClass = UI5Parser.getInstance().classFactory.getUIClass(currentClassName);
 			if (UIClass instanceof CustomUIClass) {
 				const callExpressions = UIClass.methods.reduce((accumulator: any[], UIMethod) => {
-					if (UIMethod.acornNode) {
-						const callExpressions = this.syntaxAnalyser.expandAllContent(UIMethod.acornNode).filter((node: any) => node.type === "CallExpression");
+					if (UIMethod.node) {
+						const callExpressions = this.syntaxAnalyser.expandAllContent(UIMethod.node).filter((node: any) => node.type === "CallExpression");
 						accumulator.push(...callExpressions);
 					}
 					return accumulator;
