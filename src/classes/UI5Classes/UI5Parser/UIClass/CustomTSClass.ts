@@ -1,4 +1,4 @@
-import { ClassDeclaration, MethodDeclaration, PropertyDeclaration, SourceFile } from "ts-morph";
+import { ClassDeclaration, ConstructorDeclaration, MethodDeclaration, PropertyDeclaration, SourceFile } from "ts-morph";
 import * as ts from "typescript";
 import * as Hjson from "hjson";
 import * as path from "path";
@@ -18,6 +18,8 @@ import { UI5TSParser } from "../../../../UI5TSParser";
 export interface ICustomClassTSField extends ICustomClassField<PropertyDeclaration> {}
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ICustomClassTSMethod extends ICustomClassMethod<MethodDeclaration> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ICustomClassTSConstructor extends ICustomClassMethod<ConstructorDeclaration> {}
 
 export class CustomTSClass extends AbstractCustomClass<
 	MethodDeclaration,
@@ -36,7 +38,7 @@ export class CustomTSClass extends AbstractCustomClass<
 	protected _fillParentClassName(): void {}
 	methods: ICustomClassTSMethod[] = [];
 	fields: ICustomClassTSField[] = [];
-
+	constructors: ICustomClassTSConstructor[] = [];
 	fsPath: string;
 	readonly classText: string;
 	UIDefine: IUIDefine[] = [];
@@ -64,7 +66,8 @@ export class CustomTSClass extends AbstractCustomClass<
 			if (parentModulePath?.startsWith("sap/")) {
 				this.parentClassNameDotNotation = parentModulePath.replace(/\/|\\/g, ".");
 			} else if (parentModulePath) {
-				const parentClassName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(parentModulePath);
+				const parentClassName =
+					AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(parentModulePath);
 				this.parentClassNameDotNotation = parentClassName ?? "";
 			}
 		}
@@ -167,7 +170,6 @@ export class CustomTSClass extends AbstractCustomClass<
 	}
 
 	protected _fillMethods() {
-		const constructorDeclarations = this.node.getConstructors();
 		const methods: MethodDeclaration[] = this.node.getMethods();
 
 		const UIMethods: ICustomClassTSMethod[] = methods.map(method => {
@@ -223,13 +225,64 @@ export class CustomTSClass extends AbstractCustomClass<
 			};
 		});
 
-		const constructors: ICustomClassTSMethod[] = constructorDeclarations.map(constructor => {
+		return UIMethods;
+	}
+
+	private _modifyType(returnType: string): string {
+		if (/import\(".*?"\).default/.test(returnType)) {
+			const path = /(?<=import\(").*?(?="\).default)/.exec(returnType)?.[0];
+			const UI5Type = path
+				? AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(path)
+				: undefined;
+			if (UI5Type) {
+				returnType = UI5Type;
+			}
+		}
+		if (/import\(".*?"\)\.[a-zA-Z|$]*/.test(returnType)) {
+			const className = /(?<=import\(".*?"\)\.)[a-zA-Z|$]*/.exec(returnType)?.[0];
+			if (className) {
+				returnType = className;
+			}
+		}
+
+		return returnType;
+	}
+
+	protected _fillUI5Metadata() {
+		this.methods = this._fillMethods();
+		this.fields = this._fillFields();
+		this.constructors = this._fillConstructors();
+		this._fillUIDefine();
+
+		const metadata = this.node.getProperty("metadata");
+
+		const metadataText = metadata?.getInitializer()?.getText();
+		if (metadataText) {
+			let metadataObject: ClassInfo;
+			try {
+				metadataObject = Hjson.parse(metadataText) as ClassInfo;
+				this.properties = this._fillProperties(metadataObject);
+				this.aggregations = this._fillAggregations(metadataObject);
+				this.events = this._fillEvents(metadataObject);
+				this.associations = this._fillAssociations(metadataObject);
+				this.interfaces = this._fillInterfaces(metadataObject);
+			} catch (error: any) {
+				console.error(`Couldn't parse metadata: ${error.message}`);
+				return;
+			}
+		}
+	}
+
+	private _fillConstructors(): ICustomClassTSConstructor[] {
+		const constructorDeclarations = this.node.getConstructors();
+
+		const constructors: ICustomClassTSConstructor[] = constructorDeclarations.map(constructor => {
 			const jsDocs = constructor.getJsDocs();
 			const ui5IgnoreDoc = jsDocs.some(jsDoc => jsDoc.getTags().some(tag => tag.getTagName() === "ui5ignore"));
 			const positionStart = this._sourceFile.getLineAndColumnAtPos(constructor.getStart());
 			const positionEnd = this._sourceFile.getLineAndColumnAtPos(constructor.getEnd());
 
-			const method: ICustomClassTSMethod = {
+			const method: ICustomClassTSConstructor = {
 				ui5ignored: !!ui5IgnoreDoc,
 				owner: this.className,
 				static: false,
@@ -256,9 +309,9 @@ export class CustomTSClass extends AbstractCustomClass<
 				}),
 				name: "constructor",
 				position: constructor.getStart(),
-				node: constructor as any,
 				deprecated: jsDocs.some(jsDoc => ts.isJSDocDeprecatedTag(jsDoc.compilerNode)),
 				description: "",
+				node: constructor,
 				isEventHandler: false,
 				loc: {
 					start: {
@@ -275,51 +328,7 @@ export class CustomTSClass extends AbstractCustomClass<
 			return method;
 		});
 
-		return UIMethods.concat(constructors);
-	}
-
-	private _modifyType(returnType: string): string {
-		if (/import\(".*?"\).default/.test(returnType)) {
-			const path = /(?<=import\(").*?(?="\).default)/.exec(returnType)?.[0];
-			const UI5Type = path
-				? AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(path)
-				: undefined;
-			if (UI5Type) {
-				returnType = UI5Type;
-			}
-		}
-		if (/import\(".*?"\)\.[a-zA-Z|$]*/.test(returnType)) {
-			const className = /(?<=import\(".*?"\)\.)[a-zA-Z|$]*/.exec(returnType)?.[0];
-			if (className) {
-				returnType = className;
-			}
-		}
-
-		return returnType;
-	}
-
-	protected _fillUI5Metadata() {
-		this.methods = this._fillMethods();
-		this.fields = this._fillFields();
-		this._fillUIDefine();
-
-		const metadata = this.node.getProperty("metadata");
-
-		const metadataText = metadata?.getInitializer()?.getText();
-		if (metadataText) {
-			let metadataObject: ClassInfo;
-			try {
-				metadataObject = Hjson.parse(metadataText) as ClassInfo;
-				this.properties = this._fillProperties(metadataObject);
-				this.aggregations = this._fillAggregations(metadataObject);
-				this.events = this._fillEvents(metadataObject);
-				this.associations = this._fillAssociations(metadataObject);
-				this.interfaces = this._fillInterfaces(metadataObject);
-			} catch (error: any) {
-				console.error(`Couldn't parse metadata: ${error.message}`);
-				return;
-			}
-		}
+		return constructors;
 	}
 
 	protected _fillInterfaces(metadata: ClassInfo) {
