@@ -1,13 +1,13 @@
 import { IFragment, IView } from "../../utils/FileReader";
 import { TextDocument } from "../abstraction/TextDocument";
+import { AbstractCustomClass } from "../UI5Parser/UIClass/AbstractCustomClass";
 import { AbstractUIClass, IUIAggregation, IUIAssociation, IUIEvent, IUIField, IUIMethod, IUIProperty } from "../UI5Parser/UIClass/AbstractUIClass";
-import { CustomUIClass } from "../UI5Parser/UIClass/CustomUIClass";
 
-export interface IUIClassFactory {
+export interface IUIClassFactory<CustomClass extends AbstractCustomClass> {
 	isClassAChildOfClassB(classA: string, classB: string): boolean;
 	setNewContentForClassUsingDocument(document: TextDocument, force?: boolean): void;
 	setNewCodeForClass(classNameDotNotation: string, classFileText: string, force?: boolean): void;
-	enrichTypesInCustomClass(UIClass: CustomUIClass): void;
+	enrichTypesInCustomClass(UIClass: CustomClass): void;
 	getFieldsAndMethodsForClass(className: string, returnDuplicates?: boolean): IFieldsAndMethods;
 	getClassFields(className: string, returnDuplicates?: boolean): IUIField[];
 	getClassMethods(className: string, returnDuplicates?: boolean, methods?: IUIMethod[]): IUIMethod[];
@@ -16,14 +16,14 @@ export interface IUIClassFactory {
 	getClassAssociations(className: string, returnDuplicates?: boolean): IUIAssociation[];
 	getClassProperties(className: string, returnDuplicates?: boolean): IUIProperty[];
 	getUIClass(className: string): AbstractUIClass;
-	getAllCustomUIClasses(): CustomUIClass[];
+	getAllCustomUIClasses(): CustomClass[];
 	getAllExistentUIClasses(): IUIClassMap;
 	getDefaultModelForClass(className: string): string | undefined;
 	isMethodOverriden(className: string, methodName: string): boolean;
 	removeClass(className: string): void;
 	getParent(UIClass: AbstractUIClass): AbstractUIClass | undefined;
 	setNewNameForClass(oldPath: string, newPath: string): void;
-	getViewsAndFragmentsOfControlHierarchically(CurrentUIClass: CustomUIClass, checkedClasses?: string[], removeDuplicates?: boolean, includeChildren?: boolean, includeMentioned?: boolean, includeParents?: boolean): IViewsAndFragments
+	getViewsAndFragmentsOfControlHierarchically(CurrentUIClass: CustomClass, checkedClasses?: string[], removeDuplicates?: boolean, includeChildren?: boolean, includeMentioned?: boolean, includeParents?: boolean): IViewsAndFragments
 }
 
 export interface IUIClassMap {

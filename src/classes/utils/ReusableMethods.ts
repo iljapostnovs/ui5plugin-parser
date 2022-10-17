@@ -6,7 +6,7 @@ export class ReusableMethods {
 	static getPositionOfTheLastUIDefine(document: TextDocument) {
 		let position: number | undefined;
 		const UIClass = TextDocumentTransformer.toCustomUIClass(document);
-		if (UIClass) {
+		if (UIClass && UIClass instanceof CustomUIClass) {
 			const mainFunction = UIClass.fileContent?.body[0]?.expression;
 			const definePaths: any[] = mainFunction?.arguments[0]?.elements;
 

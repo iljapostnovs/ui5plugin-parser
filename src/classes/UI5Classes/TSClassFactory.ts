@@ -1,74 +1,41 @@
+import * as ts from "typescript";
+import { ClassDeclaration, Node, Project, SourceFile } from "ts-morph";
+import { IFragment, IView } from "../utils/FileReader";
+import { UI5TSParser } from "../../UI5TSParser";
+import { TextDocument } from "./abstraction/TextDocument";
+import { IUIClassFactory, IUIClassMap, IFieldsAndMethods, IViewsAndFragments } from "./interfaces/IUIClassFactory";
 import {
 	AbstractUIClass,
-	IUIAggregation,
-	IUIAssociation,
-	IUIEvent,
 	IUIField,
 	IUIMethod,
+	IUIEvent,
+	IUIAggregation,
+	IUIAssociation,
 	IUIProperty
 } from "./UI5Parser/UIClass/AbstractUIClass";
-import { CustomUIClass } from "./UI5Parser/UIClass/CustomUIClass";
+import { CustomTSClass } from "./UI5Parser/UIClass/CustomTSClass";
+import { EmptyUIClass } from "./UI5Parser/UIClass/EmptyUIClass";
 import { StandardUIClass } from "./UI5Parser/UIClass/StandardUIClass";
-import { JSClass } from "./UI5Parser/UIClass/JSClass";
-import { IFragment, IView } from "../utils/FileReader";
-import { TextDocument } from "./abstraction/TextDocument";
-import { UI5Parser } from "../../UI5Parser";
-import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./interfaces/IUIClassFactory";
-import { ISyntaxAnalyser } from "./JSParser/ISyntaxAnalyser";
 import { AbstractUI5Parser } from "../../IUI5Parser";
 
-export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
-	private readonly syntaxAnalyser: ISyntaxAnalyser;
-	constructor(syntaxAnalyser: ISyntaxAnalyser) {
-		this.syntaxAnalyser = syntaxAnalyser;
-	}
+export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
+	private readonly _UIClasses: IUIClassMap = {};
 
-	private readonly _UIClasses: IUIClassMap = {
-		Promise: new JSClass("Promise"),
-		array: new JSClass("array"),
-		string: new JSClass("string"),
-		Array: new JSClass("Array"),
-		String: new JSClass("String")
-	};
-
-	private _createTypeDefDocClass(jsdoc: any) {
-		const typedefDoc = jsdoc.tags?.find((tag: any) => {
-			return tag.tag === "typedef";
-		});
-		const className = typedefDoc.name;
-		const properties = jsdoc.tags.filter((tag: any) => tag.tag === "property");
-		const typeDefClass = new JSClass(className);
-		typeDefClass.fields = properties.map((property: any): IUIField => {
-			return {
-				description: property.description,
-				name: property.name,
-				visibility: "public",
-				type: property.type,
-				abstract: false,
-				owner: className,
-				static: false,
-				deprecated: false
-			};
-		});
-		this._UIClasses[className] = typeDefClass;
-	}
-
-	private _getInstance(className: string, documentText?: string) {
-		let returnClass: AbstractUIClass;
+	private _getInstance(
+		className: string,
+		classDeclaration?: ClassDeclaration,
+		sourceFile?: SourceFile,
+		typeChecker?: ts.TypeChecker
+	) {
+		let returnClass: AbstractUIClass | undefined;
 		const isThisClassFromAProject =
-			!!AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className);
+			!!AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className);
+		} else if (classDeclaration && sourceFile && typeChecker) {
+			returnClass = new CustomTSClass(classDeclaration, sourceFile, typeChecker);
 		} else {
-			returnClass = new CustomUIClass(className, this.syntaxAnalyser, documentText);
-			(returnClass as CustomUIClass).comments?.forEach(comment => {
-				const typedefDoc = comment.jsdoc?.tags?.find((tag: any) => {
-					return tag.tag === "typedef";
-				});
-				if (typedefDoc) {
-					this._createTypeDefDocClass(comment.jsdoc);
-				}
-			});
+			returnClass = new EmptyUIClass(className);
 		}
 
 		return returnClass;
@@ -89,7 +56,7 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 
 	public setNewContentForClassUsingDocument(document: TextDocument, force = false) {
 		const documentText = document.getText();
-		const currentClassName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(
+		const currentClassName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(
 			document.fileName
 		);
 
@@ -98,57 +65,78 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 		}
 	}
 
-	public setNewCodeForClass(classNameDotNotation: string, classFileText: string, force = false) {
+	public setNewCodeForClass(
+		classNameDotNotation: string,
+		classFileText: string,
+		force = false,
+		sourceFile?: SourceFile,
+		project?: Project,
+		enrichWithXMLReferences = true
+	) {
 		const classDoesNotExist = !this._UIClasses[classNameDotNotation];
 		if (
 			force ||
 			classDoesNotExist ||
-			(<CustomUIClass>this._UIClasses[classNameDotNotation]).classText.length !== classFileText.length ||
-			(<CustomUIClass>this._UIClasses[classNameDotNotation]).classText !== classFileText
+			(<CustomTSClass>this._UIClasses[classNameDotNotation]).classText?.length !== classFileText.length ||
+			(<CustomTSClass>this._UIClasses[classNameDotNotation]).classText !== classFileText
 		) {
 			// console.time(`Class parsing for ${classNameDotNotation} took`);
-			const oldClass = this._UIClasses[classNameDotNotation];
-			if (oldClass && oldClass instanceof CustomUIClass && oldClass.acornClassBody) {
-				this._clearAcornNodes(oldClass);
+			if (!sourceFile && !project) {
+				const fileName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassFSPathFromClassName(classNameDotNotation);
+				project = fileName ? AbstractUI5Parser.getInstance(UI5TSParser).getProject(fileName) : undefined;
+				sourceFile = fileName ? project?.getSourceFile(fileName) : undefined;
 			}
-			this._UIClasses[classNameDotNotation] = this._getInstance(classNameDotNotation, classFileText);
+
+			if (project && sourceFile) {
+				if (sourceFile.getFullText().length !== classFileText.length) {
+					const textChange: ts.TextChange = {
+						newText: classFileText,
+						span: { start: 0, length: sourceFile.getFullText().length }
+					};
+					const newSourceFile = sourceFile.applyTextChanges([textChange]);
+					sourceFile = newSourceFile;
+				}
+				const typeChecker = project.getProgram().getTypeChecker();
+				const symbol = sourceFile && typeChecker.getSymbolAtLocation(sourceFile);
+				if (symbol && classNameDotNotation) {
+					const exports = typeChecker.getExportsOfModule(symbol);
+					const theExport = exports.find(
+						theExport =>
+							theExport.getName() === "default" &&
+							theExport.getDeclarations()?.find(declaration => Node.isClassDeclaration(declaration))
+					);
+					const classDeclaration = theExport
+						?.getDeclarations()
+						?.find(declaration => Node.isClassDeclaration(declaration));
+
+					if (classDeclaration && Node.isClassDeclaration(classDeclaration)) {
+						const theClass = this._getInstance(
+							classNameDotNotation,
+							classDeclaration,
+							sourceFile,
+							typeChecker.compilerObject
+						);
+						if (theClass) {
+							this._UIClasses[classNameDotNotation] = theClass;
+						}
+					}
+				}
+			}
 
 			const UIClass = this._UIClasses[classNameDotNotation];
-			if (UIClass instanceof CustomUIClass) {
+			if (UIClass instanceof CustomTSClass && enrichWithXMLReferences) {
 				this.enrichTypesInCustomClass(UIClass);
 			}
 			// console.timeEnd(`Class parsing for ${classNameDotNotation} took`);
 		}
 	}
 
-	private _clearAcornNodes(oldClass: CustomUIClass) {
-		const allContent = this.syntaxAnalyser.expandAllContent(oldClass.acornClassBody);
-		allContent.forEach((content: any) => {
-			delete content.expandedContent;
-		});
-	}
-
-	public enrichTypesInCustomClass(UIClass: CustomUIClass) {
-		// console.time(`Enriching ${UIClass.className} took`);
-		this._preloadParentIfNecessary(UIClass);
-		this._enrichMethodParamsWithEventType(UIClass);
+	public enrichTypesInCustomClass(UIClass: CustomTSClass) {
+		this._enrichAreMethodsEventHandlers(UIClass);
 		this._checkIfMembersAreUsedInXMLDocuments(UIClass);
-		UIClass.methods.forEach(method => {
-			this.syntaxAnalyser.findMethodReturnType(method, UIClass.className, false, true);
-		});
-		UIClass.fields.forEach(field => {
-			this.syntaxAnalyser.findFieldType(field, UIClass.className, false, true);
-		});
-		// console.timeEnd(`Enriching ${UIClass.className} took`);
 	}
 
-	private _preloadParentIfNecessary(UIClass: CustomUIClass) {
-		if (UIClass.parentClassNameDotNotation) {
-			this.getUIClass(UIClass.parentClassNameDotNotation);
-		}
-	}
-
-	private _checkIfMembersAreUsedInXMLDocuments(CurrentUIClass: CustomUIClass) {
+	private _checkIfMembersAreUsedInXMLDocuments(CurrentUIClass: CustomTSClass) {
 		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(
 			CurrentUIClass,
 			[],
@@ -171,6 +159,31 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 						const isFieldMentionedInTheView = regex.test(XMLDocument.content);
 						if (isFieldMentionedInTheView) {
 							field.mentionedInTheXMLDocument = true;
+						}
+					}
+				}
+			});
+		});
+	}
+
+	private _enrichAreMethodsEventHandlers(CurrentUIClass: CustomTSClass) {
+		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(
+			CurrentUIClass,
+			[],
+			true,
+			true,
+			true
+		);
+		const XMLDocuments = [...viewsAndFragments.views, ...viewsAndFragments.fragments];
+		XMLDocuments.forEach(XMLDocument => {
+			CurrentUIClass.methods.forEach(method => {
+				if (!method.isEventHandler && !method.mentionedInTheXMLDocument) {
+					const regex = new RegExp(`(\\.|"|')${method.name}"`);
+					if (XMLDocument) {
+						const isMethodMentionedInTheView = regex.test(XMLDocument.content);
+						if (isMethodMentionedInTheView) {
+							method.mentionedInTheXMLDocument = true;
+							method.isEventHandler = true;
 						}
 					}
 				}
@@ -327,53 +340,21 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 
 	public getUIClass(className: string) {
 		if (!this._UIClasses[className]) {
-			this._UIClasses[className] = this._getInstance(className);
+			const theClass = this._getInstance(className);
+			if (theClass) {
+				this._UIClasses[className] = theClass;
+			}
 			const UIClass = this._UIClasses[className];
-			if (UIClass instanceof CustomUIClass) {
-				this.enrichTypesInCustomClass(UIClass);
+			if (UIClass instanceof CustomTSClass) {
+				this._checkIfMembersAreUsedInXMLDocuments(UIClass);
 			}
 		}
 
 		return this._UIClasses[className];
 	}
 
-	private _enrichMethodParamsWithEventType(CurrentUIClass: CustomUIClass) {
-		// console.time(`Enriching types ${CurrentUIClass.className}`);
-		this._enrichMethodParamsWithEventTypeFromViewsAndFragments(CurrentUIClass);
-		this._enrichMethodParamsWithEventTypeFromAttachEvents(CurrentUIClass);
-		// console.timeEnd(`Enriching types ${CurrentUIClass.className}`);
-	}
-
-	private _enrichMethodParamsWithEventTypeFromViewsAndFragments(CurrentUIClass: CustomUIClass) {
-		const viewsAndFragments = this.getViewsAndFragmentsOfControlHierarchically(
-			CurrentUIClass,
-			[],
-			true,
-			true,
-			true
-		);
-		const XMLDocuments = [...viewsAndFragments.views, ...viewsAndFragments.fragments];
-		XMLDocuments.forEach(XMLDocument => {
-			CurrentUIClass.methods.forEach(method => {
-				if (!method.isEventHandler && !method.mentionedInTheXMLDocument) {
-					const regex = new RegExp(`(\\.|"|')${method.name}"`);
-					if (XMLDocument) {
-						const isMethodMentionedInTheView = regex.test(XMLDocument.content);
-						if (isMethodMentionedInTheView) {
-							method.mentionedInTheXMLDocument = true;
-							method.isEventHandler = true;
-							if (method?.node?.params && method?.node?.params[0] && !method.node.params[0].jsType) {
-								method.node.params[0].jsType = "sap.ui.base.Event";
-							}
-						}
-					}
-				}
-			});
-		});
-	}
-
 	getViewsAndFragmentsOfControlHierarchically(
-		CurrentUIClass: CustomUIClass,
+		CurrentUIClass: CustomTSClass,
 		checkedClasses: string[] = [],
 		removeDuplicates = true,
 		includeChildren = false,
@@ -403,7 +384,7 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 		checkedClasses.push(CurrentUIClass.className);
 		const viewsAndFragments: IViewsAndFragments = this.getViewsAndFragmentsRelatedTo(CurrentUIClass);
 
-		const relatedClasses: CustomUIClass[] = [];
+		const relatedClasses: CustomTSClass[] = [];
 		if (includeParents) {
 			const parentUIClasses = this.getAllCustomUIClasses().filter(
 				UIClass =>
@@ -423,7 +404,7 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 			});
 		}
 		const relatedViewsAndFragments = relatedClasses.reduce(
-			(accumulator: IViewsAndFragments, relatedUIClass: CustomUIClass) => {
+			(accumulator: IViewsAndFragments, relatedUIClass: CustomTSClass) => {
 				const relatedFragmentsAndViews = this.getViewsAndFragmentsOfControlHierarchically(
 					relatedUIClass,
 					checkedClasses,
@@ -473,13 +454,13 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 	private _removeDuplicatesForViewsAndFragments(viewsAndFragments: IViewsAndFragments) {
 		viewsAndFragments.views.forEach(view => {
 			viewsAndFragments.fragments.push(
-				...AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragmentsInXMLFile(view)
+				...AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsInXMLFile(view)
 			);
 		});
 
 		viewsAndFragments.fragments.forEach(fragment => {
 			viewsAndFragments.fragments.push(
-				...AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragmentsInXMLFile(fragment)
+				...AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsInXMLFile(fragment)
 			);
 		});
 
@@ -498,25 +479,25 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 		}, []);
 	}
 
-	getViewsAndFragmentsRelatedTo(CurrentUIClass: CustomUIClass) {
+	getViewsAndFragmentsRelatedTo(CurrentUIClass: CustomTSClass) {
 		const viewsAndFragments: IViewsAndFragments = {
 			views: [],
 			fragments: []
 		};
 
-		viewsAndFragments.fragments = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragmentsMentionedInClass(
+		viewsAndFragments.fragments = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsMentionedInClass(
 			CurrentUIClass.className
 		);
 		const views = [];
-		const view = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getViewForController(CurrentUIClass.className);
+		const view = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getViewForController(CurrentUIClass.className);
 		if (view) {
 			views.push(view);
 			viewsAndFragments.fragments.push(...view.fragments);
 		}
 		viewsAndFragments.views = views;
 
-		const fragments = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getAllFragments();
-		const allViews = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getAllViews();
+		const fragments = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getAllFragments();
+		const allViews = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getAllViews();
 
 		//check for mentioning
 		fragments.forEach(fragment => {
@@ -544,7 +525,7 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 		});
 	}
 
-	private _getAllChildrenOfClass(UIClass: CustomUIClass, bFirstLevelinheritance = false) {
+	private _getAllChildrenOfClass(UIClass: CustomTSClass, bFirstLevelinheritance = false) {
 		if (bFirstLevelinheritance) {
 			return this.getAllCustomUIClasses().filter(CurrentUIClass => {
 				return CurrentUIClass.parentClassNameDotNotation === UIClass.className;
@@ -559,22 +540,22 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 		}
 	}
 
-	public getAllCustomUIClasses(): CustomUIClass[] {
+	public getAllCustomUIClasses(): CustomTSClass[] {
 		const allUIClasses = this.getAllExistentUIClasses();
 
 		return Object.keys(allUIClasses)
 			.filter(UIClassName => {
-				return allUIClasses[UIClassName] instanceof CustomUIClass;
+				return allUIClasses[UIClassName] instanceof CustomTSClass;
 			})
-			.map(UIClassName => allUIClasses[UIClassName] as CustomUIClass);
+			.map(UIClassName => allUIClasses[UIClassName] as CustomTSClass);
 	}
 
 	private _getFragmentFromViewManifestExtensions(className: string, view: IView) {
 		const fragments: IFragment[] = [];
-		const viewName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(view.fsPath);
+		const viewName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(view.fsPath);
 		if (viewName) {
 			const extensions =
-				AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestExtensionsForClass(className);
+				AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getManifestExtensionsForClass(className);
 			const viewExtension =
 				extensions && extensions["sap.ui.viewExtensions"] && extensions["sap.ui.viewExtensions"][viewName];
 			if (viewExtension) {
@@ -582,10 +563,10 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 					const extension = viewExtension[key];
 					if (extension.type === "XML" && extension.className === "sap.ui.core.Fragment") {
 						const fragmentName = extension.fragmentName;
-						const fragment = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragment(fragmentName);
+						const fragment = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragment(fragmentName);
 						if (fragment) {
 							const fragmentsInFragment: IFragment[] =
-								AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragmentsInXMLFile(fragment);
+								AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsInXMLFile(fragment);
 							fragments.push(fragment, ...fragmentsInFragment);
 						}
 					}
@@ -596,38 +577,8 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 		return fragments;
 	}
 
-	private _enrichMethodParamsWithEventTypeFromAttachEvents(UIClass: CustomUIClass) {
-		UIClass.methods.forEach(method => {
-			const eventData = this.syntaxAnalyser.getEventHandlerDataFromJSClass(UIClass.className, method.name);
-			if (eventData) {
-				method.isEventHandler = true;
-				if (method?.node?.params && method?.node?.params[0] && !method.node.params[0].jsType) {
-					method.node.params[0].jsType = "sap.ui.base.Event";
-				}
-			}
-		});
-	}
-
 	public getAllExistentUIClasses() {
 		return this._UIClasses;
-	}
-
-	public getDefaultModelForClass(className: string): string | undefined {
-		let defaultModel;
-		const UIClass = this.getUIClass(className);
-		if (UIClass instanceof CustomUIClass) {
-			const defaultModelOfClass = this.syntaxAnalyser.getClassNameOfTheModelFromManifest("", className, true);
-			if (defaultModelOfClass) {
-				const modelUIClass = this.getUIClass(defaultModelOfClass);
-				if (modelUIClass instanceof CustomUIClass) {
-					defaultModel = defaultModelOfClass;
-				}
-			} else if (UIClass.parentClassNameDotNotation) {
-				defaultModel = this.getDefaultModelForClass(UIClass.parentClassNameDotNotation);
-			}
-		}
-
-		return defaultModel;
 	}
 
 	public isMethodOverriden(className: string, methodName: string) {
@@ -684,17 +635,20 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 	}
 
 	public setNewNameForClass(oldPath: string, newPath: string) {
-		const oldName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(oldPath);
-		const newName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(newPath);
+		const oldName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(oldPath);
+		const newName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(newPath);
 		if (oldName && newName) {
 			const oldClass = this._UIClasses[oldName];
+			if (!oldClass) {
+				return;
+			}
 			this._UIClasses[newName] = oldClass;
 			oldClass.className = newName;
 
-			if (oldClass instanceof CustomUIClass) {
-				const newClassFSPath = AbstractUI5Parser.getInstance(UI5Parser).fileReader.convertClassNameToFSPath(
+			if (oldClass instanceof CustomTSClass) {
+				const newClassFSPath = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.convertClassNameToFSPath(
 					newName,
-					oldClass.fsPath?.endsWith(".controller.js")
+					oldClass.fsPath?.endsWith(".controller.js") || oldClass.fsPath?.endsWith(".controller.ts")
 				);
 				if (newClassFSPath) {
 					oldClass.fsPath = newClassFSPath;
@@ -706,15 +660,70 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 					UIClass.parentClassNameDotNotation = newName;
 				}
 			});
-			this.removeClass(oldName);
+		}
+	}
 
-			const UIClass = this._UIClasses[newName];
-			if (UIClass instanceof CustomUIClass && UIClass.fsPath?.endsWith(".controller.js")) {
-				const view = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getViewForController(oldName);
-				if (view) {
-					AbstractUI5Parser.getInstance(UI5Parser).fileReader.removeView(view.name);
+	public getDefaultModelForClass(className: string): string | undefined {
+		let defaultModel;
+		const UIClass = this.getUIClass(className);
+		if (UIClass instanceof CustomTSClass) {
+			const defaultModelOfClass = this._getClassNameOfTheModelFromManifest(UIClass);
+			if (defaultModelOfClass) {
+				const modelUIClass = this.getUIClass(defaultModelOfClass);
+				if (modelUIClass instanceof CustomTSClass) {
+					defaultModel = defaultModelOfClass;
 				}
+			} else if (UIClass.parentClassNameDotNotation) {
+				defaultModel = this.getDefaultModelForClass(UIClass.parentClassNameDotNotation);
 			}
 		}
+
+		return defaultModel;
+	}
+
+	private _getClassNameOfTheModelFromManifest(UIClass: CustomTSClass) {
+		let defaultModelName: string | undefined;
+
+		const fnForEachChild = (node: ts.Node) => {
+			let necessaryNode: ts.CallExpression | undefined;
+			ts.forEachChild(node, child => {
+				if (necessaryNode) {
+					return;
+				}
+				if (
+					ts.isCallExpression(child) &&
+					ts.isPropertyAccessExpression(child.expression) &&
+					child.expression.name.escapedText === "setModel"
+				) {
+					necessaryNode = child;
+				} else {
+					necessaryNode = fnForEachChild(child);
+				}
+			});
+
+			return necessaryNode;
+		};
+		UIClass.methods.find(method => {
+			if (!method.node) {
+				return false;
+			}
+			const child = fnForEachChild(method.node?.compilerNode);
+			const args = child?.arguments;
+			const firstArg = args?.[0];
+			if (firstArg && ts.isCallExpression(firstArg) && ts.isStringLiteral(firstArg.arguments[0])) {
+				// const modelName = firstArg.arguments[0].text;
+				const modelType = UIClass.typeChecker.getTypeAtLocation(firstArg);
+				const modelSymbol = modelType.getSymbol();
+				const declaration = modelSymbol?.declarations?.[0];
+				const sourceFile = declaration?.getSourceFile();
+				const parentFileName = sourceFile?.fileName;
+
+				if (parentFileName) {
+					defaultModelName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(parentFileName);
+				}
+			}
+		});
+
+		return defaultModelName;
 	}
 }

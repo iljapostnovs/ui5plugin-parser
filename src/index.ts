@@ -8,9 +8,11 @@ import { XMLParser } from "./classes/utils/XMLParser";
 import { TextDocument } from "./classes/UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
 import { IFileReader } from "./classes/utils/IFileReader";
+import { UI5TSParser } from "./UI5TSParser";
 
 export {
 	UI5Parser,
+	UI5TSParser,
 	IParserConfigHandler,
 	IUIClassFactory,
 	IFileReader,

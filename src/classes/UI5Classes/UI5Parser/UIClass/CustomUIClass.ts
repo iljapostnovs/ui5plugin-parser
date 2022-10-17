@@ -21,6 +21,7 @@ import {
 	ICustomMember,
 	IUIDefine
 } from "./AbstractCustomClass";
+import { AbstractUI5Parser } from "../../../../IUI5Parser";
 const acornLoose = require("acorn-loose");
 
 interface ILooseObject {
@@ -64,7 +65,8 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		super(className);
 
 		this.syntaxAnalyser = syntaxAnalyser;
-		this.fsPath = UI5Parser.getInstance().fileReader.getClassFSPathFromClassName(this.className) ?? "";
+		this.fsPath =
+			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassFSPathFromClassName(this.className) ?? "";
 		this._readFileContainingThisClassCode(documentText); //todo: rename. not always reading anyore.
 		this.UIDefine = this._getUIDefine();
 		this.acornClassBody = this._getThisClassBodyAcorn();
@@ -317,7 +319,9 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 
 	private _readFileContainingThisClassCode(documentText?: string) {
 		if (!documentText) {
-			documentText = UI5Parser.getInstance().fileReader.getDocumentTextFromCustomClassName(this.className);
+			documentText = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getDocumentTextFromCustomClassName(
+				this.className
+			);
 		}
 		this.classText = documentText || "";
 		if (documentText) {
@@ -384,7 +388,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		let className = classPath.replace(/\//g, ".");
 
 		if (classPath?.startsWith(".")) {
-			const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(this.className);
+			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(this.className);
 
 			if (manifest && this.fsPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);
@@ -468,7 +472,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 
 	private _getParentNameFromManifest() {
 		let parentName: string | undefined;
-		const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(this.className);
+		const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(this.className);
 		if (
 			manifest?.content &&
 			manifest?.content["sap.ui5"]?.extends?.extensions &&

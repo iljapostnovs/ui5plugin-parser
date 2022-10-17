@@ -1,6 +1,6 @@
 import { ClassDeclaration, MethodDeclaration, PropertyDeclaration, SourceFile } from "ts-morph";
-import ts = require("typescript");
-import Hjson = require("hjson");
+import * as ts from "typescript";
+import * as Hjson from "hjson";
 import * as path from "path";
 import {
 	AbstractCustomClass,
@@ -11,6 +11,8 @@ import {
 } from "./AbstractCustomClass";
 import { UI5Parser } from "../../../../UI5Parser";
 import { IUIAssociation, IUIProperty } from "./AbstractUIClass";
+import { AbstractUI5Parser } from "../../../../IUI5Parser";
+import { UI5TSParser } from "../../../../UI5TSParser";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ICustomClassTSField extends ICustomClassField<PropertyDeclaration> {}
@@ -43,7 +45,9 @@ export class CustomTSClass extends AbstractCustomClass<
 	private readonly _sourceFile: SourceFile;
 	readonly typeChecker: ts.TypeChecker;
 	constructor(classDeclaration: ClassDeclaration, sourceFile: SourceFile, typeChecker: ts.TypeChecker) {
-		const className = UI5Parser.getInstance().fileReader.getClassNameFromPath(sourceFile.compilerNode.fileName);
+		const className = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(
+			sourceFile.compilerNode.fileName
+		);
 		super(className ?? "");
 
 		this.typeChecker = typeChecker;
@@ -55,22 +59,13 @@ export class CustomTSClass extends AbstractCustomClass<
 			const parentType = typeChecker.getTypeFromTypeNode(heritageClause.types[0]);
 			const parentSymbol = parentType.getSymbol();
 			const parentName = parentSymbol && typeChecker.getFullyQualifiedName(parentSymbol);
-			if (parentName?.startsWith("\"sap/")) {
-				const [parentModuleNameQuoted] = parentName.split(".");
-				const parentModuleName = parentModuleNameQuoted.substring(1, parentModuleNameQuoted.length - 1);
-				this.parentClassNameDotNotation = parentModuleName.replace(/\//g, ".");
-			} else {
-				const declarations = parentType
-					.getSymbol()
-					?.declarations?.filter(declaration => ts.isClassDeclaration(declaration));
-				const parentClassDeclaration = declarations?.[0];
-				if (parentClassDeclaration && ts.isClassDeclaration(parentClassDeclaration)) {
-					const jsDocs = ts.getJSDocTags(parentClassDeclaration);
-					const namespaceDoc = jsDocs.find(jsDoc => jsDoc.tagName.escapedText === "namespace");
-					const namespace = namespaceDoc?.comment ?? "";
-					const classNameLastPart = parentClassDeclaration.name?.escapedText ?? "";
-					this.parentClassNameDotNotation = `${namespace}.${classNameLastPart}`;
-				}
+			const [parentModuleNameQuoted] = parentName?.split(".") ?? [];
+			const parentModulePath = parentModuleNameQuoted?.substring(1, parentModuleNameQuoted.length - 1);
+			if (parentModulePath?.startsWith("sap/")) {
+				this.parentClassNameDotNotation = parentModulePath.replace(/\/|\\/g, ".");
+			} else if (parentModulePath) {
+				const parentClassName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(parentModulePath);
+				this.parentClassNameDotNotation = parentClassName ?? "";
 			}
 		}
 
@@ -99,15 +94,15 @@ export class CustomTSClass extends AbstractCustomClass<
 		});
 	}
 
-	private _generateClassNameDotNotationFor(classPath: string) {
-		let className = classPath.replace(/\//g, ".");
+	private _generateClassNameDotNotationFor(moduleNameSlash: string) {
+		let className = moduleNameSlash.replace(/\//g, ".");
 
-		if (classPath?.startsWith(".")) {
-			const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(this.className);
+		if (moduleNameSlash?.startsWith(".")) {
+			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(this.className);
 
 			if (manifest && this.fsPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);
-				const importClassPath = path.resolve(path.dirname(this.fsPath), classPath);
+				const importClassPath = path.resolve(path.dirname(this.fsPath), moduleNameSlash);
 				const relativeToManifest = path.relative(normalizedManifestPath, importClassPath);
 				const pathRelativeToManifestDotNotation = relativeToManifest.split(path.sep).join(".");
 				className = `${manifest.componentName}.${pathRelativeToManifestDotNotation}`;
@@ -127,8 +122,8 @@ export class CustomTSClass extends AbstractCustomClass<
 		const UIFields: ICustomClassTSField[] = fields.map(field => {
 			const jsDocs = field.getJsDocs();
 			const ui5IgnoreDoc = jsDocs.some(jsDoc => jsDoc.getTags().some(tag => tag.getTagName() === "ui5ignore"));
-			const positionStart = this._sourceFile.getLineAndColumnAtPos(field.getStart());
-			const positionEnd = this._sourceFile.getLineAndColumnAtPos(field.getEnd());
+			const positionStart = this._sourceFile.getLineAndColumnAtPos(field.getNameNode().getStart());
+			const positionEnd = this._sourceFile.getLineAndColumnAtPos(field.getNameNode().getEnd());
 
 			let type = field.getType().getText();
 			type = this._modifyType(type);
@@ -153,12 +148,16 @@ export class CustomTSClass extends AbstractCustomClass<
 				deprecated: jsDocs.some(jsDoc => ts.isJSDocDeprecatedTag(jsDoc.compilerNode)),
 				description: "",
 				isEventHandler: false,
-				tsNode: field,
+				node: field,
 				mentionedInTheXMLDocument: false,
-				memberPropertyNode: {
-					loc: {
-						start: positionStart,
-						end: positionEnd
+				loc: {
+					start: {
+						line: positionStart.line,
+						column: positionStart.column - 1
+					},
+					end: {
+						line: positionEnd.line,
+						column: positionEnd.column - 1
 					}
 				}
 			};
@@ -174,8 +173,8 @@ export class CustomTSClass extends AbstractCustomClass<
 		const UIMethods: ICustomClassTSMethod[] = methods.map(method => {
 			const jsDocs = method.getJsDocs();
 			const ui5IgnoreDoc = jsDocs.some(jsDoc => jsDoc.getTags().some(tag => tag.getTagName() === "ui5ignore"));
-			const positionStart = this._sourceFile.getLineAndColumnAtPos(method.getStart());
-			const positionEnd = this._sourceFile.getLineAndColumnAtPos(method.getEnd());
+			const positionStart = this._sourceFile.getLineAndColumnAtPos(method.getNameNode().getStart());
+			const positionEnd = this._sourceFile.getLineAndColumnAtPos(method.getNameNode().getEnd());
 
 			let returnType = method.getReturnType().getText();
 			returnType = this._modifyType(returnType);
@@ -211,8 +210,14 @@ export class CustomTSClass extends AbstractCustomClass<
 				isEventHandler: false,
 				node: method,
 				loc: {
-					start: positionStart,
-					end: positionEnd
+					start: {
+						line: positionStart.line,
+						column: positionStart.column - 1
+					},
+					end: {
+						line: positionEnd.line,
+						column: positionEnd.column - 1
+					}
 				},
 				mentionedInTheXMLDocument: false
 			};
@@ -223,7 +228,8 @@ export class CustomTSClass extends AbstractCustomClass<
 			const ui5IgnoreDoc = jsDocs.some(jsDoc => jsDoc.getTags().some(tag => tag.getTagName() === "ui5ignore"));
 			const positionStart = this._sourceFile.getLineAndColumnAtPos(constructor.getStart());
 			const positionEnd = this._sourceFile.getLineAndColumnAtPos(constructor.getEnd());
-			return {
+
+			const method: ICustomClassTSMethod = {
 				ui5ignored: !!ui5IgnoreDoc,
 				owner: this.className,
 				static: false,
@@ -250,16 +256,23 @@ export class CustomTSClass extends AbstractCustomClass<
 				}),
 				name: "constructor",
 				position: constructor.getStart(),
+				node: constructor as any,
 				deprecated: jsDocs.some(jsDoc => ts.isJSDocDeprecatedTag(jsDoc.compilerNode)),
 				description: "",
 				isEventHandler: false,
-				tsNode: constructor,
-				memberPropertyNode: {
-					start: positionStart,
-					end: positionEnd
+				loc: {
+					start: {
+						line: positionStart.line,
+						column: positionStart.column - 1
+					},
+					end: {
+						line: positionEnd.line,
+						column: positionEnd.column - 1
+					}
 				},
 				mentionedInTheXMLDocument: false
 			};
+			return method;
 		});
 
 		return UIMethods.concat(constructors);
@@ -268,7 +281,9 @@ export class CustomTSClass extends AbstractCustomClass<
 	private _modifyType(returnType: string): string {
 		if (/import\(".*?"\).default/.test(returnType)) {
 			const path = /(?<=import\(").*?(?="\).default)/.exec(returnType)?.[0];
-			const UI5Type = path ? UI5Parser.getInstance().fileReader.getClassNameFromPath(path) : undefined;
+			const UI5Type = path
+				? AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(path)
+				: undefined;
 			if (UI5Type) {
 				returnType = UI5Type;
 			}

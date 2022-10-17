@@ -4,6 +4,7 @@ import { TextDocument } from "../../abstraction/TextDocument";
 import { UI5Parser } from "../../../../UI5Parser";
 import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
 import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
+import { AbstractUI5Parser } from "../../../../IUI5Parser";
 
 export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethodGetterStrategy {
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
@@ -14,14 +15,18 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 
 	getFieldsAndMethods(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const className = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		const className = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(document.fileName);
 		const UIClassName = className && this.getClassNameOfTheVariableAtPosition(className, position);
 		if (UIClassName) {
 			fieldsAndMethods = this.destructueFieldsAndMethodsAccordingToMapParams(UIClassName);
 			if (fieldsAndMethods && className !== fieldsAndMethods.className) {
 				this._filterFieldsAndMethodsAccordingToAccessLevelModifiers(fieldsAndMethods);
 			} else if (fieldsAndMethods) {
-				this._filterFieldsAndMethodsAccordingToAccessLevelModifiers(fieldsAndMethods, ["private", "protected", "public"])
+				this._filterFieldsAndMethodsAccordingToAccessLevelModifiers(fieldsAndMethods, [
+					"private",
+					"protected",
+					"public"
+				]);
 			}
 		}
 
@@ -63,18 +68,24 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 				const correspondingObject = this._getCorrespondingObject(paramStructure, fields);
 				fieldsAndMethods = {
 					className: typeof correspondingObject === "object" ? "map" : correspondingObject,
-					fields: typeof correspondingObject === "object" ? Object.keys(correspondingObject).map(key => {
-						return {
-							description: key,
-							name: key,
-							visibility: "public",
-							type: typeof paramStructure[key] === "string" ? paramStructure[key] : typeof paramStructure[key],
-							owner: "",
-							abstract: false,
-							static: false,
-							deprecated: false
-						};
-					}) : [],
+					fields:
+						typeof correspondingObject === "object"
+							? Object.keys(correspondingObject).map(key => {
+									return {
+										description: key,
+										name: key,
+										visibility: "public",
+										type:
+											typeof paramStructure[key] === "string"
+												? paramStructure[key]
+												: typeof paramStructure[key],
+										owner: "",
+										abstract: false,
+										static: false,
+										deprecated: false
+									};
+							})
+							: [],
 					methods: []
 				};
 				if (typeof correspondingObject !== "object") {
@@ -82,14 +93,17 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 				}
 			}
 		} else if (className.startsWith("Promise<")) {
-			fieldsAndMethods = UI5Parser.getInstance().classFactory.getFieldsAndMethodsForClass("Promise");
+			fieldsAndMethods =
+				AbstractUI5Parser.getInstance(UI5Parser).classFactory.getFieldsAndMethodsForClass("Promise");
 			fieldsAndMethods.className = className;
 		} else {
 			if (className.endsWith("[]")) {
-				fieldsAndMethods = UI5Parser.getInstance().classFactory.getFieldsAndMethodsForClass("array");
+				fieldsAndMethods =
+					AbstractUI5Parser.getInstance(UI5Parser).classFactory.getFieldsAndMethodsForClass("array");
 				fieldsAndMethods.className = className;
 			} else {
-				fieldsAndMethods = UI5Parser.getInstance().classFactory.getFieldsAndMethodsForClass(className);
+				fieldsAndMethods =
+					AbstractUI5Parser.getInstance(UI5Parser).classFactory.getFieldsAndMethodsForClass(className);
 			}
 		}
 
@@ -116,7 +130,12 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 		let classNameOfTheCurrentVariable;
 		const stack = this.getStackOfNodesForPosition(className, position, checkForLastPosition);
 		if (stack.length > 0) {
-			classNameOfTheCurrentVariable = this.syntaxAnalyser.findClassNameForStack(stack, className, undefined, clearStack);
+			classNameOfTheCurrentVariable = this.syntaxAnalyser.findClassNameForStack(
+				stack,
+				className,
+				undefined,
+				clearStack
+			);
 		}
 
 		return classNameOfTheCurrentVariable;
@@ -124,7 +143,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 
 	public getStackOfNodesForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
-		const UIClass = UI5Parser.getInstance().classFactory.getUIClass(className);
+		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {
@@ -155,9 +174,23 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 	}
 
 	private _generateStackOfNodes(node: any, position: number, stack: any[], checkForLastPosition = false) {
-		const nodeTypesToUnshift = ["CallExpression", "MemberExpression", "VariableDeclaration", "ThisExpression", "NewExpression", "Identifier", "AwaitExpression"];
-		const positionIsCorrect = node.end < position || checkForLastPosition && node.end === position;
-		if (node && positionIsCorrect && nodeTypesToUnshift.indexOf(node.type) > -1 && node.property?.name !== "✖" && node.property?.name !== "prototype") {
+		const nodeTypesToUnshift = [
+			"CallExpression",
+			"MemberExpression",
+			"VariableDeclaration",
+			"ThisExpression",
+			"NewExpression",
+			"Identifier",
+			"AwaitExpression"
+		];
+		const positionIsCorrect = node.end < position || (checkForLastPosition && node.end === position);
+		if (
+			node &&
+			positionIsCorrect &&
+			nodeTypesToUnshift.indexOf(node.type) > -1 &&
+			node.property?.name !== "✖" &&
+			node.property?.name !== "prototype"
+		) {
 			stack.unshift(node);
 		}
 
@@ -167,5 +200,4 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 			this._generateStackOfNodes(innerNode, position, stack, checkForLastPosition);
 		}
 	}
-
 }

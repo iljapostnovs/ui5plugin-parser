@@ -6,6 +6,7 @@ import { TextDocument } from "../../abstraction/TextDocument";
 import { UI5Parser } from "../../../../UI5Parser";
 import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
 import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
+import { AbstractUI5Parser } from "../../../../IUI5Parser";
 
 export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
@@ -15,19 +16,23 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	}
 
 	getFieldsAndMethods(document: TextDocument, position: number) {
-		const fieldsAndMethods: IFieldsAndMethods | undefined = this._acornGetPropertiesForParamsInCurrentPosition(document, position);
+		const fieldsAndMethods: IFieldsAndMethods | undefined = this._acornGetPropertiesForParamsInCurrentPosition(
+			document,
+			position
+		);
 
 		return fieldsAndMethods;
 	}
 
 	private _acornGetPropertiesForParamsInCurrentPosition(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		const currentClassName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(
+			document.fileName
+		);
 
 		if (currentClassName) {
 			const stack = this.getStackOfNodesForInnerParamsForPosition(currentClassName, position);
 			if (stack.length === 1 && stack[0].type === "NewExpression") {
-
 				fieldsAndMethods = this._getFieldsAndMethodsForNewExpression(stack[0], document, position);
 			} else if (stack.length === 1 && stack[0].type === "CallExpression") {
 				fieldsAndMethods = this._getFieldsAndMethodsForCallExpression(stack[0], document, position);
@@ -39,15 +44,24 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	private _getFieldsAndMethodsForNewExpression(newExpression: any, document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		const currentClassName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(
+			document.fileName
+		);
 		if (position && currentClassName) {
 			const argument = this.syntaxAnalyser.findAcornNode(newExpression.arguments, position);
 			const indexOfArgument = newExpression.arguments.indexOf(argument);
 			if (argument && argument.type === "ObjectExpression") {
-
-				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this.syntaxAnalyser);
-				const stack = positionBeforeCurrentStrategy.getStackOfNodesForPosition(currentClassName, newExpression.end + 1);
-				const classNameOfCurrentNewExpression = this.syntaxAnalyser.findClassNameForStack(stack, currentClassName);
+				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(
+					this.syntaxAnalyser
+				);
+				const stack = positionBeforeCurrentStrategy.getStackOfNodesForPosition(
+					currentClassName,
+					newExpression.end + 1
+				);
+				const classNameOfCurrentNewExpression = this.syntaxAnalyser.findClassNameForStack(
+					stack,
+					currentClassName
+				);
 				if (classNameOfCurrentNewExpression) {
 					const node = new SAPNodeDAO().findNode(classNameOfCurrentNewExpression);
 					const constructorParameters = node?.getMetadata()?.getRawMetadata()?.constructor?.parameters;
@@ -69,18 +83,32 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	private _getFieldsAndMethodsForCallExpression(callExpression: any, document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		const currentClassName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(
+			document.fileName
+		);
 		if (currentClassName && position) {
 			const argument = this.syntaxAnalyser.findAcornNode(callExpression.arguments, position);
 			const indexOfArgument = callExpression.arguments.indexOf(argument);
 			if (argument?.type === "ObjectExpression") {
-				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this.syntaxAnalyser);
-				const stack = positionBeforeCurrentStrategy.getStackOfNodesForPosition(currentClassName, callExpression.callee.end);
-				const classNameOfCurrentObjectExpression = this.syntaxAnalyser.findClassNameForStack(stack, currentClassName);
+				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(
+					this.syntaxAnalyser
+				);
+				const stack = positionBeforeCurrentStrategy.getStackOfNodesForPosition(
+					currentClassName,
+					callExpression.callee.end
+				);
+				const classNameOfCurrentObjectExpression = this.syntaxAnalyser.findClassNameForStack(
+					stack,
+					currentClassName
+				);
 				if (classNameOfCurrentObjectExpression) {
 					const methodName = callExpression.callee?.property?.name;
 					if (methodName) {
-						const UIClass = <CustomUIClass>UI5Parser.getInstance().classFactory.getUIClass(classNameOfCurrentObjectExpression);
+						const UIClass = <CustomUIClass>(
+							AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(
+								classNameOfCurrentObjectExpression
+							)
+						);
 						const UIMethod = UIClass.methods.find(method => method.name === methodName);
 						if (UIMethod?.acornParams) {
 							const acornParam = UIMethod.acornParams[indexOfArgument];
@@ -94,7 +122,10 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 										return {
 											description: key,
 											name: key,
-											type: typeof objectForCompletionItems[key] === "string" ? objectForCompletionItems[key] : typeof objectForCompletionItems[key],
+											type:
+												typeof objectForCompletionItems[key] === "string"
+													? objectForCompletionItems[key]
+													: typeof objectForCompletionItems[key],
 											visibility: "public",
 											owner: "",
 											abstract: false,
@@ -108,12 +139,20 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 					}
 				}
 			} else if (argument?.type === "Literal" && indexOfArgument === 0) {
-				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this.syntaxAnalyser);
-				const className = positionBeforeCurrentStrategy.acornGetClassName(currentClassName, callExpression.callee.end);
+				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(
+					this.syntaxAnalyser
+				);
+				const className = positionBeforeCurrentStrategy.acornGetClassName(
+					currentClassName,
+					callExpression.callee.end
+				);
 				if (className === "sap.ui.base.Event" && callExpression.callee?.property?.name === "getParameter") {
 					const eventHandlerData = this.syntaxAnalyser.getEventHandlerData(callExpression, currentClassName);
 					if (eventHandlerData) {
-						const parameters = this.syntaxAnalyser.getParametersOfTheEvent(eventHandlerData.eventName, eventHandlerData.className);
+						const parameters = this.syntaxAnalyser.getParametersOfTheEvent(
+							eventHandlerData.eventName,
+							eventHandlerData.className
+						);
 						if (parameters) {
 							fieldsAndMethods = {
 								className: "generic",
@@ -137,7 +176,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 					let models = this._getManifestModels(document);
 					const classModels = this._getCurrentClassModels(currentClassName);
 					models.push(...classModels);
-					models = models.reduce((accumulator: { type: string, name: string }[], model) => {
+					models = models.reduce((accumulator: { type: string; name: string }[], model) => {
 						const modelAlreadyAdded = !!accumulator.find(modelInArray => modelInArray.name === model.name);
 						if (!modelAlreadyAdded) {
 							accumulator.push(model);
@@ -170,11 +209,12 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	}
 
 	private _getManifestModels(document: TextDocument) {
-		let models: { type: string, name: string }[] = [];
+		let models: { type: string; name: string }[] = [];
 		const fileName = document.fileName;
-		const currentClassName = fileName && UI5Parser.getInstance().fileReader.getClassNameFromPath(fileName);
+		const currentClassName =
+			fileName && AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(fileName);
 		if (currentClassName) {
-			const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(currentClassName);
+			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(currentClassName);
 			if (manifest && manifest.content["sap.ui5"]?.models) {
 				models = Object.keys(manifest.content["sap.ui5"]?.models).map(key => ({
 					type: manifest.content["sap.ui5"]?.models[key].type,
@@ -187,30 +227,39 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	}
 
 	private _getCurrentClassModels(currentClassName: string) {
-		let models: { type: string, name: string }[] = [];
+		let models: { type: string; name: string }[] = [];
 		if (currentClassName) {
-			const UIClass = UI5Parser.getInstance().classFactory.getUIClass(currentClassName);
+			const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(currentClassName);
 			if (UIClass instanceof CustomUIClass) {
 				const callExpressions = UIClass.methods.reduce((accumulator: any[], UIMethod) => {
 					if (UIMethod.node) {
-						const callExpressions = this.syntaxAnalyser.expandAllContent(UIMethod.node).filter((node: any) => node.type === "CallExpression");
+						const callExpressions = this.syntaxAnalyser
+							.expandAllContent(UIMethod.node)
+							.filter((node: any) => node.type === "CallExpression");
 						accumulator.push(...callExpressions);
 					}
 					return accumulator;
 				}, []);
 
-				const setModelCallExpressions = callExpressions.filter((callExpression: any) => callExpression.callee?.property?.name === "setModel" && callExpression.arguments && callExpression.arguments[1]?.value);
+				const setModelCallExpressions = callExpressions.filter(
+					(callExpression: any) =>
+						callExpression.callee?.property?.name === "setModel" &&
+						callExpression.arguments &&
+						callExpression.arguments[1]?.value
+				);
 				models = setModelCallExpressions.map((callExpression: any) => {
 					const modelName = callExpression.arguments[1].value;
-					const modelClassName = this.syntaxAnalyser.getClassNameFromSingleAcornNode(callExpression.arguments[0], UIClass);
+					const modelClassName = this.syntaxAnalyser.getClassNameFromSingleAcornNode(
+						callExpression.arguments[0],
+						UIClass
+					);
 
 					return {
 						type: modelClassName,
 						name: modelName
-					}
+					};
 				});
 			}
-
 		}
 
 		return models;
@@ -248,23 +297,27 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 		return objectToReturn;
 	}
 
-	private _generatePropertyFieldsFor(className: string, fieldsAndMethods: IFieldsAndMethods = {
-		className: "generic",
-		fields: [],
-		methods: []
-	}) {
-
-		const UIClass = UI5Parser.getInstance().classFactory.getUIClass(className);
-		fieldsAndMethods.fields = fieldsAndMethods.fields.concat(UIClass.properties.map(property => ({
-			name: property.name,
-			type: property.type,
-			description: property.description,
-			visibility: property.visibility,
-			owner: "",
-			abstract: false,
-			static: false,
-			deprecated: false
-		})));
+	private _generatePropertyFieldsFor(
+		className: string,
+		fieldsAndMethods: IFieldsAndMethods = {
+			className: "generic",
+			fields: [],
+			methods: []
+		}
+	) {
+		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		fieldsAndMethods.fields = fieldsAndMethods.fields.concat(
+			UIClass.properties.map(property => ({
+				name: property.name,
+				type: property.type,
+				description: property.description,
+				visibility: property.visibility,
+				owner: "",
+				abstract: false,
+				static: false,
+				deprecated: false
+			}))
+		);
 
 		if (UIClass.parentClassNameDotNotation) {
 			this._generatePropertyFieldsFor(UIClass.parentClassNameDotNotation, fieldsAndMethods);
@@ -275,7 +328,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	public getStackOfNodesForInnerParamsForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
-		const UIClass = UI5Parser.getInstance().classFactory.getUIClass(className);
+		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {
@@ -285,10 +338,20 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 			if (methodNode) {
 				const methodBody = methodNode.body;
 				const content = methodBody && this.syntaxAnalyser.expandAllContent(methodBody);
-				const nodeWithCurrentPosition = content && this.syntaxAnalyser.findAcornNode(content.filter((node: any) => node.type === "CallExpression").reverse(), position);
+				const nodeWithCurrentPosition =
+					content &&
+					this.syntaxAnalyser.findAcornNode(
+						content.filter((node: any) => node.type === "CallExpression").reverse(),
+						position
+					);
 
 				if (nodeWithCurrentPosition) {
-					this._generateStackOfNodesForInnerPosition(nodeWithCurrentPosition, position, stack, checkForLastPosition);
+					this._generateStackOfNodesForInnerPosition(
+						nodeWithCurrentPosition,
+						position,
+						stack,
+						checkForLastPosition
+					);
 				}
 			}
 		}
@@ -296,10 +359,28 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 		return stack;
 	}
 
-	private _generateStackOfNodesForInnerPosition(node: any, position: number, stack: any[], checkForLastPosition = false) {
-		const nodeTypesToUnshift = ["CallExpression", "MemberExpression", "ThisExpression", "NewExpression", "Identifier"];
-		const positionIsCorrect = node.start < position && (checkForLastPosition ? node.end >= position : node.end > position);
-		if (node && positionIsCorrect && nodeTypesToUnshift.indexOf(node.type) > -1 && node.property?.name !== "✖" && node.property?.name !== "prototype") {
+	private _generateStackOfNodesForInnerPosition(
+		node: any,
+		position: number,
+		stack: any[],
+		checkForLastPosition = false
+	) {
+		const nodeTypesToUnshift = [
+			"CallExpression",
+			"MemberExpression",
+			"ThisExpression",
+			"NewExpression",
+			"Identifier"
+		];
+		const positionIsCorrect =
+			node.start < position && (checkForLastPosition ? node.end >= position : node.end > position);
+		if (
+			node &&
+			positionIsCorrect &&
+			nodeTypesToUnshift.indexOf(node.type) > -1 &&
+			node.property?.name !== "✖" &&
+			node.property?.name !== "prototype"
+		) {
 			stack.unshift(node);
 		}
 

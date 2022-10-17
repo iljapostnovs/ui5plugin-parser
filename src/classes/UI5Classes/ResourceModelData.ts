@@ -1,3 +1,4 @@
+import { AbstractUI5Parser } from "../../IUI5Parser";
 import { UI5Parser } from "../../UI5Parser";
 import { TextDocument } from "./abstraction/TextDocument";
 
@@ -16,13 +17,13 @@ export class ResourceModelData {
 	public static resourceModels: IResourceModel = {};
 
 	static async readTexts() {
-		const resourceModelFiles = UI5Parser.getInstance().fileReader.getResourceModelFiles();
+		const resourceModelFiles = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getResourceModelFiles();
 		resourceModelFiles.forEach(resourceModelFile => {
 			this._updateResourceModelData(resourceModelFile);
 		});
 	}
 
-	private static _updateResourceModelData(resourceModelFile: { content: string, componentName: string }) {
+	private static _updateResourceModelData(resourceModelFile: { content: string; componentName: string }) {
 		this.resourceModels[resourceModelFile.componentName] = [];
 
 		const texts = resourceModelFile.content.match(/.*?([a-zA-Z]|\s)=.*([a-zA-Z]|\s)/g);
@@ -41,9 +42,9 @@ export class ResourceModelData {
 	}
 
 	static updateCache(document: TextDocument) {
-		const className = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		const className = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(document.fileName);
 		if (className) {
-			const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(className);
+			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className);
 			if (manifest) {
 				this._updateResourceModelData({
 					componentName: manifest.componentName,
