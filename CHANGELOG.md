@@ -1,3 +1,6 @@
+## 0.6.0 (18-10-2022)
+*  Add typescript support
+
 ## 0.5.23 (23-08-2022)
 *  Add new tag position
 

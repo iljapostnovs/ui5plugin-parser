@@ -9,6 +9,7 @@ import { TextDocument } from "./classes/UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
 import { IFileReader } from "./classes/utils/IFileReader";
 import { UI5TSParser } from "./UI5TSParser";
+import { AbstractUI5Parser } from "./IUI5Parser";
 
 export {
 	UI5Parser,
@@ -19,6 +20,7 @@ export {
 	ISyntaxAnalyser,
 	AcornSyntaxAnalyzer,
 	PackageParserConfigHandler,
+	AbstractUI5Parser,
 	XMLParser,
 	TextDocument,
 	WorkspaceFolder

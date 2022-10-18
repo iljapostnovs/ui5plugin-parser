@@ -19,15 +19,17 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 	}
 
 	getUI5Version() {
-		return this._package?.ui5?.ui5parser?.ui5version || "1.60.10";
+		return this._package?.ui5?.ui5parser?.ui5version || "1.84.29";
 	}
 
 	getExcludeFolderPatterns() {
-		return this._package?.ui5?.ui5parser?.excludeFolderPatterns || [
-			"**/resources/**",
-			"**/dist/**/**",
-			"**/node_modules/**"
-		];
+		return (
+			this._package?.ui5?.ui5parser?.excludeFolderPatterns || [
+				"**/resources/**",
+				"**/dist/**/**",
+				"**/node_modules/**"
+			]
+		);
 	}
 
 	getDataSource() {
@@ -67,9 +69,9 @@ export interface IUI5ParserEntryFields {
 }
 
 export interface IUI5ParserEntry {
-	ui5parser?: IUI5ParserEntryFields
+	ui5parser?: IUI5ParserEntryFields;
 }
 
 export interface IUI5PackageConfigEntry {
-	ui5?: IUI5ParserEntry
+	ui5?: IUI5ParserEntry;
 }

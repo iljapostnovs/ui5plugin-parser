@@ -2,7 +2,7 @@
 
 Parser package for UI5 based projects
 
-Primarely used by ui5plugin-linter package and Visual Studio Code SAPUI5 Extension
+Primarely used by ```ui5plugin-linter``` package and Visual Studio Code SAPUI5 Extension
 
 ## How to use
 
@@ -11,8 +11,19 @@ Initialization process reads the metadata of standard SAPUI5 classes and parses 
 
 ```ts
 const parser = AbstractUI5Parser.getInstance(UI5Parser);
+//or
+const parser = AbstractUI5Parser.getInstance(UI5TSParser);
+//Only one parser can be used in one session!
+
 await parser.initialize();
 ```
+### TS vs JS
+#### Initialization
+If any typescript file is found in the project, parser considers that it's TS project. <br/>
+```tsconfig.json``` should be located in CWD.
+
+#### Folder exclusions
+For convenience purposes ```UI5TSParser``` ignores ```webapp``` and ```src-gen``` folders, because they contain transpiled JS/XML files, which can make the parser to think that source files are there. If build folder name is different, is should be added to ```excludeFolderPatterns``` in your config (```VSCode Preferences``` in case of UI5 Extension, ```package.json``` in case of cli usage).
 
 ### Constructor
 
@@ -82,7 +93,7 @@ Default package.json config looks as follows:
 {
 	"ui5": {
 		"ui5parser": {
-			"ui5version": "1.60.10",
+			"ui5version": "1.84.29",
 			"excludeFolderPatterns": ["**/resources/**", "**/dist/**/**", "**/node_modules/**"],
 			"dataSource": "https://ui5.sap.com/",
 			"rejectUnauthorized": false,

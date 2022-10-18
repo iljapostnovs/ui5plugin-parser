@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from "axios";
+import { AxiosRequestConfig, Axios } from "axios";
 import * as https from "https";
 import { AbstractUI5Parser } from "../../IUI5Parser";
 import { UI5Parser } from "../../UI5Parser";
@@ -13,7 +13,12 @@ export class HTTPHandler {
 		options.httpsAgent = agent;
 
 		try {
-			data = (await axios.get(uri, options)).data;
+			const response = await new Axios(options).get(uri);
+			if (response.headers?.["content-type"] === "application/json") {
+				data = JSON.parse(response.data);
+			} else {
+				data = response.data;
+			}
 		} catch (error) {
 			console.error(
 				`Error occurred sending HTTP Request. Message: "${(<any>error).message}". Response data: "${

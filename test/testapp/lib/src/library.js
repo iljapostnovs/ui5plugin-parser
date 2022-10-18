@@ -20,7 +20,7 @@ sap.ui.define([
 		],
 		elements: [
 		],
-		version: "1.60.10"
+		version: "1.84.29"
 	});
 
 	let sPath = sap.ui.require.toUrl("com/test/library");

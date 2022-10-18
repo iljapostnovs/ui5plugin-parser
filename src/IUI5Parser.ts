@@ -1,10 +1,12 @@
 import * as fs from "fs";
+import glob = require("glob");
 import * as path from "path";
-import { IFileReader } from ".";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
+import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
 import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
 import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
 import { AbstractCustomClass } from "./classes/UI5Classes/UI5Parser/UIClass/AbstractCustomClass";
+import { IFileReader } from "./classes/utils/IFileReader";
 
 export interface IConstructorParams<CustomClass extends AbstractCustomClass> {
 	fileReader?: IFileReader;
@@ -72,5 +74,22 @@ export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass>
 		}
 
 		return AbstractUI5Parser._instance as unknown as ParserClass;
+	}
+
+	static getIsTypescriptProject(workspaceFolders: WorkspaceFolder[], configHandler: IParserConfigHandler = new PackageParserConfigHandler()) {
+		const escapedFileSeparator = "\\" + path.sep;
+
+		const tsFiles = workspaceFolders?.flatMap(wsFolder => {
+			const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
+			const exclusions: string[] = configHandler.getExcludeFolderPatterns();
+			const exclusionPaths = exclusions.map(excludeString => {
+				return `${wsFolderFSPath}/${excludeString}`;
+			});
+			return glob.sync(`${wsFolderFSPath}/**/*.ts`, {
+				ignore: exclusionPaths
+			});
+		});
+
+		return !!tsFiles?.length || false;
 	}
 }

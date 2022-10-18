@@ -29,7 +29,6 @@
 	},
 	"homepage": "https://github.com/iljapostnovs/ui5plugin-parser#readme",
 	"devDependencies": {
-		"@types/axios": "^0.14.0",
 		"@types/hjson": "^2.4.3",
 		"@types/glob": "^8.0.0",
 		"@types/line-column": "^1.0.0",
