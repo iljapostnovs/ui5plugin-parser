@@ -1,22 +1,29 @@
 import { XMLParser } from "./XMLParser";
-import { CustomUIClass } from "../UI5Classes/UI5Parser/UIClass/CustomUIClass";
 import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
 import { UI5Parser } from "../../UI5Parser";
+import { AbstractUI5Parser } from "../../IUI5Parser";
+import { AbstractCustomClass } from "../UI5Classes/UI5Parser/UIClass/AbstractCustomClass";
 
 export class TextDocumentTransformer {
 	static toXMLFile(document: TextDocument, forceRefresh = false) {
-		const className = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		const className = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(document.fileName);
 		if (className) {
 			const xmlType = document.fileName.endsWith(".fragment.xml") ? "fragment" : "view";
-			const XMLFile = UI5Parser.getInstance().fileReader.getXMLFile(className, xmlType);
+			const XMLFile = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getXMLFile(className, xmlType);
 			if (XMLFile && !XMLFile.XMLParserData) {
 				XMLParser.fillXMLParsedData(XMLFile);
 			}
 			if (XMLFile && (XMLFile.content.length !== document.getText().length || forceRefresh)) {
 				if (xmlType === "view") {
-					UI5Parser.getInstance().fileReader.setNewViewContentToCache(document.getText(), document.fileName);
+					AbstractUI5Parser.getInstance(UI5Parser).fileReader.setNewViewContentToCache(
+						document.getText(),
+						document.fileName
+					);
 				} else if (xmlType === "fragment") {
-					UI5Parser.getInstance().fileReader.setNewFragmentContentToCache(document.getText(), document.fileName);
+					AbstractUI5Parser.getInstance(UI5Parser).fileReader.setNewFragmentContentToCache(
+						document.getText(),
+						document.fileName
+					);
 				}
 			}
 
@@ -25,16 +32,16 @@ export class TextDocumentTransformer {
 	}
 
 	static toUIClass(document: TextDocument) {
-		const className = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
-		return className ? UI5Parser.getInstance().classFactory.getUIClass(className) : undefined;
+		const className = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(document.fileName);
+		return className ? AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className) : undefined;
 	}
 
 	static toCustomUIClass(document: TextDocument) {
-		let customUIClass: CustomUIClass | undefined;
-		const className = UI5Parser.getInstance().fileReader.getClassNameFromPath(document.fileName);
+		let customUIClass: AbstractCustomClass | undefined;
+		const className = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(document.fileName);
 		if (className) {
-			const UIClass = UI5Parser.getInstance().classFactory.getUIClass(className);
-			if (UIClass instanceof CustomUIClass) {
+			const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+			if (UIClass instanceof AbstractCustomClass) {
 				customUIClass = UIClass;
 			}
 		}

@@ -40,7 +40,7 @@
 			"type": "XML"
 		},
 		"dependencies": {
-			"minUI5Version": "1.60.10",
+			"minUI5Version": "1.84.29",
 			"libs": {
 				"sap.ui.core": {},
 				"sap.m": {}

@@ -1,6 +1,7 @@
 import { ICommentPositions, IXMLFile } from "./FileReader";
 import { IUIMethod } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
 import { UI5Parser } from "../../UI5Parser";
+import { AbstractUI5Parser } from "../../IUI5Parser";
 
 export interface ITag {
 	text: string;
@@ -10,7 +11,7 @@ export interface ITag {
 }
 
 export interface IHierarchicalTag extends ITag {
-	tags: IHierarchicalTag[]
+	tags: IHierarchicalTag[];
 }
 export enum PositionType {
 	InExistingAttribute = "1",
@@ -27,63 +28,108 @@ function escapeRegExp(string: string) {
 }
 
 export interface IXMLDocumentIdData {
-	id: string,
-	className: string,
-	tagText: string,
-	sourceClassName: string
+	id: string;
+	className: string;
+	tagText: string;
+	sourceClassName: string;
 }
 
 export class XMLParser {
-	static getXMLFunctionCallTagsAndAttributes(viewOrFragment: IXMLFile, eventHandlerName: string, functionCallClassName?: string) {
-		const tagAndAttributes: { tag: ITag, attributes: string[] }[] = [];
+	static getXMLFunctionCallTagsAndAttributes(
+		viewOrFragment: IXMLFile,
+		eventHandlerName: string,
+		functionCallClassName?: string
+	) {
+		const tagAndAttributes: { tag: ITag; attributes: string[] }[] = [];
 		const positions = this.getPositionsOfFunctionCallInXMLText(eventHandlerName, viewOrFragment.content);
 		if (positions.length > 0) {
 			positions.forEach(position => {
 				const tag = this.getTagInPosition(viewOrFragment, position);
-				if (!tagAndAttributes.find(tagAndAttribute => tagAndAttribute.tag.positionBegin === tag.positionBegin)) {
+				if (
+					!tagAndAttributes.find(tagAndAttribute => tagAndAttribute.tag.positionBegin === tag.positionBegin)
+				) {
 					const attributes = this.getAttributesOfTheTag(tag);
 					const eventHandlerAttributes = attributes?.filter(attribute => {
 						const { attributeValue } = this.getAttributeNameAndValue(attribute);
 						let currentEventHandlerName = this.getEventHandlerNameFromAttributeValue(attributeValue);
 
-						if (currentEventHandlerName !== eventHandlerName && currentEventHandlerName.includes(eventHandlerName)) {
+						if (
+							currentEventHandlerName !== eventHandlerName &&
+							currentEventHandlerName.includes(eventHandlerName)
+						) {
 							//TODO: refactoring
-							const results = new RegExp(`((\\..*?\\.)|("))${eventHandlerName}("|'|\\(|$)`).exec(currentEventHandlerName);
+							const results = new RegExp(`((\\..*?\\.)|("|\\.))${eventHandlerName}("|\\.|'|\\(|$)`).exec(
+								currentEventHandlerName
+							);
 							const filteredResults = results && results[0].split(".").filter(result => !!result);
 							if (filteredResults?.length === 2) {
 								if (functionCallClassName) {
 									const handlerField = filteredResults[0];
-									const responsibleClassName = UI5Parser.getInstance().fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
+									const responsibleClassName =
+										AbstractUI5Parser.getInstance(
+											UI5Parser
+										).fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
 									if (responsibleClassName) {
-										const fields = UI5Parser.getInstance().classFactory.getClassFields(responsibleClassName);
+										const fields =
+											AbstractUI5Parser.getInstance(UI5Parser).classFactory.getClassFields(
+												responsibleClassName
+											);
 										const field = fields.find(field => field.name === handlerField);
-										if (field && field.type && !UI5Parser.getInstance().classFactory.isClassAChildOfClassB(field.type, functionCallClassName)) {
+										if (
+											field &&
+											field.type &&
+											!AbstractUI5Parser.getInstance(
+												UI5Parser
+											).classFactory.isClassAChildOfClassB(field.type, functionCallClassName)
+										) {
 											return false;
 										}
 									}
 								}
-								currentEventHandlerName = filteredResults[1].substring(0, filteredResults[1].length - 1); //removes "'"
+								currentEventHandlerName = filteredResults[1].substring(
+									0,
+									filteredResults[1].length - 1
+								); //removes "'"
 							} else if (filteredResults && filteredResults.length > 2) {
 								//maybe static classes e.g. com.test.formatter.test
-								const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(currentEventHandlerName);
+								const manifest =
+									AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(
+										currentEventHandlerName
+									);
 								if (manifest) {
 									const parts = currentEventHandlerName.split(".");
 									const staticEventHandlerName = parts.pop() || "";
-									if (parts.length > 0 && functionCallClassName && parts.join(".") === functionCallClassName) {
+									if (
+										parts.length > 0 &&
+										functionCallClassName &&
+										parts.join(".") === functionCallClassName
+									) {
 										currentEventHandlerName = staticEventHandlerName;
 									}
 								}
 							}
-							if (currentEventHandlerName !== eventHandlerName && currentEventHandlerName.includes(eventHandlerName)) {
-								const results = new RegExp(`(\\.|"|')${eventHandlerName}("|'|\\()`).test(currentEventHandlerName);
+							if (
+								currentEventHandlerName !== eventHandlerName &&
+								currentEventHandlerName.includes(eventHandlerName)
+							) {
+								const results = new RegExp(`(\\.|"|')${eventHandlerName}("|'|\\(|\\.)`).test(
+									currentEventHandlerName
+								);
 								if (results) {
 									currentEventHandlerName = eventHandlerName;
 								} else {
-									const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(currentEventHandlerName);
+									const manifest =
+										AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(
+											currentEventHandlerName
+										);
 									const parts = currentEventHandlerName.split(".");
 									if (manifest) {
 										currentEventHandlerName = parts.pop() || "";
-										if (parts.length > 0 && functionCallClassName && parts.join(".") !== functionCallClassName) {
+										if (
+											parts.length > 0 &&
+											functionCallClassName &&
+											parts.join(".") !== functionCallClassName
+										) {
 											return false;
 										}
 									} else if (parts.length === 2) {
@@ -92,10 +138,15 @@ export class XMLParser {
 										const requireAttributes = this.getAllAttributesWithRequire(allTags);
 										const className = parts.shift();
 										const methodName = parts.shift();
-										const classPath = className && this.getClassPathFromRequire(requireAttributes, className);
+										const classPath =
+											className && this.getClassPathFromRequire(requireAttributes, className);
 										if (classPath) {
 											const className = classPath.replace(/\//g, ".");
-											if (functionCallClassName && methodName && functionCallClassName !== className) {
+											if (
+												functionCallClassName &&
+												methodName &&
+												functionCallClassName !== className
+											) {
 												return false;
 											} else if (methodName) {
 												currentEventHandlerName = methodName;
@@ -105,7 +156,10 @@ export class XMLParser {
 								}
 							}
 						} else if (functionCallClassName && currentEventHandlerName === eventHandlerName) {
-							const responsibleClassName = UI5Parser.getInstance().fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
+							const responsibleClassName =
+								AbstractUI5Parser.getInstance(
+									UI5Parser
+								).fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
 							if (responsibleClassName !== functionCallClassName) {
 								return false;
 							}
@@ -142,7 +196,9 @@ export class XMLParser {
 	static getAllAttributesWithRequire(tags: ITag[]) {
 		return tags.reduce((requireTags: string[], tag) => {
 			const attributes = XMLParser.getAttributesOfTheTag(tag);
-			const requireAttributes = attributes?.filter(attribute => XMLParser.getAttributeNameAndValue(attribute).attributeName.endsWith(":require"));
+			const requireAttributes = attributes?.filter(attribute =>
+				XMLParser.getAttributeNameAndValue(attribute).attributeName.endsWith(":require")
+			);
 			if (requireAttributes && requireAttributes.length > 0) {
 				requireTags.push(...requireAttributes);
 			}
@@ -155,7 +211,9 @@ export class XMLParser {
 
 		const allTags = this.getAllTags(XMLFile);
 		allTags.forEach(tag => {
-			const idAttribute = this.getAttributesOfTheTag(tag)?.find(attribute => this.getAttributeNameAndValue(attribute).attributeName === "id");
+			const idAttribute = this.getAttributesOfTheTag(tag)?.find(
+				attribute => this.getAttributeNameAndValue(attribute).attributeName === "id"
+			);
 			if (idAttribute) {
 				const className = this.getClassNameInPosition(XMLFile, tag.positionBegin + 1);
 
@@ -166,7 +224,6 @@ export class XMLParser {
 					sourceClassName: XMLFile.name
 				});
 			}
-
 		});
 
 		return result;
@@ -232,7 +289,6 @@ export class XMLParser {
 					parentTag.positionEnd = positionEnd;
 					parentTag.text = tag.text;
 				}
-
 			}
 		}
 
@@ -270,7 +326,8 @@ export class XMLParser {
 		if (tags.length === 0) {
 			return tag;
 		}
-		const correctPosition = tags[currentIndex].positionBegin <= position && tags[currentIndex].positionEnd >= position;
+		const correctPosition =
+			tags[currentIndex].positionBegin <= position && tags[currentIndex].positionEnd >= position;
 		if (tags.length === 1 && !correctPosition) {
 			return tag;
 		}
@@ -298,12 +355,22 @@ export class XMLParser {
 		let tagPositionEnd = 0;
 
 		const XMLText = XMLFile.content;
-		while (i > 0 && (XMLText[i] !== "<" || !this.getIfPositionIsNotInComments(XMLFile, i) || this.getIfPositionIsInString(XMLFile, i))) {
+		while (
+			i > 0 &&
+			(XMLText[i] !== "<" ||
+				!this.getIfPositionIsNotInComments(XMLFile, i) ||
+				this.getIfPositionIsInString(XMLFile, i))
+		) {
 			i--;
 		}
 		tagPositionBegin = i;
 
-		while (i < XMLText.length && (XMLText[i] !== ">" || !this.getIfPositionIsNotInComments(XMLFile, i) || this.getIfPositionIsInString(XMLFile, i))) {
+		while (
+			i < XMLText.length &&
+			(XMLText[i] !== ">" ||
+				!this.getIfPositionIsNotInComments(XMLFile, i) ||
+				this.getIfPositionIsInString(XMLFile, i))
+		) {
 			i++;
 		}
 		tagPositionEnd = i + 1;
@@ -345,7 +412,6 @@ export class XMLParser {
 			if (document.XMLParserData) {
 				document.XMLParserData.comments = comments;
 			}
-
 		}
 
 		return comments[position];
@@ -594,10 +660,12 @@ export class XMLParser {
 
 	private static _getClassMethodsRecursively(className: string, onlyCustomMethods = true) {
 		let methods: IUIMethod[] = [];
-		const UIClass = UI5Parser.getInstance().classFactory.getUIClass(className);
+		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
 		methods = UIClass.methods;
 
-		const isThisClassFromAProject = !!UI5Parser.getInstance().fileReader.getManifestForClass(UIClass.parentClassNameDotNotation);
+		const isThisClassFromAProject = !!AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(
+			UIClass.parentClassNameDotNotation
+		);
 		if (UIClass.parentClassNameDotNotation && (!onlyCustomMethods || isThisClassFromAProject)) {
 			methods = methods.concat(this._getClassMethodsRecursively(UIClass.parentClassNameDotNotation));
 		}
@@ -636,13 +704,16 @@ export class XMLParser {
 		let tag = tags.shift();
 
 		while (tag) {
-			if (!tag.text.startsWith("</")) { //<asd> <asd/>
+			if (!tag.text.startsWith("</")) {
+				//<asd> <asd/>
 				const hierarchicalSubTag: IHierarchicalTag = { ...tag, tags: [] };
 				hierarchicalTag.tags.push(hierarchicalSubTag);
-				if (!tag.text.endsWith("/>")) { // <asd>
+				if (!tag.text.endsWith("/>")) {
+					// <asd>
 					this._fillSubTags(tags, hierarchicalSubTag);
 				}
-			} else { //</asd>
+			} else {
+				//</asd>
 				break;
 			}
 			tag = tags.shift();
@@ -661,7 +732,10 @@ export class XMLParser {
 		const tags: ITag[] = [];
 
 		while (i < XMLText.length) {
-			const thisIsTagEnd = XMLText[i] === ">" && !XMLParser.getIfPositionIsInString(XMLFile, i) && XMLParser.getIfPositionIsNotInComments(XMLFile, i + 1);
+			const thisIsTagEnd =
+				XMLText[i] === ">" &&
+				!XMLParser.getIfPositionIsInString(XMLFile, i) &&
+				XMLParser.getIfPositionIsNotInComments(XMLFile, i + 1);
 			if (thisIsTagEnd) {
 				const indexOfTagBegining = this._getTagBeginingIndex(XMLFile, i);
 				tags.push({
@@ -724,7 +798,12 @@ export class XMLParser {
 		let i = position;
 		const XMLText = XMLFile.content;
 
-		while (i > 0 && (XMLText[i] !== "<" || XMLParser.getIfPositionIsInString(XMLFile, i) || !this.getIfPositionIsNotInComments(XMLFile, i - 1))) {
+		while (
+			i > 0 &&
+			(XMLText[i] !== "<" ||
+				XMLParser.getIfPositionIsInString(XMLFile, i) ||
+				!this.getIfPositionIsNotInComments(XMLFile, i - 1))
+		) {
 			i--;
 		}
 
@@ -769,7 +848,7 @@ export class XMLParser {
 	public static getPositionsOfFunctionCallInXMLText(functionCallName: string, XMLText: string) {
 		const positions: number[] = [];
 
-		const regExpString = `\\.?${functionCallName}("|'|\\()`;
+		const regExpString = `\\.?${functionCallName}("|'|\\(|\\.)`;
 		const regex = new RegExp(regExpString, "g");
 		let result = regex.exec(XMLText);
 		while (result) {
@@ -799,5 +878,4 @@ export class XMLParser {
 
 		return eventHandlerName || "";
 	}
-
 }

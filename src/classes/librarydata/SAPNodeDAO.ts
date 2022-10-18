@@ -1,6 +1,7 @@
 import { SAPNode } from "./SAPNode";
 import { UI5Parser } from "../../UI5Parser";
 import { FileReader } from "../utils/FileReader";
+import { AbstractUI5Parser } from "../../IUI5Parser";
 interface ILooseNodeObject {
 	[key: string]: SAPNode;
 }
@@ -51,7 +52,7 @@ export class SAPNodeDAO {
 	}
 
 	private _generateSAPNodes() {
-		const libs: any = UI5Parser.getInstance().configHandler.getLibsToLoad();
+		const libs: any = AbstractUI5Parser.getInstance(UI5Parser).configHandler.getLibsToLoad();
 		const libMap: any = {};
 		libs.forEach((lib: any) => {
 			libMap[lib] = true;
@@ -116,12 +117,12 @@ export class SAPNodeDAO {
 	}
 
 	private _getApiIndexFromCache() {
-		return UI5Parser.getInstance().fileReader.getCache(FileReader.CacheType.APIIndex);
+		return AbstractUI5Parser.getInstance(UI5Parser).fileReader.getCache(FileReader.CacheType.APIIndex);
 	}
 
 	private _cacheApiIndex() {
 		const cache = JSON.stringify(this._nodes);
-		UI5Parser.getInstance().fileReader.setCache(FileReader.CacheType.APIIndex, cache);
+		AbstractUI5Parser.getInstance(UI5Parser).fileReader.setCache(FileReader.CacheType.APIIndex, cache);
 	}
 
 	private async _fetchApiIndex() {

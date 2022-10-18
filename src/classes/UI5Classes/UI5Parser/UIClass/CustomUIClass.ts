@@ -1,70 +1,57 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import { IAcornLocation, IAcornPosition } from "../../JSParser/AcornSyntaxAnalyzer";
 import * as path from "path";
-import { AbstractUIClass, IUIField, IUIAggregation, IUIEvent, IUIMethod, IUIProperty, IUIAssociation, IUIEventParam, IUIMethodParam, IMember } from "./AbstractUIClass";
+import {
+	IUIAggregation,
+	IUIEvent,
+	IUIMethod,
+	IUIProperty,
+	IUIAssociation,
+	IUIEventParam,
+	IUIMethodParam
+} from "./AbstractUIClass";
 import * as commentParser from "comment-parser";
 import LineColumn = require("line-column");
 import { UI5Parser } from "../../../../UI5Parser";
-import { IViewsAndFragments } from "../../interfaces/IUIClassFactory";
 import { ISyntaxAnalyser } from "../../JSParser/ISyntaxAnalyser";
-import { ICacheable } from "../../abstraction/ICacheable";
+import {
+	AbstractCustomClass,
+	ICustomClassField,
+	ICustomClassMethod,
+	ICustomMember,
+	IUIDefine
+} from "./AbstractCustomClass";
+import { AbstractUI5Parser } from "../../../../IUI5Parser";
 const acornLoose = require("acorn-loose");
 
-interface IUIDefine {
-	path: string;
-	className: string;
-	classNameDotNotation: string;
-	start: number;
-	end: number;
-	acornNode: any;
-}
 interface ILooseObject {
 	[key: string]: any;
 }
 
-export interface IAcornNodeBearer {
-	acornNode?: any;
-	memberPropertyNode?: any;
-}
-
-export interface ICustomMember extends IMember, IAcornNodeBearer, IXMLDocumentMentionable, UI5Ignoreable {
-}
-
-export interface IXMLDocumentMentionable {
-	mentionedInTheXMLDocument?: boolean;
-}
 interface IComment {
 	text: string;
 	start: number;
 	end: number;
 	jsdoc: any;
-	loc: IAcornLocation
+	loc: IAcornLocation;
 }
 export interface UI5Ignoreable {
 	ui5ignored?: boolean;
 }
-export interface ICustomClassUIMethod extends IUIMethod, IAcornNodeBearer, IXMLDocumentMentionable, UI5Ignoreable {
-	position?: number;
-	isEventHandler: boolean;
+export interface ICustomClassUIMethod extends ICustomClassMethod<any> {
 	acornParams?: any;
 }
-export interface ICustomClassUIField extends IUIField, IAcornNodeBearer, IXMLDocumentMentionable, UI5Ignoreable {
+export interface ICustomClassUIField extends ICustomClassField<any> {
 	customData?: ILooseObject;
 }
-
-export interface IViewsAndFragmentsCache extends IViewsAndFragments {
-	flags: {
-		removeDuplicates: boolean,
-		includeChildren: boolean,
-		includeMentioned: boolean,
-		includeParents: boolean
-	}
-}
-export class CustomUIClass extends AbstractUIClass implements ICacheable {
+export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
+	classText = "";
+	node: any;
+	UIDefine: IUIDefine<any>[];
+	parentClassNameDotNotation = "";
+	fsPath: string;
 	public methods: ICustomClassUIMethod[] = [];
 	public fields: ICustomClassUIField[] = [];
-	public classText = "";
-	public UIDefine: IUIDefine[] = [];
 	public comments: IComment[] = [];
 	public acornClassBody: any;
 	public acornMethodsAndFields: any[] = [];
@@ -72,20 +59,18 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	private _parentVariableName: any;
 	public acornReturnedClassExtendBody: any | undefined;
 	public classBodyAcornVariableName: string | undefined;
-	public classFSPath: string | undefined;
-	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
-	private readonly _cache: ILooseObject = {};
 
 	constructor(className: string, syntaxAnalyser: ISyntaxAnalyser, documentText?: string) {
 		super(className);
 
 		this.syntaxAnalyser = syntaxAnalyser;
-		this.classFSPath = UI5Parser.getInstance().fileReader.getClassFSPathFromClassName(this.className);
+		this.fsPath =
+			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassFSPathFromClassName(this.className) ?? "";
 		this._readFileContainingThisClassCode(documentText); //todo: rename. not always reading anyore.
 		this.UIDefine = this._getUIDefine();
 		this.acornClassBody = this._getThisClassBodyAcorn();
-		this._fillParentClassNameDotNotation();
+		this._fillParentClassName();
 		this._fillUI5Metadata();
 		this._fillMethodsAndFields();
 		this._enrichMemberInfoWithJSDocs();
@@ -94,51 +79,48 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 		this._enrichVariablesWithJSDocTypesAndVisibility();
 	}
 
-	setCache<Type>(cacheName: string, cacheValue: Type) {
-		this._cache[cacheName] = cacheValue;
+	getMembers(): ICustomMember<any>[] {
+		return super.getMembers() as ICustomMember<any>[];
 	}
 
-	getCache<Type>(cacheName: string): Type {
-		return <Type>this._cache[cacheName];
-	}
-
-	getMembers(): ICustomMember[] {
-		return super.getMembers();
-	}
-
-	private _fillIsAbstract() {
+	protected _fillIsAbstract() {
 		this.abstract = !!this.methods.find(method => method.abstract) || !!this.fields.find(field => field.abstract);
 	}
 
 	private _enrichMemberInfoWithJSDocs() {
 		if (this.acornClassBody) {
 			//instance methods
-			let methods = this.acornClassBody.properties?.filter((node: any) =>
-				node.value.type === "FunctionExpression" ||
-				node.value.type === "ArrowFunctionExpression"
-			) || [];
+			let methods =
+				this.acornClassBody.properties?.filter(
+					(node: any) =>
+						node.value.type === "FunctionExpression" || node.value.type === "ArrowFunctionExpression"
+				) || [];
 
-			const fields = this.acornClassBody.properties?.filter((node: any) =>
-				node.value.type !== "FunctionExpression" &&
-				node.value.type !== "ArrowFunctionExpression"
-			) || [];
+			const fields =
+				this.acornClassBody.properties?.filter(
+					(node: any) =>
+						node.value.type !== "FunctionExpression" && node.value.type !== "ArrowFunctionExpression"
+				) || [];
 
 			//static methods
 			//TODO: Move this
 			const UIDefineBody = this.fileContent?.body[0]?.expression?.arguments[1]?.body?.body;
 			if (UIDefineBody && this.classBodyAcornVariableName) {
 				const thisClassVariableAssignments: any[] = UIDefineBody.filter((node: any) => {
-					return node.type === "ExpressionStatement" &&
-						(
-							node.expression?.left?.object?.name === this.classBodyAcornVariableName ||
-							node.expression?.left?.object?.object?.name === this.classBodyAcornVariableName
-						);
+					return (
+						node.type === "ExpressionStatement" &&
+						(node.expression?.left?.object?.name === this.classBodyAcornVariableName ||
+							node.expression?.left?.object?.object?.name === this.classBodyAcornVariableName)
+					);
 				});
 
 				const staticMethods = thisClassVariableAssignments
 					.filter(node => {
 						const assignmentBody = node.expression.right;
-						return assignmentBody.type === "ArrowFunctionExpression" || assignmentBody.type === "FunctionExpression";
+						return (
+							assignmentBody.type === "ArrowFunctionExpression" ||
+							assignmentBody.type === "FunctionExpression"
+						);
 					})
 					.map(node => ({
 						key: {
@@ -166,7 +148,9 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 				});
 				if (comment) {
 					const paramTags = comment.jsdoc?.tags?.filter((tag: any) => tag.tag === "param");
-					const returnTag = comment.jsdoc?.tags?.find((tag: any) => tag.tag === "return" || tag.tag === "returns");
+					const returnTag = comment.jsdoc?.tags?.find(
+						(tag: any) => tag.tag === "return" || tag.tag === "returns"
+					);
 					const asyncTag = comment.jsdoc?.tags?.find((tag: any) => tag.tag === "async");
 					const isPrivate = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "private");
 					const isPublic = !!comment.jsdoc?.tags?.find((tag: any) => tag.tag === "public");
@@ -185,7 +169,13 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 					if (UIMethod) {
 						if (isPrivate || isPublic || isProtected) {
-							UIMethod.visibility = isPrivate ? "private" : isProtected ? "protected" : isPublic ? "public" : UIMethod.visibility;
+							UIMethod.visibility = isPrivate
+								? "private"
+								: isProtected
+								? "protected"
+								: isPublic
+								? "public"
+								: UIMethod.visibility;
 						}
 						if (asyncTag) {
 							UIMethod.returnType = "Promise";
@@ -243,7 +233,13 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					const UIField = this.fields.find(field => field.name === fieldName);
 					if (UIField) {
 						if (isPrivate || isPublic || isProtected) {
-							UIField.visibility = isPrivate ? "private" : isProtected ? "protected" : isPublic ? "public" : UIField.visibility;
+							UIField.visibility = isPrivate
+								? "private"
+								: isProtected
+								? "protected"
+								: isPublic
+								? "public"
+								: UIField.visibility;
 						}
 
 						if (comment.jsdoc) {
@@ -286,7 +282,6 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 				}
 				this._fillFieldsRecursively(param.customData, tagNameParts, tag);
 			}
-
 		} else {
 			const param = params.find((param: any) => param.name === tag.name);
 			if (param) {
@@ -296,7 +291,6 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					UIParam.type = param.jsType;
 				}
 			}
-
 		}
 	}
 
@@ -325,7 +319,9 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 	private _readFileContainingThisClassCode(documentText?: string) {
 		if (!documentText) {
-			documentText = UI5Parser.getInstance().fileReader.getDocumentTextFromCustomClassName(this.className);
+			documentText = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getDocumentTextFromCustomClassName(
+				this.className
+			);
 		}
 		this.classText = documentText || "";
 		if (documentText) {
@@ -333,7 +329,14 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 				this.fileContent = acornLoose.parse(documentText, {
 					ecmaVersion: 11,
 					locations: true,
-					onComment: (isBlock: boolean, text: string, start: number, end: number, startLoc: IAcornPosition, endLoc: IAcornPosition) => {
+					onComment: (
+						isBlock: boolean,
+						text: string,
+						start: number,
+						end: number,
+						startLoc: IAcornPosition,
+						endLoc: IAcornPosition
+					) => {
 						if (isBlock && text?.startsWith("*")) {
 							this.comments.push({
 								text: text,
@@ -346,7 +349,6 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 								}
 							});
 						}
-
 					}
 				});
 			} catch (error) {
@@ -358,7 +360,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 		}
 	}
 
-	private _getUIDefine() {
+	protected _getUIDefine() {
 		let UIDefine: IUIDefine[] = [];
 
 		if (this.fileContent) {
@@ -366,18 +368,16 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 			if (args && args.length >= 2) {
 				const UIDefinePaths: string[] = args[0].elements?.map((part: any) => part.value) || [];
 				const UIDefineClassNames: string[] = args[1].params?.map((part: any) => part.name) || [];
-				UIDefine = UIDefinePaths
-					.filter(path => !!path)
-					.map((classPath, index): IUIDefine => {
-						return {
-							path: classPath,
-							className: UIDefineClassNames[index],
-							classNameDotNotation: this._generateClassNameDotNotationFor(classPath),
-							start: args[0].elements[index].start,
-							end: args[0].elements[index].end,
-							acornNode: args[0].elements[index]
-						};
-					});
+				UIDefine = UIDefinePaths.filter(path => !!path).map((classPath, index): IUIDefine => {
+					return {
+						path: classPath,
+						className: UIDefineClassNames[index],
+						classNameDotNotation: this._generateClassNameDotNotationFor(classPath),
+						start: args[0].elements[index].start,
+						end: args[0].elements[index].end,
+						node: args[0].elements[index]
+					};
+				});
 			}
 		}
 
@@ -388,11 +388,11 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 		let className = classPath.replace(/\//g, ".");
 
 		if (classPath?.startsWith(".")) {
-			const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(this.className);
+			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(this.className);
 
-			if (manifest && this.classFSPath) {
+			if (manifest && this.fsPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);
-				const importClassPath = path.resolve(path.dirname(this.classFSPath), classPath);
+				const importClassPath = path.resolve(path.dirname(this.fsPath), classPath);
 				const relativeToManifest = path.relative(normalizedManifestPath, importClassPath);
 				const pathRelativeToManifestDotNotation = relativeToManifest.split(path.sep).join(".");
 				className = `${manifest.componentName}.${pathRelativeToManifestDotNotation}`;
@@ -412,7 +412,6 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 		const returnKeyword = this._getReturnKeywordFromBody();
 		if (returnKeyword && body) {
-
 			classBody = this._getClassBodyFromPartAcorn(returnKeyword.argument);
 		}
 
@@ -459,7 +458,9 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 				);
 
 			if (variable) {
-				const neededDeclaration = variable.declarations.find((declaration: any) => declaration.id.name === part.name);
+				const neededDeclaration = variable.declarations.find(
+					(declaration: any) => declaration.id.name === part.name
+				);
 				classBody = this._getClassBodyFromPartAcorn(neededDeclaration.init);
 				this.acornReturnedClassExtendBody = neededDeclaration.init;
 				this.classBodyAcornVariableName = part.name;
@@ -471,8 +472,9 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 	private _getParentNameFromManifest() {
 		let parentName: string | undefined;
-		const manifest = UI5Parser.getInstance().fileReader.getManifestForClass(this.className);
-		if (manifest?.content &&
+		const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(this.className);
+		if (
+			manifest?.content &&
 			manifest?.content["sap.ui5"]?.extends?.extensions &&
 			manifest?.content["sap.ui5"]?.extends?.extensions["sap.ui.controllerExtensions"]
 		) {
@@ -502,18 +504,36 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	}
 
 	public isAssignmentStatementForThisVariable(node: any) {
-		return node.type === "AssignmentExpression" &&
+		return (
+			node.type === "AssignmentExpression" &&
 			node.operator === "=" &&
 			node.left?.type === "MemberExpression" &&
 			node.left?.property?.name &&
-			node.left?.object?.type === "ThisExpression";
+			node.left?.object?.type === "ThisExpression"
+		);
 	}
-	private _fillMethodsAndFields() {
+	protected _fillMethods(): ICustomClassMethod<any>[] {
+		return [];
+	}
+	protected _fillFields(): ICustomClassField<any>[] {
+		return [];
+	}
+	protected _fillParentClassName(): void {
+		if (this._parentVariableName) {
+			const parentClassUIDefine = this.UIDefine.find(UIDefine => UIDefine.className === this._parentVariableName);
+			if (parentClassUIDefine) {
+				this.parentClassNameDotNotation = parentClassUIDefine.classNameDotNotation;
+			}
+		}
+	}
+	protected _fillMethodsAndFields() {
 		if (this.acornClassBody?.properties) {
-
 			this.acornClassBody.properties.forEach((property: any) => {
 				const name = property.key?.name || property.key?.value;
-				if (property.value?.type === "FunctionExpression" || property.value?.type === "ArrowFunctionExpression") {
+				if (
+					property.value?.type === "FunctionExpression" ||
+					property.value?.type === "ArrowFunctionExpression"
+				) {
 					const method: ICustomClassUIMethod = {
 						name: name,
 						params: this._generateParamTextForMethod(property.value.params),
@@ -522,27 +542,31 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 						description: "",
 						visibility: name?.startsWith("_") ? "private" : "public",
 						acornParams: property.value.params,
-						acornNode: property.value,
+						node: property.value,
 						isEventHandler: false,
 						owner: this.className,
-						memberPropertyNode: property.key,
+						loc: property.key.loc,
 						static: false,
 						abstract: false,
-						deprecated: false
+						deprecated: false,
+						ui5ignored: false,
+						mentionedInTheXMLDocument: false
 					};
 					this.methods.push(method);
 				} else if (property.value?.type === "Identifier" || property.value?.type === "Literal") {
 					this.fields.push({
 						name: name,
 						type: property.jsType,
-						acornNode: property,
+						node: property,
 						description: property.jsType || "",
 						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
-						memberPropertyNode: property.key,
+						loc: property.key.loc,
 						static: false,
 						abstract: false,
-						deprecated: false
+						deprecated: false,
+						ui5ignored: false,
+						mentionedInTheXMLDocument: false
 					});
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "ObjectExpression") {
@@ -550,14 +574,16 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 						name: name,
 						type: "map",
 						description: "map",
-						acornNode: property,
+						node: property,
 						customData: this._generateCustomDataForObject(property.value),
 						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
-						memberPropertyNode: property.key,
+						loc: property.key.loc,
 						static: false,
 						abstract: false,
-						deprecated: false
+						deprecated: false,
+						ui5ignored: false,
+						mentionedInTheXMLDocument: false
 					});
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "MemberExpression") {
@@ -565,13 +591,15 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 						name: name,
 						type: undefined,
 						description: "",
-						acornNode: property,
+						node: property,
 						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
-						memberPropertyNode: property.key,
+						loc: property.key.loc,
 						static: false,
 						abstract: false,
-						deprecated: false
+						deprecated: false,
+						ui5ignored: false,
+						mentionedInTheXMLDocument: false
 					});
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "ArrayExpression") {
@@ -579,13 +607,15 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 						name: name,
 						type: "any[]",
 						description: "",
-						acornNode: property,
+						node: property,
 						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
-						memberPropertyNode: property.key,
+						loc: property.key.loc,
 						static: false,
 						abstract: false,
-						deprecated: false
+						deprecated: false,
+						ui5ignored: false,
+						mentionedInTheXMLDocument: false
 					});
 					this.acornMethodsAndFields.push(property);
 				} else if (property.value?.type === "NewExpression") {
@@ -593,38 +623,47 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 						name: name,
 						type: undefined,
 						description: "",
-						acornNode: property,
+						node: property,
 						visibility: name?.startsWith("_") ? "private" : "public",
 						owner: this.className,
-						memberPropertyNode: property.key,
+						loc: property.key.loc,
 						static: false,
 						abstract: false,
-						deprecated: false
+						deprecated: false,
+						ui5ignored: false,
+						mentionedInTheXMLDocument: false
 					});
 					this.acornMethodsAndFields.push(property);
 				}
 			});
 			this.acornClassBody.properties?.forEach((property: any) => {
-				if (property.value?.type === "FunctionExpression" || property.value?.type === "ArrowFunctionExpression") {
-					const assignmentExpressions = this.syntaxAnalyser.expandAllContent(property.value.body).filter((node: any) => node.type === "AssignmentExpression");
+				if (
+					property.value?.type === "FunctionExpression" ||
+					property.value?.type === "ArrowFunctionExpression"
+				) {
+					const assignmentExpressions = this.syntaxAnalyser
+						.expandAllContent(property.value.body)
+						.filter((node: any) => node.type === "AssignmentExpression");
 					assignmentExpressions?.forEach((node: any) => {
 						if (this.isAssignmentStatementForThisVariable(node)) {
 							const field = this.fields.find(field => field.name === node.left.property.name);
 							if (field) {
 								field.type = field.type || node.left.property.name.jsType;
-								field.acornNode = node.left;
+								field.node = node.left;
 							} else {
 								this.fields.push({
 									name: node.left.property.name,
 									type: node.left.property.name.jsType,
 									description: node.left.property.name.jsType || "",
 									visibility: node.left.property.name?.startsWith("_") ? "private" : "public",
-									acornNode: node.left,
+									node: node.left,
 									owner: this.className,
-									memberPropertyNode: node.left.property,
+									loc: node.left.property.loc,
 									static: false,
 									abstract: false,
-									deprecated: false
+									deprecated: false,
+									ui5ignored: false,
+									mentionedInTheXMLDocument: false
 								});
 							}
 						}
@@ -635,7 +674,7 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 			this._fillMethodsAndFieldsFromPrototype();
 
 			//remove duplicates
-			this.fields = this.fields.reduce((accumulator: IUIField[], field: IUIField) => {
+			this.fields = this.fields.reduce((accumulator: ICustomClassUIField[], field: ICustomClassUIField) => {
 				const existingField = accumulator.find(accumulatedField => accumulatedField.name === field.name);
 				if (existingField && field.type && !existingField.type) {
 					accumulator[accumulator.indexOf(existingField)] = field;
@@ -653,7 +692,9 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 				owner: this.className,
 				static: false,
 				abstract: false,
-				deprecated: false
+				deprecated: false,
+				ui5ignored: false,
+				mentionedInTheXMLDocument: false
 			});
 		}
 
@@ -705,13 +746,13 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 		const UIDefineBodyExists =
 			this.fileContent?.body &&
 			this.fileContent?.body[0]?.expression?.arguments &&
-			(
-				body?.body[0]?.expression?.arguments[1]?.body?.body ||
-				body?.body[0]?.expression?.arguments[2]?.body?.body
-			)
+			(body?.body[0]?.expression?.arguments[1]?.body?.body ||
+				body?.body[0]?.expression?.arguments[2]?.body?.body);
 
 		if (UIDefineBodyExists) {
-			UIDefineBody = this.fileContent?.body[0]?.expression?.arguments[1]?.body?.body || this.fileContent?.body[0]?.expression?.arguments[2]?.body?.body;
+			UIDefineBody =
+				this.fileContent?.body[0]?.expression?.arguments[1]?.body?.body ||
+				this.fileContent?.body[0]?.expression?.arguments[2]?.body?.body;
 		}
 
 		return UIDefineBody;
@@ -722,16 +763,17 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 		if (UIDefineBody && this.classBodyAcornVariableName) {
 			const thisClassVariableAssignments: any[] = UIDefineBody.filter((node: any) => {
-				return node.type === "ExpressionStatement" &&
-					(
-						node.expression?.left?.object?.name === this.classBodyAcornVariableName ||
-						node.expression?.left?.object?.object?.name === this.classBodyAcornVariableName
-					);
+				return (
+					node.type === "ExpressionStatement" &&
+					(node.expression?.left?.object?.name === this.classBodyAcornVariableName ||
+						node.expression?.left?.object?.object?.name === this.classBodyAcornVariableName)
+				);
 			});
 
 			thisClassVariableAssignments?.forEach(node => {
 				const assignmentBody = node.expression?.right;
-				const isMethod = assignmentBody?.type === "ArrowFunctionExpression" || assignmentBody?.type === "FunctionExpression";
+				const isMethod =
+					assignmentBody?.type === "ArrowFunctionExpression" || assignmentBody?.type === "FunctionExpression";
 				const isField = !isMethod;
 
 				const name = node?.expression?.left?.property?.name;
@@ -749,13 +791,15 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 						description: "",
 						visibility: name?.startsWith("_") ? "private" : "public",
 						acornParams: assignmentBody.params,
-						acornNode: assignmentBody,
+						node: assignmentBody,
 						isEventHandler: false,
 						owner: this.className,
-						memberPropertyNode: node.expression.left.property,
+						loc: node.expression.left.property.loc,
 						static: isStatic,
 						abstract: false,
-						deprecated: false
+						deprecated: false,
+						ui5ignored: false,
+						mentionedInTheXMLDocument: false
 					};
 					this.methods.push(method);
 				} else if (isField) {
@@ -764,12 +808,14 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 						visibility: name?.startsWith("_") ? "private" : "public",
 						type: typeof assignmentBody.value,
 						description: assignmentBody.jsType || "",
-						acornNode: node.expression.left,
+						node: node.expression.left,
 						owner: this.className,
-						memberPropertyNode: node.expression.left.property,
+						loc: node.expression.left.property.loc,
 						static: isStatic,
 						abstract: false,
-						deprecated: false
+						deprecated: false,
+						ui5ignored: false,
+						mentionedInTheXMLDocument: false
 					});
 				}
 			});
@@ -777,7 +823,9 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 	}
 
 	public static generateDescriptionForMethod(method: IUIMethod) {
-		return `(${method.params.map(param => param.name).join(", ")}) : ${method.returnType ? method.returnType : "void"}`;
+		return `(${method.params.map(param => param.name).join(", ")}) : ${
+			method.returnType ? method.returnType : "void"
+		}`;
 	}
 
 	public fillTypesFromHungarionNotation() {
@@ -832,7 +880,10 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 	private _fillPropertyMethods(aMethods: ICustomClassUIMethod[]) {
 		this.properties?.forEach(property => {
-			const propertyWithFirstBigLetter = `${property.name[0].toUpperCase()}${property.name.substring(1, property.name.length)}`;
+			const propertyWithFirstBigLetter = `${property.name[0].toUpperCase()}${property.name.substring(
+				1,
+				property.name.length
+			)}`;
 			const getterName = `get${propertyWithFirstBigLetter}`;
 			const setterName = `set${propertyWithFirstBigLetter}`;
 
@@ -846,25 +897,31 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 				owner: this.className,
 				static: false,
 				abstract: false,
-				deprecated: false
+				deprecated: false,
+				mentionedInTheXMLDocument: false,
+				ui5ignored: false
 			});
 
 			aMethods.push({
 				name: setterName,
 				description: `Setter for property ${property.name}`,
-				params: [{
-					name: `v${propertyWithFirstBigLetter}`,
-					type: "any",
-					description: "Property for setting its value",
-					isOptional: false
-				}],
+				params: [
+					{
+						name: `v${propertyWithFirstBigLetter}`,
+						type: "any",
+						description: "Property for setting its value",
+						isOptional: false
+					}
+				],
 				returnType: this.className,
 				visibility: property.visibility,
 				isEventHandler: false,
 				owner: this.className,
 				static: false,
 				abstract: false,
-				deprecated: false
+				deprecated: false,
+				mentionedInTheXMLDocument: false,
+				ui5ignored: false
 			});
 		});
 	}
@@ -879,7 +936,10 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 			if (!aggregation.singularName) {
 				return;
 			}
-			const aggregationWithFirstBigLetter = `${aggregation.singularName[0].toUpperCase()}${aggregation.singularName.substring(1, aggregation.singularName.length)}`;
+			const aggregationWithFirstBigLetter = `${aggregation.singularName[0].toUpperCase()}${aggregation.singularName.substring(
+				1,
+				aggregation.singularName.length
+			)}`;
 
 			let aMethods: method[] = [];
 			if (aggregation.multiple) {
@@ -892,47 +952,56 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					{
 						name: `add${aggregationWithFirstBigLetter}`,
 						returnType: this.className,
-						params: [{
-							name: `v${aggregationWithFirstBigLetter}`,
-							type: aggregation.type,
-							description: aggregation.type,
-							isOptional: false
-						}]
+						params: [
+							{
+								name: `v${aggregationWithFirstBigLetter}`,
+								type: aggregation.type,
+								description: aggregation.type,
+								isOptional: false
+							}
+						]
 					},
 					{
 						name: `insert${aggregationWithFirstBigLetter}`,
 						returnType: this.className,
-						params: [{
-							name: `v${aggregationWithFirstBigLetter}`,
-							type: aggregation.type,
-							description: aggregation.type,
-							isOptional: false
-						}, {
-							name: `v${aggregationWithFirstBigLetter}`,
-							type: "number",
-							description: "index the item should be inserted at",
-							isOptional: false
-						}]
+						params: [
+							{
+								name: `v${aggregationWithFirstBigLetter}`,
+								type: aggregation.type,
+								description: aggregation.type,
+								isOptional: false
+							},
+							{
+								name: `v${aggregationWithFirstBigLetter}`,
+								type: "number",
+								description: "index the item should be inserted at",
+								isOptional: false
+							}
+						]
 					},
 					{
 						name: `indexOf${aggregationWithFirstBigLetter}`,
 						returnType: "int",
-						params: [{
-							name: `v${aggregationWithFirstBigLetter}`,
-							type: aggregation.type,
-							description: aggregation.type,
-							isOptional: false
-						}]
+						params: [
+							{
+								name: `v${aggregationWithFirstBigLetter}`,
+								type: aggregation.type,
+								description: aggregation.type,
+								isOptional: false
+							}
+						]
 					},
 					{
 						name: `remove${aggregationWithFirstBigLetter}`,
 						returnType: `${aggregation.type}`,
-						params: [{
-							name: `v${aggregationWithFirstBigLetter}`,
-							type: aggregation.type,
-							description: aggregation.type,
-							isOptional: false
-						}]
+						params: [
+							{
+								name: `v${aggregationWithFirstBigLetter}`,
+								type: aggregation.type,
+								description: aggregation.type,
+								isOptional: false
+							}
+						]
 					},
 					{
 						name: `removeAll${aggregationWithFirstBigLetter}s`,
@@ -940,20 +1009,21 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 						params: []
 					},
 					{
-						name:
-							`destroy${aggregationWithFirstBigLetter}s`,
+						name: `destroy${aggregationWithFirstBigLetter}s`,
 						returnType: this.className,
 						params: []
 					},
 					{
 						name: `bind${aggregationWithFirstBigLetter}s`,
 						returnType: this.className,
-						params: [{
-							name: "oBindingInfo",
-							type: "object",
-							description: "The binding information",
-							isOptional: false
-						}]
+						params: [
+							{
+								name: "oBindingInfo",
+								type: "object",
+								description: "The binding information",
+								isOptional: false
+							}
+						]
 					},
 					{
 						name: `unbind${aggregationWithFirstBigLetter}s`,
@@ -971,22 +1041,26 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					{
 						name: `set${aggregationWithFirstBigLetter}`,
 						returnType: this.className,
-						params: [{
-							name: `v${aggregationWithFirstBigLetter}`,
-							type: aggregation.type,
-							description: aggregation.type,
-							isOptional: false
-						}]
+						params: [
+							{
+								name: `v${aggregationWithFirstBigLetter}`,
+								type: aggregation.type,
+								description: aggregation.type,
+								isOptional: false
+							}
+						]
 					},
 					{
 						name: `bind${aggregationWithFirstBigLetter}`,
 						returnType: this.className,
-						params: [{
-							name: "oBindingInfo",
-							type: "object",
-							description: "The binding information",
-							isOptional: false
-						}]
+						params: [
+							{
+								name: "oBindingInfo",
+								type: "object",
+								description: "The binding information",
+								isOptional: false
+							}
+						]
 					},
 					{
 						name: `unbind${aggregationWithFirstBigLetter}`,
@@ -1007,51 +1081,65 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					owner: this.className,
 					static: false,
 					abstract: false,
-					deprecated: false
+					deprecated: false,
+					mentionedInTheXMLDocument: false,
+					ui5ignored: false
 				});
 			});
-
 		});
 	}
 
 	private _fillEventMethods(aMethods: ICustomClassUIMethod[]) {
 		this.events?.forEach(event => {
-			const eventWithFirstBigLetter = `${event.name[0].toUpperCase()}${event.name.substring(1, event.name.length)}`;
+			const eventWithFirstBigLetter = `${event.name[0].toUpperCase()}${event.name.substring(
+				1,
+				event.name.length
+			)}`;
 			const aEventMethods = [
 				{
 					name: `fire${eventWithFirstBigLetter}`,
-					params: [{
-						name: "mEventParams",
-						type: "map",
-						isOptional: true,
-						description: "Event params"
-					}]
-				}, {
+					params: [
+						{
+							name: "mEventParams",
+							type: "map",
+							isOptional: true,
+							description: "Event params"
+						}
+					]
+				},
+				{
 					name: `attach${eventWithFirstBigLetter}`,
-					params: [{
-						name: "fnHandler",
-						type: "function",
-						isOptional: false,
-						description: "Event Handler"
-					}, {
-						name: "oContext",
-						type: "object",
-						isOptional: true,
-						description: "context of the event handler"
-					}]
-				}, {
+					params: [
+						{
+							name: "fnHandler",
+							type: "function",
+							isOptional: false,
+							description: "Event Handler"
+						},
+						{
+							name: "oContext",
+							type: "object",
+							isOptional: true,
+							description: "context of the event handler"
+						}
+					]
+				},
+				{
 					name: `detach${eventWithFirstBigLetter}`,
-					params: [{
-						name: "fnHandler",
-						type: "function",
-						isOptional: false,
-						description: "Event Handler"
-					}, {
-						name: "oContext",
-						type: "object",
-						isOptional: true,
-						description: "context of the event handler"
-					}]
+					params: [
+						{
+							name: "fnHandler",
+							type: "function",
+							isOptional: false,
+							description: "Event Handler"
+						},
+						{
+							name: "oContext",
+							type: "object",
+							isOptional: true,
+							description: "context of the event handler"
+						}
+					]
 				}
 			];
 
@@ -1066,7 +1154,9 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					owner: this.className,
 					static: false,
 					abstract: false,
-					deprecated: false
+					deprecated: false,
+					mentionedInTheXMLDocument: false,
+					ui5ignored: false
 				});
 			});
 		});
@@ -1074,7 +1164,10 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 	private _fillAssociationMethods(additionalMethods: ICustomClassUIMethod[]) {
 		this.associations?.forEach(association => {
-			const associationWithFirstBigLetter = `${association.singularName[0].toUpperCase()}${association.singularName.substring(1, association.singularName.length)}`;
+			const associationWithFirstBigLetter = `${association.singularName[0].toUpperCase()}${association.singularName.substring(
+				1,
+				association.singularName.length
+			)}`;
 
 			let aMethods = [];
 			if (association.multiple) {
@@ -1085,21 +1178,25 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					},
 					{
 						name: `add${associationWithFirstBigLetter}`,
-						params: [{
-							name: `v${associationWithFirstBigLetter}`,
-							type: association.type || "any",
-							isOptional: false,
-							description: `Add ${associationWithFirstBigLetter}`
-						}]
+						params: [
+							{
+								name: `v${associationWithFirstBigLetter}`,
+								type: association.type || "any",
+								isOptional: false,
+								description: `Add ${associationWithFirstBigLetter}`
+							}
+						]
 					},
 					{
 						name: `remove${associationWithFirstBigLetter}`,
-						params: [{
-							name: `v${associationWithFirstBigLetter}`,
-							type: association.type || "any",
-							isOptional: false,
-							description: `Remove ${associationWithFirstBigLetter}`
-						}]
+						params: [
+							{
+								name: `v${associationWithFirstBigLetter}`,
+								type: association.type || "any",
+								isOptional: false,
+								description: `Remove ${associationWithFirstBigLetter}`
+							}
+						]
 					},
 					{
 						name: `removeAll${associationWithFirstBigLetter}s`,
@@ -1114,12 +1211,14 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					},
 					{
 						name: `set${associationWithFirstBigLetter}`,
-						params: [{
-							name: `v${associationWithFirstBigLetter}`,
-							type: association.type || "any",
-							isOptional: false,
-							description: `Set ${associationWithFirstBigLetter}`
-						}]
+						params: [
+							{
+								name: `v${associationWithFirstBigLetter}`,
+								type: association.type || "any",
+								isOptional: false,
+								description: `Set ${associationWithFirstBigLetter}`
+							}
+						]
 					}
 				];
 			}
@@ -1135,174 +1234,227 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					owner: this.className,
 					static: false,
 					abstract: false,
-					deprecated: false
+					deprecated: false,
+					mentionedInTheXMLDocument: false,
+					ui5ignored: false
 				});
 			});
-
 		});
 	}
 
-	private _fillParentClassNameDotNotation() {
-		if (this._parentVariableName) {
-			const parentClassUIDefine = this.UIDefine.find(UIDefine => UIDefine.className === this._parentVariableName);
-			if (parentClassUIDefine) {
-				this.parentClassNameDotNotation = parentClassUIDefine.classNameDotNotation;
-			}
-		}
-	}
-
-	private _fillUI5Metadata() {
+	protected _fillUI5Metadata() {
 		if (this.acornClassBody?.properties) {
-			const metadataExists = !!this.acornClassBody.properties?.find((property: any) => property.key?.name === "metadata" || property.key?.value === "metadata");
-			const customMetadataExists = !!this.acornClassBody.properties?.find((property: any) => property.key?.name === "customMetadata" || property.key?.value === "customMetadata");
+			const metadataExists = !!this.acornClassBody.properties?.find(
+				(property: any) => property.key?.name === "metadata" || property.key?.value === "metadata"
+			);
+			const customMetadataExists = !!this.acornClassBody.properties?.find(
+				(property: any) => property.key?.name === "customMetadata" || property.key?.value === "customMetadata"
+			);
 
 			if (metadataExists) {
-				const metadataObject = this.acornClassBody.properties?.find((property: any) => property.key?.name === "metadata" || property.key?.value === "metadata");
+				const metadataObject = this.acornClassBody.properties?.find(
+					(property: any) => property.key?.name === "metadata" || property.key?.value === "metadata"
+				);
 
-				this._fillAggregations(metadataObject);
-				this._fillEvents(metadataObject);
-				this._fillProperties(metadataObject);
-				this._fillByAssociations(metadataObject);
-				this._fillInterfaces(metadataObject);
+				this.aggregations = this._fillAggregations(metadataObject);
+				this.events = this._fillEvents(metadataObject);
+				this.properties = this._fillProperties(metadataObject);
+				this.associations = this._fillAssociations(metadataObject);
+				this.interfaces = this._fillInterfaces(metadataObject);
 			}
 
 			if (customMetadataExists) {
-				const customMetadataObject = this.acornClassBody.properties?.find((property: any) => property.key?.name === "customMetadata" || property.key?.value === "customMetadata");
+				const customMetadataObject = this.acornClassBody.properties?.find(
+					(property: any) =>
+						property.key?.name === "customMetadata" || property.key?.value === "customMetadata"
+				);
 
-				this._fillByAssociations(customMetadataObject);
+				this.associations.push(...this._fillAssociations(customMetadataObject));
 				this._fillCustomInterfaces(customMetadataObject);
 			}
 		}
 	}
 
-	private _fillInterfaces(metadata: any) {
-		const interfaces = metadata.value?.properties?.find((metadataNode: any) => [metadataNode.key.name, metadataNode.key.value].includes("interfaces"));
+	protected _fillInterfaces(metadata: any) {
+		const interfaces = metadata.value?.properties?.find((metadataNode: any) =>
+			[metadataNode.key.name, metadataNode.key.value].includes("interfaces")
+		);
 		if (interfaces) {
 			const interfaceNamesDotNotation = interfaces.value?.elements?.map((element: any) => element.value) || [];
-			this.interfaces.push(...interfaceNamesDotNotation);
+			return interfaceNamesDotNotation;
+		} else {
+			return [];
 		}
 	}
 
-	private _fillCustomInterfaces(customMetadata: any) {
-		const interfaces = customMetadata.value?.properties?.find((metadataNode: any) => [metadataNode.key.name, metadataNode.key.value].includes("interfaces"));
+	protected _fillCustomInterfaces(customMetadata: any) {
+		const interfaces = customMetadata.value?.properties?.find((metadataNode: any) =>
+			[metadataNode.key.name, metadataNode.key.value].includes("interfaces")
+		);
 		if (interfaces) {
 			const interfaceNames: string[] = interfaces.value?.elements?.map((element: any) => element.name) || [];
-			const interfaceNamesDotNotation =
-				interfaceNames
-					.filter((interfaceName) => {
-						return !!this.UIDefine.find(UIDefine => UIDefine.className === interfaceName);
-
-					})
-					.map((interfaceName) => {
-						return this.UIDefine.find(UIDefine => UIDefine.className === interfaceName)?.classNameDotNotation || "";
-
-					});
+			const interfaceNamesDotNotation = interfaceNames
+				.filter(interfaceName => {
+					return !!this.UIDefine.find(UIDefine => UIDefine.className === interfaceName);
+				})
+				.map(interfaceName => {
+					return (
+						this.UIDefine.find(UIDefine => UIDefine.className === interfaceName)?.classNameDotNotation || ""
+					);
+				});
 			this.interfaces.push(...interfaceNamesDotNotation);
 		}
 	}
 
-	private _fillAggregations(metadata: any) {
-		const aggregations = metadata.value?.properties?.find((metadataNode: any) => [metadataNode.key.name, metadataNode.key.value].includes("aggregations"));
+	protected _fillAggregations(metadata: any) {
+		const aggregations = metadata.value?.properties?.find((metadataNode: any) =>
+			[metadataNode.key.name, metadataNode.key.value].includes("aggregations")
+		);
 
-		if (aggregations) {
-			this.aggregations = aggregations.value?.properties?.filter((node: any) => !!node.key.name || !!node.key.value).map((aggregationNode: any) => {
-				const aggregationName = aggregationNode.key.name || aggregationNode.key.value;
-				const aggregationProps = aggregationNode.value.properties;
-
-				let aggregationType: undefined | string = undefined;
-				const aggregationTypeProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "type" || aggregationProperty.key.value === "type");
-				if (aggregationTypeProp) {
-					aggregationType = aggregationTypeProp.value.value;
-				}
-
-				let multiple = true;
-				const multipleProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "multiple" || aggregationProperty.key.value === "multiple");
-				if (multipleProp) {
-					multiple = multipleProp.value.value;
-				}
-
-				let singularName = "";
-				const singularNameProp = aggregationProps?.find((aggregationProperty: any) => aggregationProperty.key.name === "singularName" || aggregationProperty.key.value === "singularName");
-				if (singularNameProp) {
-					singularName = singularNameProp.value.value;
-				}
-				if (!singularName) {
-					singularName = aggregationName;
-				}
-
-				let visibility = "public";
-				const visibilityProp = aggregationProps?.find((associationProperty: any) => associationProperty.key.name === "visibility" || associationProperty.key.value === "visibility");
-				if (visibilityProp) {
-					visibility = visibilityProp.value.value;
-				}
-
-				const UIAggregations: IUIAggregation = {
-					name: aggregationName,
-					type: aggregationType || "any",
-					multiple: multiple,
-					singularName: singularName,
-					description: "",
-					visibility: visibility,
-					default: false
-				};
-				return UIAggregations;
-			}) || [];
+		if (!aggregations) {
+			return [];
 		}
+
+		return (
+			aggregations.value?.properties
+				?.filter((node: any) => !!node.key.name || !!node.key.value)
+				.map((aggregationNode: any) => {
+					const aggregationName = aggregationNode.key.name || aggregationNode.key.value;
+					const aggregationProps = aggregationNode.value.properties;
+
+					let aggregationType: undefined | string = undefined;
+					const aggregationTypeProp = aggregationProps?.find(
+						(aggregationProperty: any) =>
+							aggregationProperty.key.name === "type" || aggregationProperty.key.value === "type"
+					);
+					if (aggregationTypeProp) {
+						aggregationType = aggregationTypeProp.value.value;
+					}
+
+					let multiple = true;
+					const multipleProp = aggregationProps?.find(
+						(aggregationProperty: any) =>
+							aggregationProperty.key.name === "multiple" || aggregationProperty.key.value === "multiple"
+					);
+					if (multipleProp) {
+						multiple = multipleProp.value.value;
+					}
+
+					let singularName = "";
+					const singularNameProp = aggregationProps?.find(
+						(aggregationProperty: any) =>
+							aggregationProperty.key.name === "singularName" ||
+							aggregationProperty.key.value === "singularName"
+					);
+					if (singularNameProp) {
+						singularName = singularNameProp.value.value;
+					}
+					if (!singularName) {
+						singularName = aggregationName;
+					}
+
+					let visibility = "public";
+					const visibilityProp = aggregationProps?.find(
+						(associationProperty: any) =>
+							associationProperty.key.name === "visibility" ||
+							associationProperty.key.value === "visibility"
+					);
+					if (visibilityProp) {
+						visibility = visibilityProp.value.value;
+					}
+
+					const UIAggregations: IUIAggregation = {
+						name: aggregationName,
+						type: aggregationType || "any",
+						multiple: multiple,
+						singularName: singularName,
+						description: "",
+						visibility: visibility,
+						default: false
+					};
+					return UIAggregations;
+				}) || []
+		);
 	}
 
-	private _fillEvents(metadata: any) {
-		const eventMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "events" || metadataNode.key.value === "events");
+	protected _fillEvents(metadata: any) {
+		const eventMetadataNode = metadata.value?.properties?.find(
+			(metadataNode: any) => metadataNode.key.name === "events" || metadataNode.key.value === "events"
+		);
 
-		if (eventMetadataNode) {
-			const events = eventMetadataNode.value?.properties;
-			this.events = events?.filter((node: any) => !!node.key.name || !!node.key.value).map((eventNode: any) => {
-				let visibility = "public";
-				const visibilityProp = eventNode.value?.properties?.find((node: any) => node.key.name === "visibility" || node.key.value === "visibility");
-				if (visibilityProp) {
-					visibility = visibilityProp.value.value;
-				}
-
-				let eventParams: IUIEventParam[] = [];
-				const params = eventNode.value?.properties?.find((node: any) => node.key.name === "parameters" || node.key.value === "parameters");
-				if (params) {
-					eventParams = params.value?.properties?.map((param: any) => {
-						const type = param.value?.properties?.find((param: any) => param.key.name === "type" || param.key.value === "type")?.value?.value || "";
-						const eventParam: IUIEventParam = {
-							name: param.key.name || param.key.value,
-							type: type
-						};
-						return eventParam;
-					}) || [];
-				}
-				const UIEvent: IUIEvent = {
-					name: eventNode.key.name || eventNode.key.value,
-					description: "",
-					visibility: visibility,
-					params: eventParams
-
-				};
-				return UIEvent;
-			}) || [];
+		if (!eventMetadataNode) {
+			return [];
 		}
+		const events = eventMetadataNode.value?.properties;
+		return (
+			events
+				?.filter((node: any) => !!node.key.name || !!node.key.value)
+				.map((eventNode: any) => {
+					let visibility = "public";
+					const visibilityProp = eventNode.value?.properties?.find(
+						(node: any) => node.key.name === "visibility" || node.key.value === "visibility"
+					);
+					if (visibilityProp) {
+						visibility = visibilityProp.value.value;
+					}
+
+					let eventParams: IUIEventParam[] = [];
+					const params = eventNode.value?.properties?.find(
+						(node: any) => node.key.name === "parameters" || node.key.value === "parameters"
+					);
+					if (params) {
+						eventParams =
+							params.value?.properties?.map((param: any) => {
+								const type =
+									param.value?.properties?.find(
+										(param: any) => param.key.name === "type" || param.key.value === "type"
+									)?.value?.value || "";
+								const eventParam: IUIEventParam = {
+									name: param.key.name || param.key.value,
+									type: type
+								};
+								return eventParam;
+							}) || [];
+					}
+					const UIEvent: IUIEvent = {
+						name: eventNode.key.name || eventNode.key.value,
+						description: "",
+						visibility: visibility,
+						params: eventParams
+					};
+					return UIEvent;
+				}) || []
+		);
 	}
 
-	private _fillProperties(metadata: any) {
-		const propertiesMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "properties" || metadataNode.key.value === "properties");
+	protected _fillProperties(metadata: any) {
+		const propertiesMetadataNode = metadata.value?.properties?.find(
+			(metadataNode: any) => metadataNode.key.name === "properties" || metadataNode.key.value === "properties"
+		);
 
-		if (propertiesMetadataNode) {
-			const properties = propertiesMetadataNode?.value?.properties || [];
-			this.properties = properties.filter((node: any) => !!node.key.name || !!node.key.value).map((propertyNode: any) => {
+		if (!propertiesMetadataNode) {
+			return [];
+		}
+		const properties = propertiesMetadataNode?.value?.properties || [];
+		return properties
+			.filter((node: any) => !!node.key.name || !!node.key.value)
+			.map((propertyNode: any) => {
 				const propertyName = propertyNode.key.name || propertyNode.key.value;
 				const propertyProps = propertyNode.value.properties;
 
 				let propertyType: undefined | string = undefined;
-				const propertyTypeProp = propertyProps?.find((property: any) => property.key.name === "type" || property.key.value === "type");
+				const propertyTypeProp = propertyProps?.find(
+					(property: any) => property.key.name === "type" || property.key.value === "type"
+				);
 				if (propertyTypeProp) {
 					propertyType = propertyTypeProp.value.value;
 				}
 
 				let visibility = "public";
-				const visibilityProp = propertyProps?.find((associationProperty: any) => associationProperty.key.name === "visibility" || associationProperty.key.value === "visibility");
+				const visibilityProp = propertyProps?.find(
+					(associationProperty: any) =>
+						associationProperty.key.name === "visibility" || associationProperty.key.value === "visibility"
+				);
 				if (visibilityProp) {
 					visibility = visibilityProp.value.value;
 				}
@@ -1317,61 +1469,80 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 
 				return UIProperties;
 			});
-		}
 	}
 
-	private _fillByAssociations(metadata: any) {
-		const associationMetadataNode = metadata.value?.properties?.find((metadataNode: any) => metadataNode.key.name === "associations" || metadataNode.key.value === "associations");
+	protected _fillAssociations(metadata: any) {
+		const associationMetadataNode = metadata.value?.properties?.find(
+			(metadataNode: any) => metadataNode.key.name === "associations" || metadataNode.key.value === "associations"
+		);
 
-		if (associationMetadataNode) {
-			const associations = associationMetadataNode.value?.properties || [];
-			this.associations = this.associations.concat(associations.filter((node: any) => !!node.key.name || !!node.key.value).map((associationNode: any) => {
-				const associationName = associationNode.key.name || associationNode.key.value;
-				const associationProps = associationNode.value.properties;
-
-				let associationType: undefined | string = undefined;
-				const associationTypeProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "type" || associationProperty.key.value === "type");
-				if (associationTypeProp) {
-					associationType = associationTypeProp.value.value;
-				}
-
-				let multiple = true;
-				const multipleProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "multiple" || associationProperty.key.value === "multiple");
-				if (multipleProp) {
-					multiple = multipleProp.value.value;
-				}
-
-				let singularName = "";
-				const singularNameProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "singularName" || associationProperty.key.value === "singularName");
-				if (singularNameProp) {
-					singularName = singularNameProp.value.value;
-				}
-				if (!singularName) {
-					singularName = associationName;
-				}
-
-				let visibility = "public";
-				const visibilityProp = associationProps?.find((associationProperty: any) => associationProperty.key.name === "visibility" || associationProperty.key.value === "visibility");
-				if (visibilityProp) {
-					visibility = visibilityProp.value.value;
-				}
-
-				const UIAssociations: IUIAssociation = {
-					name: associationName,
-					type: associationType,
-					multiple: multiple,
-					singularName: singularName,
-					description: "",
-					visibility: visibility
-				};
-				return UIAssociations;
-			}));
+		if (!associationMetadataNode) {
+			return [];
 		}
+		const associations = associationMetadataNode.value?.properties || [];
+		return this.associations.concat(
+			associations
+				.filter((node: any) => !!node.key.name || !!node.key.value)
+				.map((associationNode: any) => {
+					const associationName = associationNode.key.name || associationNode.key.value;
+					const associationProps = associationNode.value.properties;
+
+					let associationType: undefined | string = undefined;
+					const associationTypeProp = associationProps?.find(
+						(associationProperty: any) =>
+							associationProperty.key.name === "type" || associationProperty.key.value === "type"
+					);
+					if (associationTypeProp) {
+						associationType = associationTypeProp.value.value;
+					}
+
+					let multiple = true;
+					const multipleProp = associationProps?.find(
+						(associationProperty: any) =>
+							associationProperty.key.name === "multiple" || associationProperty.key.value === "multiple"
+					);
+					if (multipleProp) {
+						multiple = multipleProp.value.value;
+					}
+
+					let singularName = "";
+					const singularNameProp = associationProps?.find(
+						(associationProperty: any) =>
+							associationProperty.key.name === "singularName" ||
+							associationProperty.key.value === "singularName"
+					);
+					if (singularNameProp) {
+						singularName = singularNameProp.value.value;
+					}
+					if (!singularName) {
+						singularName = associationName;
+					}
+
+					let visibility = "public";
+					const visibilityProp = associationProps?.find(
+						(associationProperty: any) =>
+							associationProperty.key.name === "visibility" ||
+							associationProperty.key.value === "visibility"
+					);
+					if (visibilityProp) {
+						visibility = visibilityProp.value.value;
+					}
+
+					const UIAssociations: IUIAssociation = {
+						name: associationName,
+						type: associationType,
+						multiple: multiple,
+						singularName: singularName,
+						description: "",
+						visibility: visibility
+					};
+					return UIAssociations;
+				})
+		);
 	}
 	private _enrichVariablesWithJSDocTypesAndVisibility() {
 		//TODO: merge this with logic in custom ui class?
 		if (this.comments.length > 0) {
-
 			const classLineColumn = LineColumn(this.classText);
 			this.comments.forEach(comment => {
 				const typeDoc = comment.jsdoc?.tags?.find((tag: any) => {
@@ -1394,25 +1565,34 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 					});
 
 					if (typeDoc) {
-						const variableDeclaration = this.syntaxAnalyser.getAcornVariableDeclarationAtIndex(this, indexOfBottomLine);
+						const variableDeclaration = this.syntaxAnalyser.getAcornVariableDeclarationAtIndex(
+							this,
+							indexOfBottomLine
+						);
 						if (variableDeclaration?.declarations && variableDeclaration.declarations[0]) {
 							variableDeclaration.declarations[0]._acornSyntaxAnalyserType = typeDoc.type;
 						}
 					}
 
 					if (typeDoc || visibilityDoc || ui5ignored || isAbstract || isStatic || isDeprecated) {
-						const assignmentExpression = this.syntaxAnalyser.getAcornAssignmentExpressionAtIndex(this, indexOfBottomLine);
+						const assignmentExpression = this.syntaxAnalyser.getAcornAssignmentExpressionAtIndex(
+							this,
+							indexOfBottomLine
+						);
 						if (assignmentExpression) {
 							const leftNode = assignmentExpression.left;
-							if (leftNode?.object?.type === "ThisExpression" && leftNode?.property?.type === "Identifier") {
+							if (
+								leftNode?.object?.type === "ThisExpression" &&
+								leftNode?.property?.type === "Identifier"
+							) {
 								const members = this.getMembers();
 								const member = members.find(member => member.name === leftNode.property.name);
 								if (member) {
 									if (visibilityDoc) {
 										member.visibility = visibilityDoc.tag;
 									}
-									if (typeDoc && member.acornNode) {
-										const field = (member as IUIField);
+									if (typeDoc && member.node) {
+										const field = member as ICustomClassUIField;
 										field.type = typeDoc.type;
 									}
 									if (isStatic) {
@@ -1430,12 +1610,10 @@ export class CustomUIClass extends AbstractUIClass implements ICacheable {
 									}
 								}
 							}
-
 						}
 					}
 				}
 			});
 		}
 	}
-
 }

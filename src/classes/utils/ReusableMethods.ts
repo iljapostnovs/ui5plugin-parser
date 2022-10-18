@@ -6,7 +6,7 @@ export class ReusableMethods {
 	static getPositionOfTheLastUIDefine(document: TextDocument) {
 		let position: number | undefined;
 		const UIClass = TextDocumentTransformer.toCustomUIClass(document);
-		if (UIClass) {
+		if (UIClass && UIClass instanceof CustomUIClass) {
 			const mainFunction = UIClass.fileContent?.body[0]?.expression;
 			const definePaths: any[] = mainFunction?.arguments[0]?.elements;
 
@@ -26,7 +26,7 @@ export class ReusableMethods {
 	}
 
 	static getIfPositionIsInTheLastOrAfterLastMember(UIClass: CustomUIClass, position: number) {
-		const currentMethod = UIClass.methods.find(method => method.acornNode?.start < position && method.acornNode?.end > position);
+		const currentMethod = UIClass.methods.find(method => method.node?.start < position && method.node?.end > position);
 		const positionIsInMethod = !!currentMethod;
 		const positionIsAfterLastMethod = positionIsInMethod ? false : this._getIfPositionIsAfterLastMember(UIClass, position);
 
@@ -49,7 +49,7 @@ export class ReusableMethods {
 		const propertyValues = UIClass.acornClassBody?.properties?.map((node: any) => node.value);
 		if (propertyValues) {
 			const methodsInClassBody = UIClass.methods.filter(method => {
-				return propertyValues.includes(method.acornNode);
+				return propertyValues.includes(method.node);
 			});
 			currentMethodIsLastMethod = methodsInClassBody.indexOf(method) === methodsInClassBody.length - 1;
 		}
