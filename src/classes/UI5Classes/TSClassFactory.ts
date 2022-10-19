@@ -75,7 +75,6 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 	) {
 		const classDoesNotExist = !this._UIClasses[classNameDotNotation];
 		if (
-			force ||
 			classDoesNotExist ||
 			(<CustomTSClass>this._UIClasses[classNameDotNotation]).classText?.length !== classFileText.length ||
 			(<CustomTSClass>this._UIClasses[classNameDotNotation]).classText !== classFileText
@@ -128,6 +127,12 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 				this.enrichTypesInCustomClass(UIClass);
 			}
 			// console.timeEnd(`Class parsing for ${classNameDotNotation} took`);
+		} else if (force) {
+			const UIClass = this._UIClasses[classNameDotNotation];
+			if (UIClass instanceof CustomTSClass) {
+				UIClass.resetCache();
+				this.enrichTypesInCustomClass(UIClass);
+			}
 		}
 	}
 
