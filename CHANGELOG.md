@@ -1,3 +1,6 @@
+## 0.6.1 (19-10-2022)
+*  Improve TS caching
+
 ## 0.6.0 (18-10-2022)
 *  Add typescript support
 

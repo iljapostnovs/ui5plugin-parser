@@ -89,7 +89,7 @@ export abstract class AbstractCustomClass<
 	abstract parentClassNameDotNotation: string;
 	abstract fsPath: string;
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
-	private readonly _cache: Record<string, any> = {};
+	private _cache: Record<string, any> = {};
 
 	setCache<Type>(cacheName: string, cacheValue: Type) {
 		this._cache[cacheName] = cacheValue;
@@ -97,6 +97,10 @@ export abstract class AbstractCustomClass<
 
 	getCache<Type>(cacheName: string): Type {
 		return <Type>this._cache[cacheName];
+	}
+
+	resetCache() {
+		this._cache = {};
 	}
 
 	protected _fillUI5Metadata(metadataObject: MetadataObjectType): void {
