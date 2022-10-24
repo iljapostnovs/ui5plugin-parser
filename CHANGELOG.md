@@ -1,3 +1,6 @@
+## 0.6.2 (24-10-2022)
+*  Performance improvements
+
 ## 0.6.1 (19-10-2022)
 *  Improve TS caching
 

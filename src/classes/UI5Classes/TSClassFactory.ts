@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-import { ClassDeclaration, Node, Project, SourceFile } from "ts-morph";
+import { ClassDeclaration, Project, SourceFile, TypeChecker } from "ts-morph";
 import { IFragment, IView } from "../utils/FileReader";
 import { UI5TSParser } from "../../UI5TSParser";
 import { TextDocument } from "./abstraction/TextDocument";
@@ -21,19 +21,33 @@ import { AbstractUI5Parser } from "../../IUI5Parser";
 export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 	private readonly _UIClasses: IUIClassMap = {};
 
-	private _getInstance(
-		className: string,
-		classDeclaration?: ClassDeclaration,
-		sourceFile?: SourceFile,
-		typeChecker?: ts.TypeChecker
-	) {
+	private _getInstance(className: string, classDeclaration?: ClassDeclaration, typeChecker?: TypeChecker) {
 		let returnClass: AbstractUIClass | undefined;
 		const isThisClassFromAProject =
 			!!AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className);
-		} else if (classDeclaration && sourceFile && typeChecker) {
-			returnClass = new CustomTSClass(classDeclaration, sourceFile, typeChecker);
+		} else if (isThisClassFromAProject) {
+			if (!classDeclaration && !typeChecker) {
+				const fileName =
+					AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassFSPathFromClassName(className);
+				const project = fileName ? AbstractUI5Parser.getInstance(UI5TSParser).getProject(fileName) : undefined;
+				typeChecker = project?.getTypeChecker();
+				const sourceFile = fileName ? project?.getSourceFile(fileName) : undefined;
+				const syntaxList = sourceFile
+					?.getChildren()
+					.find(child => child.asKind(ts.SyntaxKind.SyntaxList))
+					?.asKind(ts.SyntaxKind.SyntaxList);
+				classDeclaration = syntaxList
+					?.getChildren()
+					.find(child => child.asKind(ts.SyntaxKind.ClassDeclaration)?.isDefaultExport())
+					?.asKind(ts.SyntaxKind.ClassDeclaration);
+			}
+			if (classDeclaration && typeChecker) {
+				returnClass = new CustomTSClass(classDeclaration, typeChecker);
+			} else {
+				returnClass = new EmptyUIClass(className);
+			}
 		} else {
 			returnClass = new EmptyUIClass(className);
 		}
@@ -71,7 +85,8 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 		force = false,
 		sourceFile?: SourceFile,
 		project?: Project,
-		enrichWithXMLReferences = true
+		enrichWithXMLReferences = true,
+		textChanges: ts.TextChange[] = []
 	) {
 		const classDoesNotExist = !this._UIClasses[classNameDotNotation];
 		if (
@@ -79,41 +94,45 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 			(<CustomTSClass>this._UIClasses[classNameDotNotation]).classText?.length !== classFileText.length ||
 			(<CustomTSClass>this._UIClasses[classNameDotNotation]).classText !== classFileText
 		) {
-			// console.time(`Class parsing for ${classNameDotNotation} took`);
+			console.time(`Class parsing for ${classNameDotNotation} took`);
 			if (!sourceFile && !project) {
-				const fileName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassFSPathFromClassName(classNameDotNotation);
+				const fileName =
+					AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassFSPathFromClassName(
+						classNameDotNotation
+					);
 				project = fileName ? AbstractUI5Parser.getInstance(UI5TSParser).getProject(fileName) : undefined;
 				sourceFile = fileName ? project?.getSourceFile(fileName) : undefined;
 			}
 
 			if (project && sourceFile) {
 				if (sourceFile.getFullText().length !== classFileText.length) {
-					const textChange: ts.TextChange = {
-						newText: classFileText,
-						span: { start: 0, length: sourceFile.getFullText().length }
-					};
-					const newSourceFile = sourceFile.applyTextChanges([textChange]);
+					if (textChanges.length === 0) {
+						textChanges = [
+							{
+								newText: classFileText,
+								span: { start: 0, length: sourceFile.getFullText().length }
+							}
+						];
+					}
+
+					const newSourceFile = sourceFile?.applyTextChanges(textChanges);
 					sourceFile = newSourceFile;
 				}
-				const typeChecker = project.getProgram().getTypeChecker();
-				const symbol = sourceFile && typeChecker.getSymbolAtLocation(sourceFile);
-				if (symbol && classNameDotNotation) {
-					const exports = typeChecker.getExportsOfModule(symbol);
-					const theExport = exports.find(
-						theExport =>
-							theExport.getName() === "default" &&
-							theExport.getDeclarations()?.find(declaration => Node.isClassDeclaration(declaration))
-					);
-					const classDeclaration = theExport
-						?.getDeclarations()
-						?.find(declaration => Node.isClassDeclaration(declaration));
+				if (classNameDotNotation) {
+					const syntaxList = sourceFile
+						.getChildren()
+						.find(child => child.asKind(ts.SyntaxKind.SyntaxList))
+						?.asKind(ts.SyntaxKind.SyntaxList);
+					const classDeclaration = syntaxList
+						?.getChildren()
+						.find(child => child.asKind(ts.SyntaxKind.ClassDeclaration)?.isDefaultExport())
+						?.asKind(ts.SyntaxKind.ClassDeclaration);
 
-					if (classDeclaration && Node.isClassDeclaration(classDeclaration)) {
+					if (classDeclaration) {
 						const theClass = this._getInstance(
 							classNameDotNotation,
 							classDeclaration,
-							sourceFile,
-							typeChecker.compilerObject
+							project.getTypeChecker()
 						);
 						if (theClass) {
 							this._UIClasses[classNameDotNotation] = theClass;
@@ -126,7 +145,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 			if (UIClass instanceof CustomTSClass && enrichWithXMLReferences) {
 				this.enrichTypesInCustomClass(UIClass);
 			}
-			// console.timeEnd(`Class parsing for ${classNameDotNotation} took`);
+			console.timeEnd(`Class parsing for ${classNameDotNotation} took`);
 		} else if (force) {
 			const UIClass = this._UIClasses[classNameDotNotation];
 			if (UIClass instanceof CustomTSClass) {
@@ -490,11 +509,13 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 			fragments: []
 		};
 
-		viewsAndFragments.fragments = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsMentionedInClass(
+		viewsAndFragments.fragments = AbstractUI5Parser.getInstance(
+			UI5TSParser
+		).fileReader.getFragmentsMentionedInClass(CurrentUIClass.className);
+		const views = [];
+		const view = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getViewForController(
 			CurrentUIClass.className
 		);
-		const views = [];
-		const view = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getViewForController(CurrentUIClass.className);
 		if (view) {
 			views.push(view);
 			viewsAndFragments.fragments.push(...view.fragments);
@@ -568,7 +589,8 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 					const extension = viewExtension[key];
 					if (extension.type === "XML" && extension.className === "sap.ui.core.Fragment") {
 						const fragmentName = extension.fragmentName;
-						const fragment = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragment(fragmentName);
+						const fragment =
+							AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragment(fragmentName);
 						if (fragment) {
 							const fragmentsInFragment: IFragment[] =
 								AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsInXMLFile(fragment);
@@ -717,14 +739,15 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 			const firstArg = args?.[0];
 			if (firstArg && ts.isCallExpression(firstArg) && ts.isStringLiteral(firstArg.arguments[0])) {
 				// const modelName = firstArg.arguments[0].text;
-				const modelType = UIClass.typeChecker.getTypeAtLocation(firstArg);
+				const modelType = UIClass.typeChecker.compilerObject.getTypeAtLocation(firstArg);
 				const modelSymbol = modelType.getSymbol();
 				const declaration = modelSymbol?.declarations?.[0];
 				const sourceFile = declaration?.getSourceFile();
 				const parentFileName = sourceFile?.fileName;
 
 				if (parentFileName) {
-					defaultModelName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(parentFileName);
+					defaultModelName =
+						AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(parentFileName);
 				}
 			}
 		});

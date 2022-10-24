@@ -37,23 +37,15 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass> {
 	}
 
 	processSourceFiles(project: Project, changedFiles: SourceFile[]) {
-		const program = project.getProgram();
 		const tsSourceFiles = changedFiles.filter(sourceFile => !sourceFile.compilerNode.fileName.endsWith(".d.ts"));
 		tsSourceFiles.forEach(sourceFile => {
 			const className = this.fileReader.getClassNameFromPath(sourceFile.compilerNode.fileName);
-			const typeChecker = program.getTypeChecker();
-			const symbol = sourceFile && typeChecker.getSymbolAtLocation(sourceFile);
-			if (symbol && className) {
-				const exports = typeChecker.getExportsOfModule(symbol);
-				const theExport = exports.find(
-					theExport =>
-						theExport.compilerSymbol.escapedName === "default" &&
-						theExport.getDeclarations().find(declaration => ts.isClassDeclaration(declaration.compilerNode))
-				);
-				const classDeclaration = theExport
-					?.getDeclarations()
-					?.find(declaration => ts.isClassDeclaration(declaration.compilerNode));
-				if (classDeclaration && ts.isClassDeclaration(classDeclaration.compilerNode)) {
+			if (className) {
+				const classDeclaration = sourceFile
+					.getChildren()
+					.find(child => child.asKind(ts.SyntaxKind.ClassDeclaration)?.isDefaultExport())
+					?.asKind(ts.SyntaxKind.ClassDeclaration);
+				if (classDeclaration) {
 					this.classFactory.setNewCodeForClass(
 						className,
 						sourceFile.getFullText(),
