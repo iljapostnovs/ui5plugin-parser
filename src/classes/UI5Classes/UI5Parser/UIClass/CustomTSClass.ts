@@ -68,10 +68,10 @@ export class CustomTSClass extends AbstractCustomClass<
 		if (heritageClause) {
 			const parentName = heritageClause.types[0].expression.getText();
 			const parentImportDeclaration = sourceFile.getImportDeclaration(declaration => {
-				return declaration.getImportClause()?.getText() === parentName;
+				return declaration.getImportClause()?.getDefaultImport()?.getText() === parentName;
 			});
 			const parentModule = parentImportDeclaration?.getModuleSpecifierValue();
-			this.parentClassNameDotNotation = parentModule?.replace(/\//g, ".") ?? "";
+			this.parentClassNameDotNotation = (parentModule && this._generateClassNameDotNotationFor(parentModule)) ?? "";
 		}
 
 		this.classText = sourceFile.getFullText();

@@ -94,7 +94,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 			(<CustomTSClass>this._UIClasses[classNameDotNotation]).classText?.length !== classFileText.length ||
 			(<CustomTSClass>this._UIClasses[classNameDotNotation]).classText !== classFileText
 		) {
-			console.time(`Class parsing for ${classNameDotNotation} took`);
+			// console.time(`Class parsing for ${classNameDotNotation} took`);
 			if (!sourceFile && !project) {
 				const fileName =
 					AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassFSPathFromClassName(
@@ -145,7 +145,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass> {
 			if (UIClass instanceof CustomTSClass && enrichWithXMLReferences) {
 				this.enrichTypesInCustomClass(UIClass);
 			}
-			console.timeEnd(`Class parsing for ${classNameDotNotation} took`);
+			// console.timeEnd(`Class parsing for ${classNameDotNotation} took`);
 		} else if (force) {
 			const UIClass = this._UIClasses[classNameDotNotation];
 			if (UIClass instanceof CustomTSClass) {

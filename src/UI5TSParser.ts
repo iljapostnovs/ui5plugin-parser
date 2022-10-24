@@ -41,20 +41,14 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass> {
 		tsSourceFiles.forEach(sourceFile => {
 			const className = this.fileReader.getClassNameFromPath(sourceFile.compilerNode.fileName);
 			if (className) {
-				const classDeclaration = sourceFile
-					.getChildren()
-					.find(child => child.asKind(ts.SyntaxKind.ClassDeclaration)?.isDefaultExport())
-					?.asKind(ts.SyntaxKind.ClassDeclaration);
-				if (classDeclaration) {
-					this.classFactory.setNewCodeForClass(
-						className,
-						sourceFile.getFullText(),
-						false,
-						sourceFile,
-						project,
-						false
-					);
-				}
+				this.classFactory.setNewCodeForClass(
+					className,
+					sourceFile.getFullText(),
+					false,
+					sourceFile,
+					project,
+					false
+				);
 			}
 		});
 	}
@@ -92,8 +86,6 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass> {
 		this.tsProjects.push(project);
 
 		const sourceFiles = project.getSourceFiles();
-		const tsSourceFiles = sourceFiles.filter(sourceFile => !sourceFile.compilerNode.fileName.endsWith(".d.ts"));
-		this.processSourceFiles(project, tsSourceFiles);
 
 		const pathMap = project.getCompilerOptions().paths;
 		const paths = pathMap ? Object.keys(pathMap).flatMap(key => pathMap[key]) : [];

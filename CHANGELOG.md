@@ -1,3 +1,6 @@
+## 0.6.3 (24-10-2022)
+*  Initialization bugfixes
+
 ## 0.6.2 (24-10-2022)
 *  Performance improvements
 
