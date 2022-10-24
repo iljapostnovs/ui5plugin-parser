@@ -1,4 +1,11 @@
-import { ClassDeclaration, ConstructorDeclaration, MethodDeclaration, PropertyDeclaration, SourceFile } from "ts-morph";
+import {
+	ClassDeclaration,
+	ConstructorDeclaration,
+	MethodDeclaration,
+	PropertyDeclaration,
+	SourceFile,
+	TypeChecker
+} from "ts-morph";
 import * as ts from "typescript";
 import * as Hjson from "hjson";
 import * as path from "path";
@@ -28,6 +35,7 @@ export class CustomTSClass extends AbstractCustomClass<
 	ClassInfo
 > {
 	parentClassNameDotNotation = "";
+	readonly typeChecker: TypeChecker;
 	protected _fillIsAbstract(): void {
 		throw new Error("Method not implemented.");
 	}
@@ -45,8 +53,8 @@ export class CustomTSClass extends AbstractCustomClass<
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
 	readonly node: ClassDeclaration;
 	private readonly _sourceFile: SourceFile;
-	readonly typeChecker: ts.TypeChecker;
-	constructor(classDeclaration: ClassDeclaration, sourceFile: SourceFile, typeChecker: ts.TypeChecker) {
+	constructor(classDeclaration: ClassDeclaration, typeChecker: TypeChecker) {
+		const sourceFile = classDeclaration.getSourceFile();
 		const className = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(
 			sourceFile.compilerNode.fileName
 		);
@@ -58,18 +66,12 @@ export class CustomTSClass extends AbstractCustomClass<
 			return heritage.token == ts.SyntaxKind.ExtendsKeyword;
 		});
 		if (heritageClause) {
-			const parentType = typeChecker.getTypeFromTypeNode(heritageClause.types[0]);
-			const parentSymbol = parentType.getSymbol();
-			const parentName = parentSymbol && typeChecker.getFullyQualifiedName(parentSymbol);
-			const [parentModuleNameQuoted] = parentName?.split(".") ?? [];
-			const parentModulePath = parentModuleNameQuoted?.substring(1, parentModuleNameQuoted.length - 1);
-			if (parentModulePath?.startsWith("sap/")) {
-				this.parentClassNameDotNotation = parentModulePath.replace(/\/|\\/g, ".");
-			} else if (parentModulePath) {
-				const parentClassName =
-					AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(parentModulePath);
-				this.parentClassNameDotNotation = parentClassName ?? "";
-			}
+			const parentName = heritageClause.types[0].expression.getText();
+			const parentImportDeclaration = sourceFile.getImportDeclaration(declaration => {
+				return declaration.getImportClause()?.getText() === parentName;
+			});
+			const parentModule = parentImportDeclaration?.getModuleSpecifierValue();
+			this.parentClassNameDotNotation = parentModule?.replace(/\//g, ".") ?? "";
 		}
 
 		this.classText = sourceFile.getFullText();
@@ -77,7 +79,11 @@ export class CustomTSClass extends AbstractCustomClass<
 		this._sourceFile = sourceFile;
 		this.fsPath = sourceFile.compilerNode.fileName;
 		this.node = classDeclaration;
-		this._fillUI5Metadata();
+		this._fillUI5Metadata(undefined, false);
+	}
+
+	loadTypes() {
+		this._fillUI5Metadata(undefined, true);
 	}
 
 	_fillUIDefine() {
@@ -119,7 +125,7 @@ export class CustomTSClass extends AbstractCustomClass<
 		return className;
 	}
 
-	protected _fillFields() {
+	protected _fillFields(metadata?: ClassInfo, fillTypes = false) {
 		const fields: PropertyDeclaration[] = this.node.getProperties();
 
 		const UIFields: ICustomClassTSField[] = fields.map(field => {
@@ -128,7 +134,7 @@ export class CustomTSClass extends AbstractCustomClass<
 			const positionStart = this._sourceFile.getLineAndColumnAtPos(field.getNameNode().getStart());
 			const positionEnd = this._sourceFile.getLineAndColumnAtPos(field.getNameNode().getEnd());
 
-			let type = field.getType().getText();
+			let type = fillTypes ? field.getType().getText() : "any";
 			type = this._modifyType(type);
 			return {
 				ui5ignored: ui5IgnoreDoc,
@@ -169,7 +175,7 @@ export class CustomTSClass extends AbstractCustomClass<
 		return UIFields;
 	}
 
-	protected _fillMethods() {
+	protected _fillMethods(metadata?: ClassInfo, fillTypes = false) {
 		const methods: MethodDeclaration[] = this.node.getMethods();
 
 		const UIMethods: ICustomClassTSMethod[] = methods.map(method => {
@@ -178,7 +184,7 @@ export class CustomTSClass extends AbstractCustomClass<
 			const positionStart = this._sourceFile.getLineAndColumnAtPos(method.getNameNode().getStart());
 			const positionEnd = this._sourceFile.getLineAndColumnAtPos(method.getNameNode().getEnd());
 
-			let returnType = method.getReturnType().getText();
+			let returnType = fillTypes ? method.getReturnType().getText() : "void";
 			returnType = this._modifyType(returnType);
 			return {
 				ui5ignored: !!ui5IgnoreDoc,
@@ -200,7 +206,7 @@ export class CustomTSClass extends AbstractCustomClass<
 				params: method.getParameters().map(param => {
 					return {
 						name: param.getName(),
-						type: this._modifyType(param.getType().getText()) ?? "any",
+						type: fillTypes ? (this._modifyType(param.getType().getText()) ?? "any") : "any",
 						description: "",
 						isOptional: false
 					};
@@ -248,10 +254,10 @@ export class CustomTSClass extends AbstractCustomClass<
 		return returnType;
 	}
 
-	protected _fillUI5Metadata() {
-		this.methods = this._fillMethods();
-		this.fields = this._fillFields();
-		this.constructors = this._fillConstructors();
+	protected _fillUI5Metadata(classInfo?: ClassInfo, fillTypes = false) {
+		this.methods = this._fillMethods(undefined, fillTypes);
+		this.fields = this._fillFields(undefined, fillTypes);
+		this.constructors = this._fillConstructors(undefined, fillTypes);
 		this._fillUIDefine();
 
 		const metadata = this.node.getProperty("metadata");
@@ -273,7 +279,7 @@ export class CustomTSClass extends AbstractCustomClass<
 		}
 	}
 
-	private _fillConstructors(): ICustomClassTSConstructor[] {
+	private _fillConstructors(metadata?: ClassInfo, fillTypes = false): ICustomClassTSConstructor[] {
 		const constructorDeclarations = this.node.getConstructors();
 
 		const constructors: ICustomClassTSConstructor[] = constructorDeclarations.map(constructor => {
@@ -287,7 +293,7 @@ export class CustomTSClass extends AbstractCustomClass<
 				owner: this.className,
 				static: false,
 				abstract: false,
-				returnType: this._modifyType(constructor.getReturnType().getText()) ?? "void",
+				returnType: fillTypes ? (this._modifyType(constructor.getReturnType().getText()) ?? "void") : this.className,
 				visibility:
 					constructor
 						.getModifiers()
@@ -302,7 +308,7 @@ export class CustomTSClass extends AbstractCustomClass<
 				params: constructor.getParameters().map(param => {
 					return {
 						name: param.getName(),
-						type: this._modifyType(param.getType().getText()) ?? "any",
+						type: fillTypes ? (this._modifyType(param.getType().getText()) ?? "any"): "any",
 						description: "",
 						isOptional: false
 					};

@@ -2,7 +2,15 @@
 
 Parser package for UI5 based projects
 
-Primarely used by ```ui5plugin-linter``` package and Visual Studio Code SAPUI5 Extension
+Primarely used by `ui5plugin-linter` package and Visual Studio Code SAPUI5 Extension
+
+---
+
+Any support is highly appreciated!<br/>
+[<img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86" height="30"/>](https://github.com/sponsors/iljapostnovs)
+[<img src="https://newbie.zeromesh.net/donate.7.6.svg" height="30"/>](https://donate.cafe/iljapostnovs)
+
+---
 
 ## How to use
 
@@ -17,13 +25,17 @@ const parser = AbstractUI5Parser.getInstance(UI5TSParser);
 
 await parser.initialize();
 ```
+
 ### TS vs JS
+
 #### Initialization
+
 If any typescript file is found in the project, parser considers that it's TS project. <br/>
-```tsconfig.json``` should be located in CWD.
+`tsconfig.json` should be located in CWD.
 
 #### Folder exclusions
-For convenience purposes ```UI5TSParser``` ignores ```webapp``` and ```src-gen``` folders, because they contain transpiled JS/XML files, which can make the parser to think that source files are there. If build folder name is different, is should be added to ```excludeFolderPatterns``` in your config (```VSCode Preferences``` in case of UI5 Extension, ```package.json``` in case of cli usage).
+
+For convenience purposes `UI5TSParser` ignores `webapp` and `src-gen` folders, because they contain transpiled JS/XML files, which can make the parser to think that source files are there. If build folder name is different, is should be added to `excludeFolderPatterns` in your config (`VSCode Preferences` in case of UI5 Extension, `package.json` in case of cli usage).
 
 ### Constructor
 
@@ -53,13 +65,14 @@ interface IParserConfigHandler {
 
 ### Usage
 
-How to get info about a JS Class:
+How to get info about a JS/TS Class:
 
 ```ts
 const UIClass = parser.classFactory.getUIClass("com.test.any.class");
 ```
 
 UIClass will have class metadata such as fields, methods, properties, aggregations, associations, events etc.
+> *TS only!* For performance reasons TS parser doesn't parse types right away. If you want to load all type info such as method return type, parameter types etc, please use ```UIClass.loadTypes()```
 
 ### Default Config Handler
 
