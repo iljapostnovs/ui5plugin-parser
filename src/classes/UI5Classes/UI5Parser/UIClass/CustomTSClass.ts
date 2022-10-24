@@ -77,7 +77,7 @@ export class CustomTSClass extends AbstractCustomClass<
 		this.classText = sourceFile.getFullText();
 
 		this._sourceFile = sourceFile;
-		this.fsPath = sourceFile.compilerNode.fileName;
+		this.fsPath = path.resolve(sourceFile.compilerNode.fileName);
 		this.node = classDeclaration;
 		this._fillUI5Metadata(undefined, false);
 	}
