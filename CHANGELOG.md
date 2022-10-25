@@ -1,3 +1,7 @@
+## 0.6.6 (25-10-2022)
+
+-   Fill UIDefine first
+
 ## 0.6.5 (25-10-2022)
 
 -   Try to guess type from UI Define

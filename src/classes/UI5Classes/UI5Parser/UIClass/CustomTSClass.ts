@@ -267,10 +267,10 @@ export class CustomTSClass extends AbstractCustomClass<
 	}
 
 	protected _fillUI5Metadata(classInfo?: ClassInfo, fillTypes = false) {
+		this._fillUIDefine();
 		this.methods = this._fillMethods(undefined, fillTypes);
 		this.fields = this._fillFields(undefined, fillTypes);
 		this.constructors = this._fillConstructors(undefined, fillTypes);
-		this._fillUIDefine();
 
 		const metadata = this.node.getProperty("metadata");
 
