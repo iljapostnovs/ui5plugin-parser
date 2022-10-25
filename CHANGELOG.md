@@ -1,3 +1,7 @@
+## 0.6.5 (25-10-2022)
+
+-   Try to guess type from UI Define
+
 ## 0.6.4 (24-10-2022)
 
 -   Parsing bugfixes

@@ -71,7 +71,8 @@ export class CustomTSClass extends AbstractCustomClass<
 				return declaration.getImportClause()?.getDefaultImport()?.getText() === parentName;
 			});
 			const parentModule = parentImportDeclaration?.getModuleSpecifierValue();
-			this.parentClassNameDotNotation = (parentModule && this._generateClassNameDotNotationFor(parentModule)) ?? "";
+			this.parentClassNameDotNotation =
+				(parentModule && this._generateClassNameDotNotationFor(parentModule)) ?? "";
 		}
 
 		this.classText = sourceFile.getFullText();
@@ -125,6 +126,13 @@ export class CustomTSClass extends AbstractCustomClass<
 		return className;
 	}
 
+	private _guessTypeFromUIDefine(typeName?: string) {
+		if (typeName) {
+			const UIDefine = this.UIDefine.find(define => define.className === typeName);
+			return UIDefine?.classNameDotNotation;
+		}
+	}
+
 	protected _fillFields(metadata?: ClassInfo, fillTypes = false) {
 		const fields: PropertyDeclaration[] = this.node.getProperties();
 
@@ -134,7 +142,11 @@ export class CustomTSClass extends AbstractCustomClass<
 			const positionStart = this._sourceFile.getLineAndColumnAtPos(field.getNameNode().getStart());
 			const positionEnd = this._sourceFile.getLineAndColumnAtPos(field.getNameNode().getEnd());
 
-			let type = fillTypes ? field.getType().getText() : "any";
+			const typeNode = field.getTypeNode();
+			const typeReference = typeNode?.asKind(ts.SyntaxKind.TypeReference);
+			let type = fillTypes
+				? field.getType().getText()
+				: this._guessTypeFromUIDefine(typeReference?.getText()) ?? "any";
 			type = this._modifyType(type);
 			return {
 				ui5ignored: ui5IgnoreDoc,
@@ -206,7 +218,7 @@ export class CustomTSClass extends AbstractCustomClass<
 				params: method.getParameters().map(param => {
 					return {
 						name: param.getName(),
-						type: fillTypes ? (this._modifyType(param.getType().getText()) ?? "any") : "any",
+						type: fillTypes ? this._modifyType(param.getType().getText()) ?? "any" : "any",
 						description: "",
 						isOptional: false
 					};
@@ -293,7 +305,9 @@ export class CustomTSClass extends AbstractCustomClass<
 				owner: this.className,
 				static: false,
 				abstract: false,
-				returnType: fillTypes ? (this._modifyType(constructor.getReturnType().getText()) ?? "void") : this.className,
+				returnType: fillTypes
+					? this._modifyType(constructor.getReturnType().getText()) ?? "void"
+					: this.className,
 				visibility:
 					constructor
 						.getModifiers()
@@ -308,7 +322,7 @@ export class CustomTSClass extends AbstractCustomClass<
 				params: constructor.getParameters().map(param => {
 					return {
 						name: param.getName(),
-						type: fillTypes ? (this._modifyType(param.getType().getText()) ?? "any"): "any",
+						type: fillTypes ? this._modifyType(param.getType().getText()) ?? "any" : "any",
 						description: "",
 						isOptional: false
 					};
