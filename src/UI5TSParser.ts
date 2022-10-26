@@ -8,12 +8,13 @@ import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolde
 import { TSClassFactory } from "./classes/UI5Classes/TSClassFactory";
 import { AbstractUI5Parser, IConstructorParams } from "./IUI5Parser";
 import { CustomTSClass } from "./classes/UI5Classes/UI5Parser/UIClass/CustomTSClass";
+import { CustomTSObject } from "./classes/UI5Classes/UI5Parser/UIClass/CustomTSObject";
 
-export interface UI5TSParserConstructor extends IConstructorParams<CustomTSClass> {
+export interface UI5TSParserConstructor extends IConstructorParams<CustomTSClass | CustomTSObject> {
 	classFactory: TSClassFactory;
 }
 
-export class UI5TSParser extends AbstractUI5Parser<CustomTSClass> {
+export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObject> {
 	readonly configHandler: IParserConfigHandler;
 	readonly classFactory: TSClassFactory;
 	readonly fileReader: IFileReader;

@@ -10,6 +10,7 @@ import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolde
 import { IFileReader } from "./classes/utils/IFileReader";
 import { UI5TSParser } from "./UI5TSParser";
 import { AbstractUI5Parser } from "./IUI5Parser";
+import { AnyCustomTSClass, ICustomTSField, ICustomTSMethod } from "./Types";
 
 export {
 	UI5Parser,
@@ -23,5 +24,8 @@ export {
 	AbstractUI5Parser,
 	XMLParser,
 	TextDocument,
-	WorkspaceFolder
+	WorkspaceFolder,
+	ICustomTSField,
+	ICustomTSMethod,
+	AnyCustomTSClass
 };

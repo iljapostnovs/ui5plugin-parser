@@ -1,3 +1,7 @@
+## 0.7.0 (26-10-2022)
+
+-   Add CustomTSObject
+
 ## 0.6.6 (25-10-2022)
 
 -   Fill UIDefine first
