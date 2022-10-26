@@ -7,6 +7,7 @@ import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
 import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
 import { ResourceModelData } from "../UI5Classes/ResourceModelData";
 import { CustomTSClass } from "../UI5Classes/UI5Parser/UIClass/CustomTSClass";
+import { CustomTSObject } from "../UI5Classes/UI5Parser/UIClass/CustomTSObject";
 import { IUIManifest, IViews, IManifestPaths, IView, IFragment, IXMLFile, IIdClassMap } from "./FileReader";
 import { IFileReader } from "./IFileReader";
 import { TextDocumentTransformer } from "./TextDocumentTransformer";
@@ -21,9 +22,9 @@ export class TSFileReader implements IFileReader {
 	private readonly _UI5Version: string;
 	public globalStoragePath: string | undefined;
 	private readonly _configHandler: IParserConfigHandler;
-	private readonly _classFactory: IUIClassFactory<CustomTSClass>;
+	private readonly _classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>;
 
-	constructor(configHandler: IParserConfigHandler, classFactory: IUIClassFactory<CustomTSClass>) {
+	constructor(configHandler: IParserConfigHandler, classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>) {
 		this._configHandler = configHandler;
 		this._UI5Version = configHandler.getUI5Version();
 		this._classFactory = classFactory;

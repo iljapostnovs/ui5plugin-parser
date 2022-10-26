@@ -144,10 +144,15 @@ export class CustomTSClass extends AbstractCustomClass<
 
 			const typeNode = field.getTypeNode();
 			const typeReference = typeNode?.asKind(ts.SyntaxKind.TypeReference);
-			let type = fillTypes
-				? field.getType().getText()
-				: this._guessTypeFromUIDefine(typeReference?.getText()) ?? "any";
-			type = this._modifyType(type);
+			const typeQuery = typeNode?.asKind(ts.SyntaxKind.TypeQuery);
+
+			const typeName = typeReference?.getText() ?? typeQuery?.getExprName().getText();
+			let type = fillTypes ? field.getType().getText() : this._guessTypeFromUIDefine(typeName);
+
+			if (!fillTypes && !type) {
+				type = this._guessTypeFromInitialization(field);
+			}
+			type = this._modifyType(type ?? "any");
 			return {
 				ui5ignored: ui5IgnoreDoc,
 				owner: this.className,
@@ -185,6 +190,22 @@ export class CustomTSClass extends AbstractCustomClass<
 		});
 
 		return UIFields;
+	}
+
+	private _guessTypeFromInitialization(field: PropertyDeclaration): string | undefined {
+		let type: string | undefined;
+		const initializer = field.getInitializer();
+		const newExpression = initializer?.asKind(ts.SyntaxKind.NewExpression);
+		const identifier = initializer?.asKind(ts.SyntaxKind.Identifier);
+		if (newExpression) {
+			type = newExpression.getExpression().getText();
+		} else if (identifier) {
+			type = identifier.getText();
+		}
+
+		type = this._guessTypeFromUIDefine(type);
+
+		return type;
 	}
 
 	protected _fillMethods(metadata?: ClassInfo, fillTypes = false) {

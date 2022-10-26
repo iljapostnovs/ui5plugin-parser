@@ -1,6 +1,6 @@
 {
 	"name": "ui5plugin-parser",
-	"version": "0.6.6",
+	"version": "0.7.0",
 	"description": "UI5 Class parser",
 	"main": "dist/index.js",
 	"scripts": {
