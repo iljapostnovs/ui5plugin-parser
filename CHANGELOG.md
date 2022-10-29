@@ -1,3 +1,7 @@
+## 0.7.1 (29-10-2022)
+
+-   Fix i18n regex
+
 ## 0.7.0 (26-10-2022)
 
 -   Add CustomTSObject
