@@ -1,3 +1,5 @@
+import * as Hjson from "hjson";
+import * as path from "path";
 import {
 	ClassDeclaration,
 	ConstructorDeclaration,
@@ -7,8 +9,9 @@ import {
 	TypeChecker
 } from "ts-morph";
 import * as ts from "typescript";
-import * as Hjson from "hjson";
-import * as path from "path";
+import { AbstractUI5Parser } from "../../../../IUI5Parser";
+import { UI5Parser } from "../../../../UI5Parser";
+import { UI5TSParser } from "../../../../UI5TSParser";
 import {
 	AbstractCustomClass,
 	ICustomClassField,
@@ -16,10 +19,7 @@ import {
 	IUIDefine,
 	IViewsAndFragmentsCache
 } from "./AbstractCustomClass";
-import { UI5Parser } from "../../../../UI5Parser";
 import { IUIAssociation, IUIProperty } from "./AbstractUIClass";
-import { AbstractUI5Parser } from "../../../../IUI5Parser";
-import { UI5TSParser } from "../../../../UI5TSParser";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ICustomClassTSField extends ICustomClassField<PropertyDeclaration> {}
@@ -270,7 +270,9 @@ export class CustomTSClass extends AbstractCustomClass<
 	private _modifyType(returnType: string): string {
 		if (/import\(".*?"\).default/.test(returnType)) {
 			const path = /(?<=import\(").*?(?="\).default)/.exec(returnType)?.[0];
-			const UI5Type = path
+			const UI5Type = path?.startsWith("sap/")
+				? path.replace(/\//g, ".")
+				: path
 				? AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(path)
 				: undefined;
 			if (UI5Type) {
