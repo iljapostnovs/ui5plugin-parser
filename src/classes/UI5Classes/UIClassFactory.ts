@@ -22,6 +22,9 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 	constructor(syntaxAnalyser: ISyntaxAnalyser) {
 		this.syntaxAnalyser = syntaxAnalyser;
 	}
+	isCustomClass(UIClass: AbstractUIClass): UIClass is CustomUIClass {
+		return UIClass instanceof CustomUIClass;
+	}
 
 	private readonly _UIClasses: IUIClassMap = {
 		Promise: new JSClass("Promise"),

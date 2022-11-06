@@ -22,6 +22,7 @@ export interface IUIClassFactory<CustomClass extends AbstractCustomClass> {
 	isMethodOverriden(className: string, methodName: string): boolean;
 	removeClass(className: string): void;
 	getParent(UIClass: AbstractUIClass): AbstractUIClass | undefined;
+	isCustomClass(UIClass: AbstractUIClass): UIClass is CustomClass;
 	setNewNameForClass(oldPath: string, newPath: string): void;
 	getViewsAndFragmentsOfControlHierarchically(CurrentUIClass: CustomClass, checkedClasses?: string[], removeDuplicates?: boolean, includeChildren?: boolean, includeMentioned?: boolean, includeParents?: boolean): IViewsAndFragments
 }

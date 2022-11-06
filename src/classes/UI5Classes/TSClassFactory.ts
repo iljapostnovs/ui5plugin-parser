@@ -20,6 +20,10 @@ import { AbstractUI5Parser } from "../../IUI5Parser";
 import { CustomTSObject } from "./UI5Parser/UIClass/CustomTSObject";
 
 export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSObject> {
+	isCustomClass(UIClass: AbstractUIClass): UIClass is CustomTSClass | CustomTSObject {
+		return UIClass instanceof CustomTSClass || UIClass instanceof CustomTSObject;
+	}
+
 	private readonly _UIClasses: IUIClassMap = {};
 
 	private _getInstance(
@@ -105,7 +109,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 		if (
 			classDoesNotExist ||
 			(<CustomTSClass | CustomTSObject>this._UIClasses[classNameDotNotation]).classText?.length !==
-				classFileText.length ||
+			classFileText.length ||
 			(<CustomTSClass | CustomTSObject>this._UIClasses[classNameDotNotation]).classText !== classFileText
 		) {
 			// console.time(`Class parsing for ${classNameDotNotation} took`);

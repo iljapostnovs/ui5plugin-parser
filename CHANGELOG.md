@@ -1,3 +1,7 @@
+## 0.7.2 (06-11-2022)
+
+-   Return type bugfixes
+
 ## 0.7.1 (29-10-2022)
 
 -   Fix i18n regex

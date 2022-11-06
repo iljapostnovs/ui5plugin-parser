@@ -236,7 +236,9 @@ export class CustomTSObject extends AbstractCustomClass<
 	private _modifyType(returnType: string): string {
 		if (/import\(".*?"\).default/.test(returnType)) {
 			const path = /(?<=import\(").*?(?="\).default)/.exec(returnType)?.[0];
-			const UI5Type = path
+			const UI5Type = path?.startsWith("sap/")
+				? path.replace(/\//g, ".")
+				: path
 				? AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(path)
 				: undefined;
 			if (UI5Type) {
