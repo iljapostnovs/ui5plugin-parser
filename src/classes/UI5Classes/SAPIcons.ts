@@ -1,6 +1,5 @@
-import { AbstractUI5Parser } from "../../IUI5Parser";
-import { UI5Parser } from "../../UI5Parser";
-import { FileReader } from "../utils/FileReader";
+
+
 import { HTTPHandler } from "../utils/HTTPHandler";
 import { URLBuilder } from "../utils/URLBuilder";
 
@@ -8,6 +7,9 @@ export class SAPIcons {
 	public static icons: string[] = [];
 
 	static async preloadIcons() {
+		const { AbstractUI5Parser } = await import("../../IUI5Parser");
+		const { UI5Parser } = await import("../../UI5Parser");
+		const { FileReader } = await import("../utils/FileReader");
 		this.icons = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getCache(FileReader.CacheType.Icons);
 		if (!this.icons) {
 			this.icons = await this._loadIcons();
