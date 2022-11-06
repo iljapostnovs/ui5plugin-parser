@@ -1,3 +1,7 @@
+## 0.7.4 (06-11-2022)
+
+-   Fix initialization
+
 ## 0.7.3 (06-11-2022)
 
 -   Add additional typechecking to xml parser
