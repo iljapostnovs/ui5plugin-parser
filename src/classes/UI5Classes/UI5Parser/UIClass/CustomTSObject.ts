@@ -1,3 +1,4 @@
+import * as path from "path";
 import {
 	MethodDeclaration,
 	ObjectLiteralElementLike,
@@ -8,17 +9,16 @@ import {
 	TypeChecker
 } from "ts-morph";
 import * as ts from "typescript";
-import * as path from "path";
+import { AbstractUI5Parser } from "../../../../IUI5Parser";
+import { UI5Parser } from "../../../../UI5Parser";
+import { UI5TSParser } from "../../../../UI5TSParser";
 import {
 	AbstractCustomClass,
-	ICustomClassMethod,
 	ICustomClassField,
+	ICustomClassMethod,
 	IUIDefine,
 	IViewsAndFragmentsCache
 } from "./AbstractCustomClass";
-import { UI5Parser } from "../../../../UI5Parser";
-import { AbstractUI5Parser } from "../../../../IUI5Parser";
-import { UI5TSParser } from "../../../../UI5TSParser";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ICustomClassTSObjectField extends ICustomClassField<PropertyAssignment> {}
@@ -54,14 +54,12 @@ export class CustomTSObject extends AbstractCustomClass<
 			sourceFile.compilerNode.fileName
 		);
 		super(className ?? "");
-
 		this.typeChecker = typeChecker;
-
 		this.classText = sourceFile.getFullText();
-
 		this._sourceFile = sourceFile;
 		this.fsPath = path.resolve(sourceFile.compilerNode.fileName);
 		this.node = objectLiteralExpression;
+
 		this._fillUI5Metadata(undefined, false);
 	}
 

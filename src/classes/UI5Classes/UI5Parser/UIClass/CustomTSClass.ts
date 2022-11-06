@@ -59,8 +59,11 @@ export class CustomTSClass extends AbstractCustomClass<
 			sourceFile.compilerNode.fileName
 		);
 		super(className ?? "");
-
+		this.fsPath = path.resolve(sourceFile.compilerNode.fileName);
+		this.classText = sourceFile.getFullText();
+		this._sourceFile = sourceFile;
 		this.typeChecker = typeChecker;
+		this.node = classDeclaration;
 
 		const heritageClause = classDeclaration.compilerNode.heritageClauses?.find(heritage => {
 			return heritage.token == ts.SyntaxKind.ExtendsKeyword;
@@ -75,11 +78,6 @@ export class CustomTSClass extends AbstractCustomClass<
 				(parentModule && this._generateClassNameDotNotationFor(parentModule)) ?? "";
 		}
 
-		this.classText = sourceFile.getFullText();
-
-		this._sourceFile = sourceFile;
-		this.fsPath = path.resolve(sourceFile.compilerNode.fileName);
-		this.node = classDeclaration;
 		this._fillUI5Metadata(undefined, false);
 	}
 

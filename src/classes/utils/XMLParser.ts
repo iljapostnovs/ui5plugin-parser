@@ -1,7 +1,7 @@
-import { ICommentPositions, IXMLFile } from "./FileReader";
-import { IUIMethod } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
-import { UI5Parser } from "../../UI5Parser";
 import { AbstractUI5Parser } from "../../IUI5Parser";
+import { UI5Parser } from "../../UI5Parser";
+import { IMember, IUIMethod } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
+import { ICommentPositions, IXMLFile } from "./FileReader";
 
 export interface ITag {
 	text: string;
@@ -76,8 +76,7 @@ export class XMLParser {
 											);
 										const field = fields.find(field => field.name === handlerField);
 										if (
-											field &&
-											field.type &&
+											field?.type &&
 											!AbstractUI5Parser.getInstance(
 												UI5Parser
 											).classFactory.isClassAChildOfClassB(field.type, functionCallClassName)
@@ -112,11 +111,45 @@ export class XMLParser {
 								currentEventHandlerName !== eventHandlerName &&
 								currentEventHandlerName.includes(eventHandlerName)
 							) {
-								const results = new RegExp(`(\\.|"|')${eventHandlerName}("|'|\\(|\\.)`).test(
+								const results = new RegExp(`(\\.|"|')${eventHandlerName}("|'|\\(|\\.)`).exec(
 									currentEventHandlerName
 								);
 								if (results) {
-									currentEventHandlerName = eventHandlerName;
+									const responsibleClassName =
+										AbstractUI5Parser.getInstance(
+											UI5Parser
+										).fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
+									if (functionCallClassName && responsibleClassName) {
+										let handlerField = results[0];
+										if (handlerField.startsWith(".")) {
+											handlerField = handlerField.substring(1, handlerField.length);
+										}
+										const memberName = handlerField.substring(0, handlerField.length - 1);
+										const fields =
+											AbstractUI5Parser.getInstance(UI5Parser).classFactory.getClassFields(
+												responsibleClassName
+											);
+										const methods =
+											AbstractUI5Parser.getInstance(UI5Parser).classFactory.getClassMethods(
+												responsibleClassName
+											);
+										const members: IMember[] = [...fields, ...methods];
+										const member = members.find(member => member.name === memberName);
+										const classFactory = AbstractUI5Parser.getInstance(UI5Parser).classFactory;
+										if (
+											!member ||
+											!classFactory.isClassAChildOfClassB(
+												responsibleClassName,
+												functionCallClassName
+											)
+										) {
+											return false;
+										} else {
+											currentEventHandlerName = memberName;
+										}
+									} else {
+										currentEventHandlerName = eventHandlerName;
+									}
 								} else {
 									const manifest =
 										AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(
