@@ -5,10 +5,10 @@
 	"main": "dist/index.js",
 	"scripts": {
 		"test": "test",
-		"compile": "tsc",
+		"compile": "npx tsc",
 		"compile-prod": "rd /s /q \"dist\" && npx tsc --project tsconfig-prod.json",
 		"watch": "npm run compile",
-		"lint": "tslint -p ./"
+		"lint": "eslint src"
 	},
 	"repository": {
 		"type": "git",
