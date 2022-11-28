@@ -89,7 +89,11 @@ export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass>
 				ignore: exclusionPaths
 			});
 		});
+		const tsconfig = workspaceFolders?.flatMap(wsFolder => {
+			const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
+			return glob.sync(`${wsFolderFSPath}/tsconfig.json`);
+		});
 
-		return !!tsFiles?.length || false;
+		return (!!tsFiles?.length && !!tsconfig?.length) || false;
 	}
 }

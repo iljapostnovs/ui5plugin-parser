@@ -1,3 +1,7 @@
+## 0.7.5 (28-11-2022)
+
+-   Now parser checks both for ```.ts``` files and ```tsconfig.json``` existence
+
 ## 0.7.4 (06-11-2022)
 
 -   Fix initialization
