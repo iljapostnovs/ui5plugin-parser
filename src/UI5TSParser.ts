@@ -55,14 +55,21 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObjec
 	}
 
 	protected async _preloadAllNecessaryData(wsFolders: WorkspaceFolder[]) {
-		const initializedProjects = wsFolders.map(wsFolder => {
-			const { project, paths, sourceFiles } = this._initializeTS(wsFolder.fsPath);
-			const projectPaths = paths.map(initializedPath =>
-				path.resolve(wsFolder.fsPath, initializedPath.replace(/\*/g, ""))
-			);
+		const initializedProjects = [];
 
-			return { projectPaths, sourceFiles, project };
-		});
+		for (const wsFolder of wsFolders) {
+			try {
+				const { project, paths, sourceFiles } = this._initializeTS(wsFolder.fsPath);
+				const projectPaths = paths.map(initializedPath =>
+					path.resolve(wsFolder.fsPath, initializedPath.replace(/\*/g, ""))
+				);
+
+				initializedProjects.push({ projectPaths, sourceFiles, project });
+			} catch (error) {
+				continue;
+			}
+		}
+
 		const paths = initializedProjects.flatMap(project => project.projectPaths);
 		const notDuplicatedPaths = paths.filter(initializedPath => {
 			return !wsFolders.some(wsFolder => initializedPath.startsWith(wsFolder.fsPath));
