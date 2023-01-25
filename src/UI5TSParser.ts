@@ -1,14 +1,15 @@
 import * as path from "path";
 import { Project, SourceFile, ts } from "ts-morph";
-import { TSFileReader } from "./classes/utils/TSFileReader";
-import { IFileReader } from "./classes/utils/IFileReader";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
 import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
 import { TSClassFactory } from "./classes/UI5Classes/TSClassFactory";
-import { AbstractUI5Parser, IConstructorParams } from "./IUI5Parser";
 import { CustomTSClass } from "./classes/UI5Classes/UI5Parser/UIClass/CustomTSClass";
 import { CustomTSObject } from "./classes/UI5Classes/UI5Parser/UIClass/CustomTSObject";
+import { IFileReader } from "./classes/utils/IFileReader";
+import { TSFileReader } from "./classes/utils/TSFileReader";
+import { AbstractUI5Parser, IConstructorParams } from "./IUI5Parser";
+import glob = require("glob");
 
 export interface UI5TSParserConstructor extends IConstructorParams<CustomTSClass | CustomTSObject> {
 	classFactory: TSClassFactory;
@@ -55,7 +56,8 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObjec
 	}
 
 	protected async _preloadAllNecessaryData(wsFolders: WorkspaceFolder[]) {
-		const initializedProjects = wsFolders.map(wsFolder => {
+		const validWsFolders = this._getValidWsFolders(wsFolders);
+		const initializedProjects = validWsFolders.map(wsFolder => {
 			const { project, paths, sourceFiles } = this._initializeTS(wsFolder.fsPath);
 			const projectPaths = paths.map(initializedPath =>
 				path.resolve(wsFolder.fsPath, initializedPath.replace(/\*/g, ""))
@@ -65,14 +67,34 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObjec
 		});
 		const paths = initializedProjects.flatMap(project => project.projectPaths);
 		const notDuplicatedPaths = paths.filter(initializedPath => {
-			return !wsFolders.some(wsFolder => initializedPath.startsWith(wsFolder.fsPath));
+			return !validWsFolders.some(wsFolder => initializedPath.startsWith(wsFolder.fsPath));
 		});
 		const tsWsFolders = notDuplicatedPaths.map(path => new WorkspaceFolder(path));
 
-		await super._preloadAllNecessaryData(tsWsFolders.concat(wsFolders));
+		await super._preloadAllNecessaryData(tsWsFolders.concat(validWsFolders));
 
 		initializedProjects.forEach(initializedProject => {
 			this.processSourceFiles(initializedProject.project, initializedProject.sourceFiles);
+		});
+	}
+
+	private _getValidWsFolders(wsFolders: WorkspaceFolder[]) {
+		return wsFolders.filter(wsFolder => {
+			const escapedFileSeparator = "\\" + path.sep;
+			const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
+			const exclusions: string[] = this.configHandler.getExcludeFolderPatterns();
+			const exclusionPaths = exclusions.map(excludeString => {
+				return `${wsFolderFSPath}/${excludeString}`;
+			});
+			const tsFiles = glob.sync(`${wsFolderFSPath}/**/*.ts`, {
+				ignore: exclusionPaths
+			});
+			const tsconfig = glob.sync(`${wsFolderFSPath}/tsconfig.json`);
+			const manifest = glob.sync(`${wsFolderFSPath}/**/manifest.json`, {
+				ignore: exclusionPaths
+			});
+
+			return tsFiles.length > 0 && tsconfig.length > 0 && manifest.length > 0;
 		});
 	}
 
@@ -91,6 +113,6 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObjec
 		const pathMap = project.getCompilerOptions().paths;
 		const paths = pathMap ? Object.keys(pathMap).flatMap(key => pathMap[key]) : [];
 
-		return { paths, sourceFiles: sourceFiles, project };
+		return { paths, sourceFiles, project };
 	}
 }
