@@ -1,6 +1,7 @@
 ## 0.7.6 (25-01-2023)
 
--   Fixes [#59](https://github.com/iljapostnovs/ui5plugin-parser/issues/59)
+-   Bugfix for [#59](https://github.com/iljapostnovs/ui5plugin-parser/issues/59)
+-   Bugfix for [#61](https://github.com/iljapostnovs/ui5plugin-parser/issues/61)
 
 ## 0.7.5 (28-11-2022)
 
