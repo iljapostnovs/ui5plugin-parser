@@ -30,7 +30,7 @@ await parser.initialize();
 
 #### Initialization
 
-If any typescript file is found in the project, parser considers that it's TS project. <br/>
+If any `.ts` file and `tsconfig.json` is found in the project, parser considers that it's TS project. <br/>
 `tsconfig.json` should be located in CWD.
 
 #### Folder exclusions
@@ -72,7 +72,8 @@ const UIClass = parser.classFactory.getUIClass("com.test.any.class");
 ```
 
 UIClass will have class metadata such as fields, methods, properties, aggregations, associations, events etc.
-> *TS only!* For performance reasons TS parser doesn't parse types right away. If you want to load all type info such as method return type, parameter types etc, please use ```UIClass.loadTypes()```
+
+> _TS only!_ For performance reasons TS parser doesn't parse types right away. If you want to load all type info such as method return type, parameter types etc, please use `UIClass.loadTypes()`
 
 ### Default Config Handler
 
