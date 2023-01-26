@@ -899,7 +899,7 @@ export class XMLParser {
 			eventHandlerName = eventHandlerName.replace(".", "");
 		}
 		if (eventHandlerName.includes("(")) {
-			const result = /.*?(?=\(.*\))/.exec(eventHandlerName);
+			const result = /.*?(?=\((.|\n)*\))/.exec(eventHandlerName);
 			if (result) {
 				eventHandlerName = result[0];
 			}
