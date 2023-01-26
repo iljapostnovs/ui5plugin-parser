@@ -1,3 +1,7 @@
+## 0.7.8 (26-01-2023)
+
+-   Throw errors on failed http requests
+
 ## 0.7.7 (26-01-2023)
 
 -   Bugfix for [#61](https://github.com/iljapostnovs/ui5plugin-parser/issues/61)

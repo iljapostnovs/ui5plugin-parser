@@ -1,10 +1,10 @@
-import { URLBuilder } from "../utils/URLBuilder";
+import { AbstractUI5Parser } from "../../IUI5Parser";
+import { UI5Parser } from "../../UI5Parser";
 import { FileReader } from "../utils/FileReader";
 import { HTTPHandler } from "../utils/HTTPHandler";
+import { URLBuilder } from "../utils/URLBuilder";
 import { SAPNode } from "./SAPNode";
 import { UI5Metadata } from "./UI5Metadata";
-import { UI5Parser } from "../../UI5Parser";
-import { AbstractUI5Parser } from "../../IUI5Parser";
 
 interface ILooseObject {
 	[key: string]: any;
@@ -79,14 +79,7 @@ export class UI5MetadataDAO {
 	}
 
 	public async getMetadataForLib(lib: string) {
-		let metadata;
-		try {
-			metadata = await this._fetchMetadataForLib(lib);
-		} catch (error) {
-			console.log(error);
-		}
-
-		return metadata;
+		return await this._fetchMetadataForLib(lib);
 	}
 
 	private _fetchMetadataForLib(lib: string) {
