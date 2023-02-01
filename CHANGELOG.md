@@ -1,3 +1,7 @@
+## 0.7.9 (01-02-2023)
+
+-   Fix xml parser [#291](https://github.com/iljapostnovs/VSCodeUI5Plugin/issues/291)
+
 ## 0.7.8 (26-01-2023)
 
 -   Throw errors on failed http requests
