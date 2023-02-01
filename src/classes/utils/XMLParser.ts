@@ -807,16 +807,19 @@ export class XMLParser {
 		const positionMapping: boolean[] = [];
 		let quotionMarkCount = 0;
 		let secondTypeQuotionMarkCount = 0;
+        let stringOpener: string | null = null;
 
 		let i = 0;
 		while (i < document.content.length) {
 			const isInString = quotionMarkCount % 2 === 1 || secondTypeQuotionMarkCount % 2 === 1;
 			positionMapping.push(isInString);
-			if (document.content[i] === "\"" && this.getIfPositionIsNotInComments(document, i)) {
+			if (document.content[i] === "\"" && this.getIfPositionIsNotInComments(document, i) && (!isInString || stringOpener === "\"")) {
 				quotionMarkCount++;
+                stringOpener = "\"";
 			}
-			if (document.content[i] === "'" && this.getIfPositionIsNotInComments(document, i)) {
+			if (document.content[i] === "'" && this.getIfPositionIsNotInComments(document, i) && (!isInString || stringOpener === "'")) {
 				secondTypeQuotionMarkCount++;
+                stringOpener = "'";
 			}
 			i++;
 		}
