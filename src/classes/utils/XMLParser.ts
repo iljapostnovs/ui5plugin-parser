@@ -392,7 +392,8 @@ export class XMLParser {
 			i > 0 &&
 			(XMLText[i] !== "<" ||
 				!this.getIfPositionIsNotInComments(XMLFile, i) ||
-				this.getIfPositionIsInString(XMLFile, i))
+				this.getIfPositionIsInString(XMLFile, i)) ||
+                XMLText.substring(i, i + 2).toLowerCase() === "<!"
 		) {
 			i--;
 		}

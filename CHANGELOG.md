@@ -1,3 +1,7 @@
+## 0.7.11 (04-02-2023)
+
+-   Add exclusion for doctype tag
+
 ## 0.7.10 (04-02-2023)
 
 -   Ignore doctype tags [#188](https://github.com/iljapostnovs/VSCodeUI5Plugin/issues/188)
