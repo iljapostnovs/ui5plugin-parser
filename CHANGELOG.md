@@ -1,3 +1,7 @@
+## 0.7.10 (04-02-2023)
+
+-   Ignore doctype tags [#188](https://github.com/iljapostnovs/VSCodeUI5Plugin/issues/188)
+
 ## 0.7.9 (01-02-2023)
 
 -   Fix xml parser [#291](https://github.com/iljapostnovs/VSCodeUI5Plugin/issues/291)
