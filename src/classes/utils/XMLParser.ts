@@ -771,11 +771,14 @@ export class XMLParser {
 				XMLParser.getIfPositionIsNotInComments(XMLFile, i + 1);
 			if (thisIsTagEnd) {
 				const indexOfTagBegining = this._getTagBeginingIndex(XMLFile, i);
-				tags.push({
-					text: XMLText.substring(indexOfTagBegining, i + 1),
-					positionBegin: indexOfTagBegining,
-					positionEnd: i
-				});
+                const tagText = XMLText.substring(indexOfTagBegining, i + 1);
+                if (!tagText.startsWith("<!") || tagText.startsWith("<!--")) {
+                    tags.push({
+                        text: tagText,
+                        positionBegin: indexOfTagBegining,
+                        positionEnd: i
+                    });
+                }
 			}
 			i++;
 		}
