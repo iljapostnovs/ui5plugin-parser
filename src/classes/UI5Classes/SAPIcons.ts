@@ -1,27 +1,29 @@
 
 
-import { HTTPHandler } from "../utils/HTTPHandler";
+import { IUI5Parser } from "../../IUI5Parser";
+import { FileReader } from "../utils/FileReader";
 import { URLBuilder } from "../utils/URLBuilder";
 
 export class SAPIcons {
-	public static icons: string[] = [];
+	public icons: string[] = [];
+	private readonly parser: IUI5Parser;
+	constructor(parser: IUI5Parser) {
+		this.parser = parser;
+	}
 
-	static async preloadIcons() {
-		const { AbstractUI5Parser } = await import("../../IUI5Parser");
-		const { UI5Parser } = await import("../../UI5Parser");
-		const { FileReader } = await import("../utils/FileReader");
-		this.icons = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getCache(FileReader.CacheType.Icons);
+	async preloadIcons() {
+		this.icons = this.parser.fileReader.getCache(FileReader.CacheType.Icons);
 		if (!this.icons) {
 			this.icons = await this._loadIcons();
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.setCache(
+			this.parser.fileReader.setCache(
 				FileReader.CacheType.Icons,
 				JSON.stringify(this.icons)
 			);
 		}
 	}
 
-	private static async _loadIcons() {
-		const uris: string[] = URLBuilder.getInstance().getIconURIs();
+	private async _loadIcons() {
+		const uris: string[] = new URLBuilder(this.parser.configHandler, this.parser.fileReader).getIconURIs();
 		let icons: string[] = [];
 		const aIconResponses = await Promise.all(uris.map(uri => this._requestJSONData(uri)));
 		aIconResponses.forEach((iconResponse: any) => {
@@ -40,8 +42,8 @@ export class SAPIcons {
 		return icons;
 	}
 
-	private static async _requestJSONData(uri: string) {
-		const data: any = await HTTPHandler.get(uri);
+	private async _requestJSONData(uri: string) {
+		const data: any = await this.parser.httpHandler.get(uri);
 
 		return data;
 	}

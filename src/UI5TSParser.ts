@@ -2,14 +2,24 @@ import * as path from "path";
 import { Project, SourceFile, ts } from "ts-morph";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
+import { SAPNodeDAO } from "./classes/librarydata/SAPNodeDAO";
+import { UI5MetadataDAO } from "./classes/librarydata/UI5MetadataDAO";
 import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
+import { ResourceModelData } from "./classes/UI5Classes/ResourceModelData";
+import { SAPIcons } from "./classes/UI5Classes/SAPIcons";
 import { TSClassFactory } from "./classes/UI5Classes/TSClassFactory";
 import { CustomTSClass } from "./classes/UI5Classes/UI5Parser/UIClass/CustomTSClass";
 import { CustomTSObject } from "./classes/UI5Classes/UI5Parser/UIClass/CustomTSObject";
+import { HTTPHandler } from "./classes/utils/HTTPHandler";
 import { IFileReader } from "./classes/utils/IFileReader";
+import { ReusableMethods } from "./classes/utils/ReusableMethods";
+import { TextDocumentTransformer } from "./classes/utils/TextDocumentTransformer";
 import { TSFileReader } from "./classes/utils/TSFileReader";
-import { AbstractUI5Parser, IConstructorParams } from "./IUI5Parser";
+import { URLBuilder } from "./classes/utils/URLBuilder";
+import { XMLParser } from "./classes/utils/XMLParser";
+import { IConstructorParams } from "./IUI5Parser";
 import glob = require("glob");
+import { AbstractUI5Parser } from "./AbstractUI5Parser";
 
 export interface UI5TSParserConstructor extends IConstructorParams<CustomTSClass | CustomTSObject> {
 	classFactory: TSClassFactory;
@@ -20,12 +30,30 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObjec
 	readonly classFactory: TSClassFactory;
 	readonly fileReader: IFileReader;
 	readonly tsProjects: Project[] = [];
+	readonly nodeDAO: SAPNodeDAO;
+	readonly metadataDAO: UI5MetadataDAO;
+	readonly urlBuilder: URLBuilder;
+	readonly icons: SAPIcons;
+	readonly httpHandler: HTTPHandler;
+	readonly resourceModelData: ResourceModelData;
+	readonly textDocumentTransformer: TextDocumentTransformer;
+	readonly reusableMethods: ReusableMethods;
+	readonly xmlParser: XMLParser;
 
 	constructor(params?: UI5TSParserConstructor) {
 		super();
-		this.classFactory = params?.classFactory || new TSClassFactory();
+		this.classFactory = params?.classFactory || new TSClassFactory(this);
 		this.configHandler = params?.configHandler || new PackageParserConfigHandler();
-		this.fileReader = params?.fileReader || new TSFileReader(this.configHandler, this.classFactory);
+		this.fileReader = params?.fileReader || new TSFileReader(this.configHandler, this.classFactory, this);
+		this.icons = new SAPIcons(this);
+		this.metadataDAO = new UI5MetadataDAO(this);
+		this.nodeDAO = new SAPNodeDAO(this);
+		this.urlBuilder = new URLBuilder(this.configHandler, this.fileReader);
+		this.httpHandler = new HTTPHandler(this.configHandler);
+		this.resourceModelData = new ResourceModelData(this);
+		this.textDocumentTransformer = new TextDocumentTransformer(this);
+		this.reusableMethods = new ReusableMethods(this.textDocumentTransformer);
+		this.xmlParser = new XMLParser(this);
 	}
 
 	getProject(fsPath: string) {

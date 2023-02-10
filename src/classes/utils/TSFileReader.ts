@@ -1,17 +1,15 @@
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
+import { UI5TSParser } from "../../UI5TSParser";
 import { IParserConfigHandler } from "../config/IParserConfigHandler";
 import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
 import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
-import { ResourceModelData } from "../UI5Classes/ResourceModelData";
 import { CustomTSClass } from "../UI5Classes/UI5Parser/UIClass/CustomTSClass";
 import { CustomTSObject } from "../UI5Classes/UI5Parser/UIClass/CustomTSObject";
-import { IUIManifest, IViews, IManifestPaths, IView, IFragment, IXMLFile, IIdClassMap } from "./FileReader";
+import { IFragment, IIdClassMap, IManifestPaths, IUIManifest, IView, IViews, IXMLFile } from "./FileReader";
 import { IFileReader } from "./IFileReader";
-import { TextDocumentTransformer } from "./TextDocumentTransformer";
-import { XMLParser } from "./XMLParser";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
@@ -23,11 +21,13 @@ export class TSFileReader implements IFileReader {
 	public globalStoragePath: string | undefined;
 	private readonly _configHandler: IParserConfigHandler;
 	private readonly _classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>;
+	private readonly _parser: UI5TSParser;
 
-	constructor(configHandler: IParserConfigHandler, classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>) {
+	constructor(configHandler: IParserConfigHandler, classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>, parser: UI5TSParser) {
 		this._configHandler = configHandler;
 		this._UI5Version = configHandler.getUI5Version();
 		this._classFactory = classFactory;
+		this._parser = parser;
 	}
 
 	public setNewViewContentToCache(viewContent: string, fsPath: string, forceRefresh = false) {
@@ -349,7 +349,7 @@ export class TSFileReader implements IFileReader {
 		if (!XMLFile.idClassMap[controlId]) {
 			let controlClass = "";
 
-			const allIds = XMLParser.getAllIDsInCurrentView(XMLFile);
+			const allIds = this._parser.xmlParser.getAllIDsInCurrentView(XMLFile);
 			const id = allIds.find(idData => idData.id === controlId);
 			controlClass = id?.className || "";
 			if (controlClass) {
@@ -363,7 +363,7 @@ export class TSFileReader implements IFileReader {
 	readAllFiles(wsFolders: WorkspaceFolder[]) {
 		this._readAllFragmentsAndSaveInCache(wsFolders);
 		this._readAllViewsAndSaveInCache(wsFolders);
-		ResourceModelData.readTexts();
+		this._parser.resourceModelData.readTexts();
 	}
 
 	private _readAllViewsAndSaveInCache(wsFolders: WorkspaceFolder[]) {
@@ -416,7 +416,7 @@ export class TSFileReader implements IFileReader {
 	}
 
 	getResponsibleClassForXMLDocument(document: TextDocument) {
-		const XMLDocument = TextDocumentTransformer.toXMLFile(document);
+		const XMLDocument = this._parser.textDocumentTransformer.toXMLFile(document);
 		if (XMLDocument) {
 			return this.getResponsibleClassNameForViewOrFragment(XMLDocument);
 		}

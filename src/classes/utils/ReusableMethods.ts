@@ -3,9 +3,14 @@ import { CustomUIClass, ICustomClassUIMethod } from "../UI5Classes/UI5Parser/UIC
 import { TextDocumentTransformer } from "./TextDocumentTransformer";
 
 export class ReusableMethods {
-	static getPositionOfTheLastUIDefine(document: TextDocument) {
+	private readonly _documentTransformer: TextDocumentTransformer;
+	constructor (documentTransformer: TextDocumentTransformer) {
+		this._documentTransformer = documentTransformer;
+	}
+
+	getPositionOfTheLastUIDefine(document: TextDocument) {
 		let position: number | undefined;
-		const UIClass = TextDocumentTransformer.toCustomUIClass(document);
+		const UIClass = this._documentTransformer.toCustomUIClass(document);
 		if (UIClass && UIClass instanceof CustomUIClass) {
 			const mainFunction = UIClass.fileContent?.body[0]?.expression;
 			const definePaths: any[] = mainFunction?.arguments[0]?.elements;
@@ -25,7 +30,7 @@ export class ReusableMethods {
 		return position;
 	}
 
-	static getIfPositionIsInTheLastOrAfterLastMember(UIClass: CustomUIClass, position: number) {
+	getIfPositionIsInTheLastOrAfterLastMember(UIClass: CustomUIClass, position: number) {
 		const currentMethod = UIClass.methods.find(method => method.node?.start < position && method.node?.end > position);
 		const positionIsInMethod = !!currentMethod;
 		const positionIsAfterLastMethod = positionIsInMethod ? false : this._getIfPositionIsAfterLastMember(UIClass, position);
@@ -33,7 +38,7 @@ export class ReusableMethods {
 		return positionIsInMethod || positionIsAfterLastMethod;
 	}
 
-	private static _getIfPositionIsAfterLastMember(UIClass: CustomUIClass, position: number) {
+	private _getIfPositionIsAfterLastMember(UIClass: CustomUIClass, position: number) {
 		let isPositionAfterLastMethod = false;
 		const properties = UIClass.acornClassBody?.properties || [];
 		const lastProperty = properties[properties.length - 1];
@@ -44,7 +49,7 @@ export class ReusableMethods {
 		return isPositionAfterLastMethod;
 	}
 
-	static getIfMethodIsLastOne(UIClass: CustomUIClass, method: ICustomClassUIMethod) {
+	getIfMethodIsLastOne(UIClass: CustomUIClass, method: ICustomClassUIMethod) {
 		let currentMethodIsLastMethod = false;
 		const propertyValues = UIClass.acornClassBody?.properties?.map((node: any) => node.value);
 		if (propertyValues) {
@@ -57,7 +62,7 @@ export class ReusableMethods {
 		return currentMethodIsLastMethod;
 	}
 
-	static getIfPositionIsInPropertyName(UIClass: CustomUIClass, position: number) {
+	getIfPositionIsInPropertyName(UIClass: CustomUIClass, position: number) {
 		let bPositionIsInPropertyName = true;
 		const positionIsBetweenProperties = !!UIClass.acornClassBody.properties?.find((node: any, index: number) => {
 			let correctNode = false;

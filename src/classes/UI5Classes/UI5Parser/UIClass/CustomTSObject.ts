@@ -9,8 +9,6 @@ import {
 	TypeChecker
 } from "ts-morph";
 import * as ts from "typescript";
-import { AbstractUI5Parser } from "../../../../IUI5Parser";
-import { UI5Parser } from "../../../../UI5Parser";
 import { UI5TSParser } from "../../../../UI5TSParser";
 import {
 	AbstractCustomClass,
@@ -48,12 +46,12 @@ export class CustomTSObject extends AbstractCustomClass<
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
 	readonly node: ObjectLiteralExpression;
 	private readonly _sourceFile: SourceFile;
-	constructor(objectLiteralExpression: ObjectLiteralExpression, typeChecker: TypeChecker) {
+	constructor(objectLiteralExpression: ObjectLiteralExpression, parser: UI5TSParser, typeChecker: TypeChecker) {
 		const sourceFile = objectLiteralExpression.getSourceFile();
-		const className = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(
+		const className = parser.fileReader.getClassNameFromPath(
 			sourceFile.compilerNode.fileName
 		);
-		super(className ?? "");
+		super(className ?? "", parser);
 		this.typeChecker = typeChecker;
 		this.classText = sourceFile.getFullText();
 		this._sourceFile = sourceFile;
@@ -88,7 +86,7 @@ export class CustomTSObject extends AbstractCustomClass<
 		let className = moduleNameSlash.replace(/\//g, ".");
 
 		if (moduleNameSlash?.startsWith(".")) {
-			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(this.className);
+			const manifest = this.parser.fileReader.getManifestForClass(this.className);
 
 			if (manifest && this.fsPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);
@@ -237,7 +235,7 @@ export class CustomTSObject extends AbstractCustomClass<
 			const UI5Type = path?.startsWith("sap/")
 				? path.replace(/\//g, ".")
 				: path
-				? AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(path)
+				? this.parser.fileReader.getClassNameFromPath(path)
 				: undefined;
 			if (UI5Type) {
 				returnType = UI5Type;

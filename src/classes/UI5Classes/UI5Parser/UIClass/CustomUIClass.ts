@@ -1,18 +1,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { IAcornLocation, IAcornPosition } from "../../JSParser/AcornSyntaxAnalyzer";
-import * as path from "path";
-import {
-	IUIAggregation,
-	IUIEvent,
-	IUIMethod,
-	IUIProperty,
-	IUIAssociation,
-	IUIEventParam,
-	IUIMethodParam
-} from "./AbstractUIClass";
 import * as commentParser from "comment-parser";
-import LineColumn = require("line-column");
-import { UI5Parser } from "../../../../UI5Parser";
+import * as path from "path";
+import { UI5JSParser } from "../../../../UI5JSParser";
+import { IAcornLocation, IAcornPosition } from "../../JSParser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "../../JSParser/ISyntaxAnalyser";
 import {
 	AbstractCustomClass,
@@ -21,7 +11,10 @@ import {
 	ICustomMember,
 	IUIDefine
 } from "./AbstractCustomClass";
-import { AbstractUI5Parser } from "../../../../IUI5Parser";
+import {
+	IUIAggregation, IUIAssociation, IUIEvent, IUIEventParam, IUIMethod, IUIMethodParam, IUIProperty
+} from "./AbstractUIClass";
+import LineColumn = require("line-column");
 const acornLoose = require("acorn-loose");
 
 interface ILooseObject {
@@ -61,12 +54,12 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 	public classBodyAcornVariableName: string | undefined;
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
 
-	constructor(className: string, syntaxAnalyser: ISyntaxAnalyser, documentText?: string) {
-		super(className);
+	constructor(className: string, syntaxAnalyser: ISyntaxAnalyser, parser: UI5JSParser, documentText?: string) {
+		super(className, parser);
 
 		this.syntaxAnalyser = syntaxAnalyser;
 		this.fsPath =
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassFSPathFromClassName(this.className) ?? "";
+			this.parser.fileReader.getClassFSPathFromClassName(this.className) ?? "";
 		this._readFileContainingThisClassCode(documentText); //todo: rename. not always reading anyore.
 		this.UIDefine = this._getUIDefine();
 		this.acornClassBody = this._getThisClassBodyAcorn();
@@ -319,7 +312,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 
 	private _readFileContainingThisClassCode(documentText?: string) {
 		if (!documentText) {
-			documentText = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getDocumentTextFromCustomClassName(
+			documentText = this.parser.fileReader.getDocumentTextFromCustomClassName(
 				this.className
 			);
 		}
@@ -388,7 +381,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		let className = classPath.replace(/\//g, ".");
 
 		if (classPath?.startsWith(".")) {
-			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(this.className);
+			const manifest = this.parser.fileReader.getManifestForClass(this.className);
 
 			if (manifest && this.fsPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);
@@ -472,7 +465,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 
 	private _getParentNameFromManifest() {
 		let parentName: string | undefined;
-		const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(this.className);
+		const manifest = this.parser.fileReader.getManifestForClass(this.className);
 		if (
 			manifest?.content &&
 			manifest?.content["sap.ui5"]?.extends?.extensions &&

@@ -1,25 +1,24 @@
-import * as ts from "typescript";
 import { ClassDeclaration, ObjectLiteralExpression, Project, SourceFile, TypeChecker } from "ts-morph";
-import { IFragment, IView } from "../utils/FileReader";
+import * as ts from "typescript";
 import { UI5TSParser } from "../../UI5TSParser";
+import { IFragment, IView } from "../utils/FileReader";
 import { TextDocument } from "./abstraction/TextDocument";
-import { IUIClassFactory, IUIClassMap, IFieldsAndMethods, IViewsAndFragments } from "./interfaces/IUIClassFactory";
+import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./interfaces/IUIClassFactory";
 import {
-	AbstractUIClass,
-	IUIField,
-	IUIMethod,
-	IUIEvent,
-	IUIAggregation,
-	IUIAssociation,
-	IUIProperty
+	AbstractUIClass, IUIAggregation,
+	IUIAssociation, IUIEvent, IUIField,
+	IUIMethod, IUIProperty
 } from "./UI5Parser/UIClass/AbstractUIClass";
 import { CustomTSClass } from "./UI5Parser/UIClass/CustomTSClass";
+import { CustomTSObject } from "./UI5Parser/UIClass/CustomTSObject";
 import { EmptyUIClass } from "./UI5Parser/UIClass/EmptyUIClass";
 import { StandardUIClass } from "./UI5Parser/UIClass/StandardUIClass";
-import { AbstractUI5Parser } from "../../IUI5Parser";
-import { CustomTSObject } from "./UI5Parser/UIClass/CustomTSObject";
 
 export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSObject> {
+	private readonly parser: UI5TSParser;
+	constructor(parser: UI5TSParser) {
+		this.parser = parser;
+	}
 	isCustomClass(UIClass: AbstractUIClass): UIClass is CustomTSClass | CustomTSObject {
 		return UIClass instanceof CustomTSClass || UIClass instanceof CustomTSObject;
 	}
@@ -33,14 +32,14 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 	) {
 		let returnClass: AbstractUIClass | undefined;
 		const isThisClassFromAProject =
-			!!AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getManifestForClass(className);
+			!!this.parser.fileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
-			returnClass = new StandardUIClass(className);
+			returnClass = new StandardUIClass(className, this.parser);
 		} else if (isThisClassFromAProject) {
 			if (!declaration && !typeChecker) {
 				const fileName =
-					AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassFSPathFromClassName(className);
-				const project = fileName ? AbstractUI5Parser.getInstance(UI5TSParser).getProject(fileName) : undefined;
+					this.parser.fileReader.getClassFSPathFromClassName(className);
+				const project = fileName ? this.parser.getProject(fileName) : undefined;
 				typeChecker = project?.getTypeChecker();
 				const sourceFile = fileName ? project?.getSourceFile(fileName) : undefined;
 
@@ -59,14 +58,14 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 				}
 			}
 			if (declaration && typeChecker && declaration instanceof ClassDeclaration) {
-				returnClass = new CustomTSClass(declaration, typeChecker);
+				returnClass = new CustomTSClass(declaration, this.parser, typeChecker);
 			} else if (declaration && typeChecker && declaration instanceof ObjectLiteralExpression) {
-				returnClass = new CustomTSObject(declaration, typeChecker);
+				returnClass = new CustomTSObject(declaration, this.parser,  typeChecker);
 			} else {
-				returnClass = new EmptyUIClass(className);
+				returnClass = new EmptyUIClass(className, this.parser);
 			}
 		} else {
-			returnClass = new EmptyUIClass(className);
+			returnClass = new EmptyUIClass(className, this.parser);
 		}
 
 		return returnClass;
@@ -87,7 +86,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 
 	public setNewContentForClassUsingDocument(document: TextDocument, force = false) {
 		const documentText = document.getText();
-		const currentClassName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(
+		const currentClassName = this.parser.fileReader.getClassNameFromPath(
 			document.fileName
 		);
 
@@ -115,10 +114,10 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 			// console.time(`Class parsing for ${classNameDotNotation} took`);
 			if (!sourceFile && !project) {
 				const fileName =
-					AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassFSPathFromClassName(
+					this.parser.fileReader.getClassFSPathFromClassName(
 						classNameDotNotation
 					);
-				project = fileName ? AbstractUI5Parser.getInstance(UI5TSParser).getProject(fileName) : undefined;
+				project = fileName ? this.parser.getProject(fileName) : undefined;
 				sourceFile = fileName ? project?.getSourceFile(fileName) : undefined;
 			}
 
@@ -497,13 +496,13 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 	private _removeDuplicatesForViewsAndFragments(viewsAndFragments: IViewsAndFragments) {
 		viewsAndFragments.views.forEach(view => {
 			viewsAndFragments.fragments.push(
-				...AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsInXMLFile(view)
+				...this.parser.fileReader.getFragmentsInXMLFile(view)
 			);
 		});
 
 		viewsAndFragments.fragments.forEach(fragment => {
 			viewsAndFragments.fragments.push(
-				...AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsInXMLFile(fragment)
+				...this.parser.fileReader.getFragmentsInXMLFile(fragment)
 			);
 		});
 
@@ -528,11 +527,9 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 			fragments: []
 		};
 
-		viewsAndFragments.fragments = AbstractUI5Parser.getInstance(
-			UI5TSParser
-		).fileReader.getFragmentsMentionedInClass(CurrentUIClass.className);
+		viewsAndFragments.fragments = this.parser.fileReader.getFragmentsMentionedInClass(CurrentUIClass.className);
 		const views = [];
-		const view = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getViewForController(
+		const view = this.parser.fileReader.getViewForController(
 			CurrentUIClass.className
 		);
 		if (view) {
@@ -541,8 +538,8 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 		}
 		viewsAndFragments.views = views;
 
-		const fragments = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getAllFragments();
-		const allViews = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getAllViews();
+		const fragments = this.parser.fileReader.getAllFragments();
+		const allViews = this.parser.fileReader.getAllViews();
 
 		//check for mentioning
 		fragments.forEach(fragment => {
@@ -600,10 +597,10 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 
 	private _getFragmentFromViewManifestExtensions(className: string, view: IView) {
 		const fragments: IFragment[] = [];
-		const viewName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(view.fsPath);
+		const viewName = this.parser.fileReader.getClassNameFromPath(view.fsPath);
 		if (viewName) {
 			const extensions =
-				AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getManifestExtensionsForClass(className);
+				this.parser.fileReader.getManifestExtensionsForClass(className);
 			const viewExtension =
 				extensions && extensions["sap.ui.viewExtensions"] && extensions["sap.ui.viewExtensions"][viewName];
 			if (viewExtension) {
@@ -612,10 +609,10 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 					if (extension.type === "XML" && extension.className === "sap.ui.core.Fragment") {
 						const fragmentName = extension.fragmentName;
 						const fragment =
-							AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragment(fragmentName);
+							this.parser.fileReader.getFragment(fragmentName);
 						if (fragment) {
 							const fragmentsInFragment: IFragment[] =
-								AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getFragmentsInXMLFile(fragment);
+								this.parser.fileReader.getFragmentsInXMLFile(fragment);
 							fragments.push(fragment, ...fragmentsInFragment);
 						}
 					}
@@ -684,8 +681,8 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 	}
 
 	public setNewNameForClass(oldPath: string, newPath: string) {
-		const oldName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(oldPath);
-		const newName = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(newPath);
+		const oldName = this.parser.fileReader.getClassNameFromPath(oldPath);
+		const newName = this.parser.fileReader.getClassNameFromPath(newPath);
 		if (oldName && newName) {
 			const oldClass = this._UIClasses[oldName];
 			if (!oldClass) {
@@ -695,7 +692,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 			oldClass.className = newName;
 
 			if (oldClass instanceof CustomTSClass || oldClass instanceof CustomTSObject) {
-				const newClassFSPath = AbstractUI5Parser.getInstance(UI5TSParser).fileReader.convertClassNameToFSPath(
+				const newClassFSPath = this.parser.fileReader.convertClassNameToFSPath(
 					newName,
 					oldClass.fsPath?.endsWith(".controller.js") || oldClass.fsPath?.endsWith(".controller.ts")
 				);
@@ -769,7 +766,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 
 				if (parentFileName) {
 					defaultModelName =
-						AbstractUI5Parser.getInstance(UI5TSParser).fileReader.getClassNameFromPath(parentFileName);
+						this.parser.fileReader.getClassNameFromPath(parentFileName);
 				}
 			}
 		});

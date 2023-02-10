@@ -1,4 +1,4 @@
-import { SAPIcons } from "../../SAPIcons";
+import { IUI5Parser } from "../../../../IUI5Parser";
 
 export interface IUIMethodParam {
 	name: string;
@@ -79,16 +79,19 @@ export abstract class AbstractUIClass implements IAbstract {
 	public interfaces: string[] = [];
 	public parentClassNameDotNotation = "";
 	public deprecated = false;
+	protected readonly parser: IUI5Parser;
 
-	constructor(className: string) {
+	constructor(className: string, parser: IUI5Parser) {
 		this.className = className;
 		this.classExists = true;
 		this.abstract = false;
+		this.parser = parser;
 	}
 
 	getMembers(): IMember[] {
 		return [...this.methods, ...this.fields];
 	}
+
 
 	protected generateTypeValues(type: string) {
 		let typeValues: ITypeValue[] = [];
@@ -99,7 +102,7 @@ export abstract class AbstractUIClass implements IAbstract {
 				{ text: "false", description: "boolean false" }
 			];
 		} else if (type === "sap.ui.core.URI") {
-			typeValues = SAPIcons.icons.map(icon => ({ text: icon, description: icon }));
+			typeValues = this.parser.icons.icons.map(icon => ({ text: icon, description: icon }));
 		} else if (type === "string") {
 			// const currentComponentName = UI5Plugin.getInstance().fileReader.getComponentNameOfAppInCurrentWorkspaceFolder();
 			// if (currentComponentName) {

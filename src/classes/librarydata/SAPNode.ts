@@ -5,9 +5,10 @@ export class SAPNode {
 	public metadata: UI5Metadata | undefined;
 	public nodes: SAPNode[] = [];
 
-	public static readonly metadataDAO = new UI5MetadataDAO();
-	constructor(node: any) {
+	readonly metadataDAO: UI5MetadataDAO;
+	constructor(node: any, metadataDAO: UI5MetadataDAO) {
 		this.node = node;
+		this.metadataDAO = metadataDAO;
 
 		this._fillNodes();
 	}
@@ -15,7 +16,7 @@ export class SAPNode {
 	private _fillNodes() {
 		if (this.node.nodes) {
 			for (const node of this.node.nodes) {
-				const newNode = new SAPNode(node);
+				const newNode = new SAPNode(node, this.metadataDAO);
 				this.nodes.push(newNode);
 			}
 		}
@@ -104,7 +105,7 @@ export class SAPNode {
 
 	public getMetadata() {
 		if (!this.metadata) {
-			this.metadata = SAPNode.metadataDAO.getPreloadedMetadataForNode(this);
+			this.metadata = this.metadataDAO.getPreloadedMetadataForNode(this);
 		}
 
 		return this.metadata;

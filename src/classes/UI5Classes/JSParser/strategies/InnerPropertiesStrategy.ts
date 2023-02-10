@@ -1,17 +1,16 @@
-import { SAPNodeDAO } from "../../../librarydata/SAPNodeDAO";
+import { IUI5Parser } from "../../../../IUI5Parser";
+import { TextDocument } from "../../abstraction/TextDocument";
+import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
+import { AbstractCustomClass } from "../../UI5Parser/UIClass/AbstractCustomClass";
 import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
+import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./FieldsAndMethodForPositionBeforeCurrentStrategy";
-import { TextDocument } from "../../abstraction/TextDocument";
-import { UI5Parser } from "../../../../UI5Parser";
-import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
-import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
-import { AbstractUI5Parser } from "../../../../IUI5Parser";
 
 export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
-	constructor(syntaxAnalyser: ISyntaxAnalyser) {
-		super();
+	constructor(syntaxAnalyser: ISyntaxAnalyser, parser: IUI5Parser<AbstractCustomClass>) {
+		super(parser);
 		this.syntaxAnalyser = syntaxAnalyser;
 	}
 
@@ -26,7 +25,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	private _acornGetPropertiesForParamsInCurrentPosition(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(
+		const currentClassName = this.parser.fileReader.getClassNameFromPath(
 			document.fileName
 		);
 
@@ -44,7 +43,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	private _getFieldsAndMethodsForNewExpression(newExpression: any, document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(
+		const currentClassName = this.parser.fileReader.getClassNameFromPath(
 			document.fileName
 		);
 		if (position && currentClassName) {
@@ -52,7 +51,8 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 			const indexOfArgument = newExpression.arguments.indexOf(argument);
 			if (argument && argument.type === "ObjectExpression") {
 				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(
-					this.syntaxAnalyser
+					this.syntaxAnalyser,
+					this.parser
 				);
 				const stack = positionBeforeCurrentStrategy.getStackOfNodesForPosition(
 					currentClassName,
@@ -63,7 +63,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 					currentClassName
 				);
 				if (classNameOfCurrentNewExpression) {
-					const node = new SAPNodeDAO().findNode(classNameOfCurrentNewExpression);
+					const node = this.parser.nodeDAO.findNode(classNameOfCurrentNewExpression);
 					const constructorParameters = node?.getMetadata()?.getRawMetadata()?.constructor?.parameters;
 					if (constructorParameters) {
 						const settings = constructorParameters.find((parameter: any) => parameter.name === "mSettings");
@@ -83,7 +83,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	private _getFieldsAndMethodsForCallExpression(callExpression: any, document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const currentClassName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(
+		const currentClassName = this.parser.fileReader.getClassNameFromPath(
 			document.fileName
 		);
 		if (currentClassName && position) {
@@ -91,7 +91,8 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 			const indexOfArgument = callExpression.arguments.indexOf(argument);
 			if (argument?.type === "ObjectExpression") {
 				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(
-					this.syntaxAnalyser
+					this.syntaxAnalyser,
+					this.parser
 				);
 				const stack = positionBeforeCurrentStrategy.getStackOfNodesForPosition(
 					currentClassName,
@@ -105,7 +106,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 					const methodName = callExpression.callee?.property?.name;
 					if (methodName) {
 						const UIClass = <CustomUIClass>(
-							AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(
+							this.parser.classFactory.getUIClass(
 								classNameOfCurrentObjectExpression
 							)
 						);
@@ -140,7 +141,8 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 				}
 			} else if (argument?.type === "Literal" && indexOfArgument === 0) {
 				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(
-					this.syntaxAnalyser
+					this.syntaxAnalyser,
+					this.parser
 				);
 				const className = positionBeforeCurrentStrategy.acornGetClassName(
 					currentClassName,
@@ -212,9 +214,9 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 		let models: { type: string; name: string }[] = [];
 		const fileName = document.fileName;
 		const currentClassName =
-			fileName && AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(fileName);
+			fileName && this.parser.fileReader.getClassNameFromPath(fileName);
 		if (currentClassName) {
-			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(currentClassName);
+			const manifest = this.parser.fileReader.getManifestForClass(currentClassName);
 			if (manifest && manifest.content["sap.ui5"]?.models) {
 				models = Object.keys(manifest.content["sap.ui5"]?.models).map(key => ({
 					type: manifest.content["sap.ui5"]?.models[key].type,
@@ -229,7 +231,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 	private _getCurrentClassModels(currentClassName: string) {
 		let models: { type: string; name: string }[] = [];
 		if (currentClassName) {
-			const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(currentClassName);
+			const UIClass = this.parser.classFactory.getUIClass(currentClassName);
 			if (UIClass instanceof CustomUIClass) {
 				const callExpressions = UIClass.methods.reduce((accumulator: any[], UIMethod) => {
 					if (UIMethod.node) {
@@ -305,7 +307,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 			methods: []
 		}
 	) {
-		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = this.parser.classFactory.getUIClass(className);
 		fieldsAndMethods.fields = fieldsAndMethods.fields.concat(
 			UIClass.properties.map(property => ({
 				name: property.name,
@@ -328,7 +330,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 
 	public getStackOfNodesForInnerParamsForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
-		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = this.parser.classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {

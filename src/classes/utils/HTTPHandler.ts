@@ -1,12 +1,15 @@
 import { Axios, AxiosRequestConfig } from "axios";
 import * as https from "https";
-import { AbstractUI5Parser } from "../../IUI5Parser";
-import { UI5Parser } from "../../UI5Parser";
+import { IParserConfigHandler } from "../config/IParserConfigHandler";
 export class HTTPHandler {
-	static async get(uri: string, options: AxiosRequestConfig = {}): Promise<any> {
+	private readonly configHandler: IParserConfigHandler;
+	constructor(configHandler: IParserConfigHandler) {
+		this.configHandler = configHandler;
+	}
+	async get(uri: string, options: AxiosRequestConfig = {}): Promise<any> {
 		let data = {};
 
-		const rejectUnauthorized = AbstractUI5Parser.getInstance(UI5Parser).configHandler.getRejectUnauthorized();
+		const rejectUnauthorized = this.configHandler.getRejectUnauthorized();
 		const agent = new https.Agent({
 			rejectUnauthorized: !!rejectUnauthorized
 		});

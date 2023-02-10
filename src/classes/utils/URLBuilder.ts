@@ -1,26 +1,17 @@
-import { AbstractUI5Parser } from "../../IUI5Parser";
-import { UI5Parser } from "../../UI5Parser";
 import { IParserConfigHandler } from "../config/IParserConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
 import { AbstractUIClass } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
+import { IFileReader } from "./IFileReader";
 
 export class URLBuilder {
-	private static _URLBuilderInstance: URLBuilder;
 	private readonly _UI5Version: string;
 	private readonly _URLHost: string;
+	private readonly _fileReader: IFileReader;
 
-	private constructor(UI5Version: string, configHandler: IParserConfigHandler) {
+	constructor(configHandler: IParserConfigHandler, fileReader: IFileReader) {
 		this._URLHost = configHandler.getDataSource();
-		this._UI5Version = UI5Version;
-	}
-
-	static getInstance(configHandler?: IParserConfigHandler) {
-		if (!this._URLBuilderInstance && configHandler) {
-			const UI5Version: any = configHandler.getUI5Version();
-			this._URLBuilderInstance = new URLBuilder(UI5Version, configHandler);
-		}
-
-		return this._URLBuilderInstance;
+		this._UI5Version = configHandler.getUI5Version();
+		this._fileReader = fileReader;
 	}
 
 	getMarkupUrlForClassApi(SAPClass: SAPNode | AbstractUIClass) {
@@ -32,7 +23,7 @@ export class URLBuilder {
 				: "";
 
 		if (
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className) ||
+			this._fileReader.getManifestForClass(className) ||
 			this._isStandardClass(className)
 		) {
 			return "";
@@ -43,7 +34,7 @@ export class URLBuilder {
 
 	getMarkupUrlForPropertiesApi(SAPClass: AbstractUIClass) {
 		if (
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(SAPClass.className) ||
+			this._fileReader.getManifestForClass(SAPClass.className) ||
 			this._isStandardClass(SAPClass.className)
 		) {
 			return "";
@@ -54,7 +45,7 @@ export class URLBuilder {
 
 	getMarkupUrlForAggregationApi(SAPClass: AbstractUIClass) {
 		if (
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(SAPClass.className) ||
+			this._fileReader.getManifestForClass(SAPClass.className) ||
 			this._isStandardClass(SAPClass.className)
 		) {
 			return "";
@@ -65,7 +56,7 @@ export class URLBuilder {
 
 	getMarkupUrlForAssociationApi(SAPClass: AbstractUIClass) {
 		if (
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(SAPClass.className) ||
+			this._fileReader.getManifestForClass(SAPClass.className) ||
 			this._isStandardClass(SAPClass.className)
 		) {
 			return "";
@@ -76,7 +67,7 @@ export class URLBuilder {
 
 	getMarkupUrlForEventsApi(SAPClass: AbstractUIClass, eventName = "Events") {
 		if (
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(SAPClass.className) ||
+			this._fileReader.getManifestForClass(SAPClass.className) ||
 			this._isStandardClass(SAPClass.className)
 		) {
 			return "";
@@ -94,7 +85,7 @@ export class URLBuilder {
 				: "";
 
 		if (
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className) ||
+			this._fileReader.getManifestForClass(className) ||
 			this._isStandardClass(className)
 		) {
 			return "";
@@ -112,7 +103,7 @@ export class URLBuilder {
 				: "";
 
 		if (
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className) ||
+			this._fileReader.getManifestForClass(className) ||
 			this._isStandardClass(className)
 		) {
 			return "";
@@ -149,7 +140,7 @@ export class URLBuilder {
 				? SAPClass.className
 				: "";
 		if (
-			AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className) ||
+			this._fileReader.getManifestForClass(className) ||
 			this._isStandardClass(className)
 		) {
 			return "";

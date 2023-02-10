@@ -1,6 +1,6 @@
-import { AbstractUI5Parser } from "../../IUI5Parser";
-import { UI5Parser } from "../../UI5Parser";
+import { IUI5Parser } from "../../IUI5Parser";
 import { TextDocument } from "./abstraction/TextDocument";
+import { AbstractCustomClass } from "./UI5Parser/UIClass/AbstractCustomClass";
 
 export interface IInternalizationText {
 	text: string;
@@ -14,16 +14,20 @@ interface IResourceModel {
 }
 
 export class ResourceModelData {
-	public static resourceModels: IResourceModel = {};
+	protected readonly parser: IUI5Parser<AbstractCustomClass>;
+	constructor(parser: IUI5Parser<AbstractCustomClass>) {
+		this.parser = parser;
+	}
+	public resourceModels: IResourceModel = {};
 
-	static async readTexts() {
-		const resourceModelFiles = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getResourceModelFiles();
+	async readTexts() {
+		const resourceModelFiles = this.parser.fileReader.getResourceModelFiles();
 		resourceModelFiles.forEach(resourceModelFile => {
 			this._updateResourceModelData(resourceModelFile);
 		});
 	}
 
-	private static _updateResourceModelData(resourceModelFile: { content: string; componentName: string }) {
+	private _updateResourceModelData(resourceModelFile: { content: string; componentName: string }) {
 		this.resourceModels[resourceModelFile.componentName] = [];
 
 		const texts = resourceModelFile.content.match(/.*?([a-zA-Z]|\s|\d)=.*([a-zA-Z]|\s|\d)/g);
@@ -41,10 +45,10 @@ export class ResourceModelData {
 		});
 	}
 
-	static updateCache(document: TextDocument) {
-		const className = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(document.fileName);
+	updateCache(document: TextDocument) {
+		const className = this.parser.fileReader.getClassNameFromPath(document.fileName);
 		if (className) {
-			const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className);
+			const manifest = this.parser.fileReader.getManifestForClass(className);
 			if (manifest) {
 				this._updateResourceModelData({
 					componentName: manifest.componentName,

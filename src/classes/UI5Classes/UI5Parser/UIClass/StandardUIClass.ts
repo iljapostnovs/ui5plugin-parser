@@ -1,19 +1,10 @@
-import {
-	AbstractUIClass,
-	IUIMethod,
-	IUIProperty,
-	IUIEvent,
-	IUIAggregation,
-	IUIAssociation,
-	ITypeValue,
-	IUIField,
-	IUIMethodParam
-} from "./AbstractUIClass";
-import { SAPNodeDAO } from "../../../librarydata/SAPNodeDAO";
+import { IUI5Parser } from "../../../../IUI5Parser";
 import { MainLooper } from "../../JSParser/MainLooper";
-import { URLBuilder } from "../../../utils/URLBuilder";
-import { UI5Parser } from "../../../../UI5Parser";
-import { AbstractUI5Parser } from "../../../../IUI5Parser";
+import { AbstractCustomClass } from "./AbstractCustomClass";
+import {
+	AbstractUIClass, ITypeValue, IUIAggregation,
+	IUIAssociation, IUIEvent, IUIField, IUIMethod, IUIMethodParam, IUIProperty
+} from "./AbstractUIClass";
 
 const aXmlnsData = [
 	{
@@ -84,11 +75,10 @@ const aFioriElementsControllers = [
 ];
 
 export class StandardUIClass extends AbstractUIClass {
-	private readonly _nodeDAO = new SAPNodeDAO();
 	public methods: IStandardClassUIMethod[] = [];
 
-	constructor(className: string) {
-		super(className);
+	constructor(className: string, parser: IUI5Parser<AbstractCustomClass>) {
+		super(className, parser);
 
 		if (aFioriElementsControllers.includes(className)) {
 			this.classExists = true;
@@ -244,7 +234,7 @@ export class StandardUIClass extends AbstractUIClass {
 						: [],
 					returnType: method.returnValue ? method.returnValue.type : "void",
 					isFromParent: !isParent,
-					api: URLBuilder.getInstance().getMarkupUrlForMethodApi(SAPNode, method.name),
+					api: this.parser.urlBuilder.getMarkupUrlForMethodApi(SAPNode, method.name),
 					visibility: method.visibility,
 					owner: this.className,
 					abstract: false,
@@ -294,7 +284,7 @@ export class StandardUIClass extends AbstractUIClass {
 	}
 
 	private _findSAPNode(className: string) {
-		return this._nodeDAO.findNode(className);
+		return this.parser.nodeDAO.findNode(className);
 	}
 
 	public static removeTags(text = "") {
@@ -384,7 +374,7 @@ export class StandardUIClass extends AbstractUIClass {
 	private _generateAdditionalDescriptionFrom(className: string) {
 		let additionalDescription = "";
 		const isThisClassFromAProject =
-			!!AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className);
+			!!this.parser.fileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			const SAPNode = this._findSAPNode(className);
 			additionalDescription =
@@ -401,7 +391,7 @@ export class StandardUIClass extends AbstractUIClass {
 	protected generateTypeValues(type: string) {
 		let typeValues = super.generateTypeValues(type);
 
-		const isThisClassFromAProject = !!AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(type);
+		const isThisClassFromAProject = !!this.parser.fileReader.getManifestForClass(type);
 		if (typeValues.length === 0 && !isThisClassFromAProject) {
 			const typeNode = this._findSAPNode(type);
 			const metadata = typeNode?.getMetadata();
@@ -516,7 +506,7 @@ export class StandardUIClass extends AbstractUIClass {
 				}),
 				returnType: this.className,
 				isFromParent: false,
-				api: URLBuilder.getInstance().getUrlForClassApi(this),
+				api: this.parser.urlBuilder.getUrlForClassApi(this),
 				visibility: "public",
 				owner: this.className,
 				abstract: false,

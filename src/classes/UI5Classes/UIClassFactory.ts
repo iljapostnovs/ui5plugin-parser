@@ -1,3 +1,8 @@
+import { UI5JSParser } from "../../UI5JSParser";
+import { IFragment, IView } from "../utils/FileReader";
+import { TextDocument } from "./abstraction/TextDocument";
+import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./interfaces/IUIClassFactory";
+import { ISyntaxAnalyser } from "./JSParser/ISyntaxAnalyser";
 import {
 	AbstractUIClass,
 	IUIAggregation,
@@ -8,31 +13,28 @@ import {
 	IUIProperty
 } from "./UI5Parser/UIClass/AbstractUIClass";
 import { CustomUIClass } from "./UI5Parser/UIClass/CustomUIClass";
-import { StandardUIClass } from "./UI5Parser/UIClass/StandardUIClass";
 import { JSClass } from "./UI5Parser/UIClass/JSClass";
-import { IFragment, IView } from "../utils/FileReader";
-import { TextDocument } from "./abstraction/TextDocument";
-import { UI5Parser } from "../../UI5Parser";
-import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./interfaces/IUIClassFactory";
-import { ISyntaxAnalyser } from "./JSParser/ISyntaxAnalyser";
-import { AbstractUI5Parser } from "../../IUI5Parser";
+import { StandardUIClass } from "./UI5Parser/UIClass/StandardUIClass";
 
 export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
-	constructor(syntaxAnalyser: ISyntaxAnalyser) {
+	private readonly parser: UI5JSParser;
+	constructor(syntaxAnalyser: ISyntaxAnalyser, parser: UI5JSParser) {
 		this.syntaxAnalyser = syntaxAnalyser;
+		this.parser = parser;
+		this._UIClasses = {
+			Promise: new JSClass("Promise", parser),
+			array: new JSClass("array", parser),
+			string: new JSClass("string", parser),
+			Array: new JSClass("Array", parser),
+			String: new JSClass("String", parser)
+		};
 	}
 	isCustomClass(UIClass: AbstractUIClass): UIClass is CustomUIClass {
 		return UIClass instanceof CustomUIClass;
 	}
 
-	private readonly _UIClasses: IUIClassMap = {
-		Promise: new JSClass("Promise"),
-		array: new JSClass("array"),
-		string: new JSClass("string"),
-		Array: new JSClass("Array"),
-		String: new JSClass("String")
-	};
+	private readonly _UIClasses: IUIClassMap;
 
 	private _createTypeDefDocClass(jsdoc: any) {
 		const typedefDoc = jsdoc.tags?.find((tag: any) => {
@@ -40,7 +42,7 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 		});
 		const className = typedefDoc.name;
 		const properties = jsdoc.tags.filter((tag: any) => tag.tag === "property");
-		const typeDefClass = new JSClass(className);
+		const typeDefClass = new JSClass(className, this.parser);
 		typeDefClass.fields = properties.map((property: any): IUIField => {
 			return {
 				description: property.description,
@@ -59,11 +61,11 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 	private _getInstance(className: string, documentText?: string) {
 		let returnClass: AbstractUIClass;
 		const isThisClassFromAProject =
-			!!AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className);
+			!!this.parser.fileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
-			returnClass = new StandardUIClass(className);
+			returnClass = new StandardUIClass(className, this.parser);
 		} else {
-			returnClass = new CustomUIClass(className, this.syntaxAnalyser, documentText);
+			returnClass = new CustomUIClass(className, this.syntaxAnalyser, this.parser, documentText);
 			(returnClass as CustomUIClass).comments?.forEach(comment => {
 				const typedefDoc = comment.jsdoc?.tags?.find((tag: any) => {
 					return tag.tag === "typedef";
@@ -92,7 +94,7 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 
 	public setNewContentForClassUsingDocument(document: TextDocument, force = false) {
 		const documentText = document.getText();
-		const currentClassName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(
+		const currentClassName = this.parser.fileReader.getClassNameFromPath(
 			document.fileName
 		);
 
@@ -476,13 +478,13 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 	private _removeDuplicatesForViewsAndFragments(viewsAndFragments: IViewsAndFragments) {
 		viewsAndFragments.views.forEach(view => {
 			viewsAndFragments.fragments.push(
-				...AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragmentsInXMLFile(view)
+				...this.parser.fileReader.getFragmentsInXMLFile(view)
 			);
 		});
 
 		viewsAndFragments.fragments.forEach(fragment => {
 			viewsAndFragments.fragments.push(
-				...AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragmentsInXMLFile(fragment)
+				...this.parser.fileReader.getFragmentsInXMLFile(fragment)
 			);
 		});
 
@@ -507,19 +509,19 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 			fragments: []
 		};
 
-		viewsAndFragments.fragments = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragmentsMentionedInClass(
+		viewsAndFragments.fragments = this.parser.fileReader.getFragmentsMentionedInClass(
 			CurrentUIClass.className
 		);
 		const views = [];
-		const view = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getViewForController(CurrentUIClass.className);
+		const view = this.parser.fileReader.getViewForController(CurrentUIClass.className);
 		if (view) {
 			views.push(view);
 			viewsAndFragments.fragments.push(...view.fragments);
 		}
 		viewsAndFragments.views = views;
 
-		const fragments = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getAllFragments();
-		const allViews = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getAllViews();
+		const fragments = this.parser.fileReader.getAllFragments();
+		const allViews = this.parser.fileReader.getAllViews();
 
 		//check for mentioning
 		fragments.forEach(fragment => {
@@ -574,10 +576,10 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 
 	private _getFragmentFromViewManifestExtensions(className: string, view: IView) {
 		const fragments: IFragment[] = [];
-		const viewName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(view.fsPath);
+		const viewName = this.parser.fileReader.getClassNameFromPath(view.fsPath);
 		if (viewName) {
 			const extensions =
-				AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestExtensionsForClass(className);
+				this.parser.fileReader.getManifestExtensionsForClass(className);
 			const viewExtension =
 				extensions && extensions["sap.ui.viewExtensions"] && extensions["sap.ui.viewExtensions"][viewName];
 			if (viewExtension) {
@@ -585,10 +587,10 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 					const extension = viewExtension[key];
 					if (extension.type === "XML" && extension.className === "sap.ui.core.Fragment") {
 						const fragmentName = extension.fragmentName;
-						const fragment = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragment(fragmentName);
+						const fragment = this.parser.fileReader.getFragment(fragmentName);
 						if (fragment) {
 							const fragmentsInFragment: IFragment[] =
-								AbstractUI5Parser.getInstance(UI5Parser).fileReader.getFragmentsInXMLFile(fragment);
+								this.parser.fileReader.getFragmentsInXMLFile(fragment);
 							fragments.push(fragment, ...fragmentsInFragment);
 						}
 					}
@@ -687,15 +689,15 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 	}
 
 	public setNewNameForClass(oldPath: string, newPath: string) {
-		const oldName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(oldPath);
-		const newName = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(newPath);
+		const oldName = this.parser.fileReader.getClassNameFromPath(oldPath);
+		const newName = this.parser.fileReader.getClassNameFromPath(newPath);
 		if (oldName && newName) {
 			const oldClass = this._UIClasses[oldName];
 			this._UIClasses[newName] = oldClass;
 			oldClass.className = newName;
 
 			if (oldClass instanceof CustomUIClass) {
-				const newClassFSPath = AbstractUI5Parser.getInstance(UI5Parser).fileReader.convertClassNameToFSPath(
+				const newClassFSPath = this.parser.fileReader.convertClassNameToFSPath(
 					newName,
 					oldClass.fsPath?.endsWith(".controller.js")
 				);
@@ -713,9 +715,9 @@ export class UIClassFactory implements IUIClassFactory<CustomUIClass> {
 
 			const UIClass = this._UIClasses[newName];
 			if (UIClass instanceof CustomUIClass && UIClass.fsPath?.endsWith(".controller.js")) {
-				const view = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getViewForController(oldName);
+				const view = this.parser.fileReader.getViewForController(oldName);
 				if (view) {
-					AbstractUI5Parser.getInstance(UI5Parser).fileReader.removeView(view.name);
+					this.parser.fileReader.removeView(view.name);
 				}
 			}
 		}

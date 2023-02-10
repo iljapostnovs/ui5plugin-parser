@@ -1,72 +1,19 @@
-import { AbstractUI5Parser } from "../../IUI5Parser";
-import { UI5Parser } from "../../UI5Parser";
-import { FileReader } from "../utils/FileReader";
-import { HTTPHandler } from "../utils/HTTPHandler";
-import { URLBuilder } from "../utils/URLBuilder";
+import { IUI5Parser } from "../../IUI5Parser";
 import { SAPNode } from "./SAPNode";
 import { UI5Metadata } from "./UI5Metadata";
-
-interface ILooseObject {
-	[key: string]: any;
-}
-
-let namespaceDesignTimes: ILooseObject = {};
-
-export class UI5MetadataPreloader {
-	private readonly _libNames: ILooseObject = {};
-	private readonly _nodes: SAPNode[];
-	private static _resolveLibPreload: (value: any) => void;
-	public static libsPreloaded = new Promise((resolve) => {
-		UI5MetadataPreloader._resolveLibPreload = resolve;
-	});
-	constructor(nodes: SAPNode[]) {
-		this._nodes = nodes;
-	}
-
-	public async preloadLibs() {
-		let cache = this._loadCache();
-		if (!cache) {
-			const promises = [];
-			const metadataDAO = new UI5MetadataDAO();
-			this._nodes.forEach((node: SAPNode) => {
-				this._getUniqueLibNames(node);
-			});
-
-			for (const i in this._libNames) {
-				promises.push(metadataDAO.getMetadataForLib(i));
-			}
-
-			return Promise.all(promises).then(() => {
-				cache = namespaceDesignTimes;
-				this._writeCache();
-				UI5MetadataPreloader._resolveLibPreload(cache);
-			});
-		} else {
-			namespaceDesignTimes = cache;
-			UI5MetadataPreloader._resolveLibPreload(cache);
-			return new Promise(resolve => resolve(cache));
-		}
-	}
-
-	private _loadCache() {
-		return AbstractUI5Parser.getInstance(UI5Parser).fileReader.getCache(FileReader.CacheType.Metadata);
-	}
-
-	private _writeCache() {
-		const cache = JSON.stringify(namespaceDesignTimes);
-		AbstractUI5Parser.getInstance(UI5Parser).fileReader.setCache(FileReader.CacheType.Metadata, cache);
-	}
-
-	private _getUniqueLibNames(node: SAPNode) {
-		this._libNames[node.getLib()] = "";
-		if (node.nodes) {
-			node.nodes.forEach(this._getUniqueLibNames, this);
-		}
-	}
-}
+import { UI5MetadataPreloader } from "./UI5MetadataPreloader";
 export class UI5MetadataDAO {
+	metadataPreloader: UI5MetadataPreloader;
+	constructor(parser: IUI5Parser) {
+		this.metadataPreloader = new UI5MetadataPreloader(parser);
+	}
+
+	loadMetadata(nodes: SAPNode[]) {
+		return this.metadataPreloader.preloadLibs(nodes);
+	}
+
 	public getPreloadedMetadataForNode(node: SAPNode) {
-		const libMetadata = namespaceDesignTimes[node.getLib()];
+		const libMetadata = this.metadataPreloader.namespaceDesignTimes[node.getLib()];
 		const metadata = this._findNodeMetadata(node, libMetadata);
 
 		return new UI5Metadata(metadata);
@@ -76,34 +23,5 @@ export class UI5MetadataDAO {
 		return libMetadata?.symbols ? libMetadata.symbols.find(
 			(metadata: any) => metadata.name.replace("module:", "").replace(/\//g, ".") === node.getName()
 		) : {};
-	}
-
-	public async getMetadataForLib(lib: string) {
-		return await this._fetchMetadataForLib(lib);
-	}
-
-	private _fetchMetadataForLib(lib: string) {
-		return new Promise((resolve, reject) => {
-			if (namespaceDesignTimes[lib]) {
-				if (namespaceDesignTimes[lib].then) {
-					namespaceDesignTimes[lib].then(() => {
-						resolve(namespaceDesignTimes[lib]);
-					});
-				} else {
-					resolve(namespaceDesignTimes[lib]);
-				}
-			} else {
-				setTimeout(async () => {
-					const readPath: string = URLBuilder.getInstance().getDesignTimeUrlForLib(lib);
-					namespaceDesignTimes[lib] = HTTPHandler.get(readPath);
-					try {
-						namespaceDesignTimes[lib] = await namespaceDesignTimes[lib];
-						resolve(namespaceDesignTimes[lib]);
-					} catch (error) {
-						reject(error);
-					}
-				}, Math.round(Math.random() * 150));
-			}
-		});
 	}
 }

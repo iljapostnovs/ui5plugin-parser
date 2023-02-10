@@ -1,24 +1,24 @@
-import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
-import { FieldPropertyMethodGetterStrategy as FieldMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
+import { IUI5Parser } from "../../../../IUI5Parser";
 import { TextDocument } from "../../abstraction/TextDocument";
-import { UI5Parser } from "../../../../UI5Parser";
 import { IFieldsAndMethods } from "../../interfaces/IUIClassFactory";
+import { AbstractCustomClass } from "../../UI5Parser/UIClass/AbstractCustomClass";
+import { CustomUIClass } from "../../UI5Parser/UIClass/CustomUIClass";
 import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
-import { AbstractUI5Parser } from "../../../../IUI5Parser";
+import { FieldPropertyMethodGetterStrategy as FieldMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 
 export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethodGetterStrategy {
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
-	constructor(syntaxAnalyser: ISyntaxAnalyser) {
-		super();
+	constructor(syntaxAnalyser: ISyntaxAnalyser, parser: IUI5Parser<AbstractCustomClass>) {
+		super(parser);
 		this.syntaxAnalyser = syntaxAnalyser;
 	}
 
 	getFieldsAndMethods(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
-		const className = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromPath(document.fileName);
+		const className = this.parser.fileReader.getClassNameFromPath(document.fileName);
 		const UIClassName = className && this.getClassNameOfTheVariableAtPosition(className, position);
 		if (UIClassName) {
-			fieldsAndMethods = this.destructueFieldsAndMethodsAccordingToMapParams(UIClassName);
+			fieldsAndMethods = this.destructureFieldsAndMethodsAccordingToMapParams(UIClassName);
 			if (fieldsAndMethods && className !== fieldsAndMethods.className) {
 				this._filterFieldsAndMethodsAccordingToAccessLevelModifiers(fieldsAndMethods);
 			} else if (fieldsAndMethods) {
@@ -32,7 +32,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 
 		return fieldsAndMethods;
 	}
-	public destructueFieldsAndMethodsAccordingToMapParams(className: string): IFieldsAndMethods | undefined {
+	public destructureFieldsAndMethodsAccordingToMapParams(className: string): IFieldsAndMethods | undefined {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
 		const isMap = className.includes("__map__");
 		const classNamePartsFromMapParam = className.split("__mapparam__");
@@ -89,21 +89,21 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 					methods: []
 				};
 				if (typeof correspondingObject !== "object") {
-					fieldsAndMethods = this.destructueFieldsAndMethodsAccordingToMapParams(correspondingObject);
+					fieldsAndMethods = this.destructureFieldsAndMethodsAccordingToMapParams(correspondingObject);
 				}
 			}
 		} else if (className.startsWith("Promise<")) {
 			fieldsAndMethods =
-				AbstractUI5Parser.getInstance(UI5Parser).classFactory.getFieldsAndMethodsForClass("Promise");
+				this.parser.classFactory.getFieldsAndMethodsForClass("Promise");
 			fieldsAndMethods.className = className;
 		} else {
 			if (className.endsWith("[]")) {
 				fieldsAndMethods =
-					AbstractUI5Parser.getInstance(UI5Parser).classFactory.getFieldsAndMethodsForClass("array");
+					this.parser.classFactory.getFieldsAndMethodsForClass("array");
 				fieldsAndMethods.className = className;
 			} else {
 				fieldsAndMethods =
-					AbstractUI5Parser.getInstance(UI5Parser).classFactory.getFieldsAndMethodsForClass(className);
+					this.parser.classFactory.getFieldsAndMethodsForClass(className);
 			}
 		}
 
@@ -143,7 +143,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 
 	public getStackOfNodesForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
-		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = this.parser.classFactory.getUIClass(className);
 
 		if (UIClass instanceof CustomUIClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {

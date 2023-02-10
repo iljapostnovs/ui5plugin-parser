@@ -1,6 +1,12 @@
+import { IUI5Parser } from "../../../../../IUI5Parser";
 import { TextDocument } from "../../../abstraction/TextDocument";
 import { IFieldsAndMethods } from "../../../interfaces/IUIClassFactory";
+import { AbstractCustomClass } from "../../../UI5Parser/UIClass/AbstractCustomClass";
 export abstract class FieldPropertyMethodGetterStrategy {
+	protected readonly parser: IUI5Parser<AbstractCustomClass>;
+	constructor(parser: IUI5Parser<AbstractCustomClass>) {
+		this.parser = parser;
+	}
 	abstract getFieldsAndMethods(document: TextDocument, position: number): IFieldsAndMethods | undefined;
 
 	protected _filterFieldsAndMethodsAccordingToAccessLevelModifiers(fieldsAndMethods: IFieldsAndMethods, visibility = ["public"]) {

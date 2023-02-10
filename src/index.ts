@@ -1,19 +1,19 @@
+import { AbstractUI5Parser } from "./AbstractUI5Parser";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
-import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
-import { ISyntaxAnalyser } from "./classes/UI5Classes/JSParser/ISyntaxAnalyser";
-import { UI5Parser } from "./UI5Parser";
-import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
-import { XMLParser } from "./classes/utils/XMLParser";
 import { TextDocument } from "./classes/UI5Classes/abstraction/TextDocument";
 import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
+import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
+import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
+import { ISyntaxAnalyser } from "./classes/UI5Classes/JSParser/ISyntaxAnalyser";
 import { IFileReader } from "./classes/utils/IFileReader";
-import { UI5TSParser } from "./UI5TSParser";
-import { AbstractUI5Parser } from "./IUI5Parser";
+import { XMLParser } from "./classes/utils/XMLParser";
 import { AnyCustomTSClass, ICustomTSField, ICustomTSMethod } from "./Types";
+import { UI5JSParser } from "./UI5JSParser";
+import { UI5TSParser } from "./UI5TSParser";
 
 export {
-	UI5Parser,
+	UI5JSParser,
 	UI5TSParser,
 	IParserConfigHandler,
 	IUIClassFactory,
@@ -29,3 +29,4 @@ export {
 	ICustomTSMethod,
 	AnyCustomTSClass
 };
+

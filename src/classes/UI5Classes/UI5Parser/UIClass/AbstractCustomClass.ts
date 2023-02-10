@@ -1,15 +1,9 @@
-import {
-	AbstractUIClass,
-	IUIField,
-	IUIAggregation,
-	IUIEvent,
-	IUIMethod,
-	IUIProperty,
-	IUIAssociation,
-	IMember
-} from "./AbstractUIClass";
-import { IViewsAndFragments } from "../../interfaces/IUIClassFactory";
 import { ICacheable } from "../../abstraction/ICacheable";
+import { IViewsAndFragments } from "../../interfaces/IUIClassFactory";
+import {
+	AbstractUIClass, IMember, IUIAggregation, IUIAssociation, IUIEvent, IUIField, IUIMethod,
+	IUIProperty
+} from "./AbstractUIClass";
 
 export interface IUIDefine<NodeType = any> extends INodeBearer<NodeType> {
 	path: string;
@@ -90,7 +84,6 @@ export abstract class AbstractCustomClass<
 	abstract fsPath: string;
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
 	private _cache: Record<string, any> = {};
-
 	setCache<Type>(cacheName: string, cacheValue: Type) {
 		this._cache[cacheName] = cacheValue;
 	}

@@ -1,16 +1,14 @@
+import { IUI5Parser } from "../../../IUI5Parser";
 import { IXMLFile } from "../../utils/FileReader";
-import { IUIField, IUIMethod } from "../UI5Parser/UIClass/AbstractUIClass";
-import { ICustomClassUIMethod, CustomUIClass, ICustomClassUIField } from "../UI5Parser/UIClass/CustomUIClass";
-import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./strategies/FieldsAndMethodForPositionBeforeCurrentStrategy";
-import { FieldPropertyMethodGetterStrategy } from "./strategies/abstraction/FieldPropertyMethodGetterStrategy";
-import { InnerPropertiesStrategy } from "./strategies/InnerPropertiesStrategy";
-import { XMLParser } from "../../utils/XMLParser";
-import { SAPNodeDAO } from "../../librarydata/SAPNodeDAO";
 import { TextDocument } from "../abstraction/TextDocument";
-import { UI5Parser } from "../../../UI5Parser";
 import { IFieldsAndMethods } from "../interfaces/IUIClassFactory";
+import { AbstractCustomClass } from "../UI5Parser/UIClass/AbstractCustomClass";
+import { IUIField, IUIMethod } from "../UI5Parser/UIClass/AbstractUIClass";
+import { CustomUIClass, ICustomClassUIField, ICustomClassUIMethod } from "../UI5Parser/UIClass/CustomUIClass";
 import { ISyntaxAnalyser } from "./ISyntaxAnalyser";
-import { AbstractUI5Parser } from "../../../IUI5Parser";
+import { FieldPropertyMethodGetterStrategy } from "./strategies/abstraction/FieldPropertyMethodGetterStrategy";
+import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./strategies/FieldsAndMethodForPositionBeforeCurrentStrategy";
+import { InnerPropertiesStrategy } from "./strategies/InnerPropertiesStrategy";
 
 export interface IAcornPosition {
 	line: number;
@@ -23,12 +21,16 @@ export interface IAcornLocation {
 }
 
 export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
+	private readonly parser: IUI5Parser<AbstractCustomClass>;
+	constructor(parser: IUI5Parser<AbstractCustomClass>) {
+		this.parser = parser;
+	}
 	getFieldsAndMethodsOfTheCurrentVariable(document: TextDocument, position: number) {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
 
 		const aStrategies: FieldPropertyMethodGetterStrategy[] = [
-			new FieldsAndMethodForPositionBeforeCurrentStrategy(this),
-			new InnerPropertiesStrategy(this)
+			new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser),
+			new InnerPropertiesStrategy(this, this.parser)
 		];
 
 		aStrategies.find(strategy => {
@@ -263,7 +265,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 							if (className === "map" && (<ICustomClassUIMethod>method).node) {
 								currentNode._acornSyntaxAnalyserType = "map";
 								const UIClass =
-									AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(currentClassName);
+									this.parser.classFactory.getUIClass(currentClassName);
 								if (UIClass instanceof CustomUIClass) {
 									const body = (method as ICustomClassUIMethod).node.body?.body;
 									if (body) {
@@ -297,7 +299,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 						if (className === "map" && (<ICustomClassUIField>field).node?.value) {
 							currentNode._acornSyntaxAnalyserType = "map";
 							const UIClass =
-								AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(primaryClassName);
+								this.parser.classFactory.getUIClass(primaryClassName);
 							if (UIClass instanceof CustomUIClass) {
 								className = this.getClassNameFromSingleAcornNode(
 									(field as ICustomClassUIField).node.value,
@@ -310,7 +312,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 					if (!className && currentClassName === "map") {
 						const UIClass =
-							AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(primaryClassName);
+							this.parser.classFactory.getUIClass(primaryClassName);
 						if (UIClass instanceof CustomUIClass) {
 							className = this.getClassNameFromSingleAcornNode(currentNode, UIClass, stack);
 						}
@@ -326,7 +328,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 					className = this._generateSAPStandardClassNameFromStack(stack);
 				} else {
 					const UIClass = <CustomUIClass>(
-						AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(currentClassName)
+						this.parser.classFactory.getUIClass(currentClassName)
 					);
 
 					const variableDeclaration = this._getAcornVariableDeclarationFromUIClass(
@@ -390,7 +392,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				}
 			} else if (currentNode.type === "NewExpression") {
 				const UIClass = <CustomUIClass>(
-					AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(currentClassName)
+					this.parser.classFactory.getUIClass(currentClassName)
 				);
 				if (currentNode.callee?.type === "Identifier") {
 					className = this._getClassNameFromUIDefineDotNotation(currentNode.callee?.name, UIClass);
@@ -474,7 +476,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			this.declarationStack = [];
 		}
 		let modelClassName = "";
-		const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className);
+		const manifest = this.parser.fileReader.getManifestForClass(className);
 		if (manifest && manifest.content["sap.ui5"]?.models) {
 			const modelEntry = manifest.content["sap.ui5"].models[modelName];
 			if (modelEntry?.type) {
@@ -483,7 +485,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		}
 
 		if (!modelClassName) {
-			const methods = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getClassMethods(className);
+			const methods = this.parser.classFactory.getClassMethods(className);
 			const method = (<ICustomClassUIMethod[]>methods).find(method => {
 				let methodFound = false;
 				if (method.node) {
@@ -505,7 +507,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				if (memberExpression && memberExpression.arguments[0]) {
 					this.declarationStack = stackCopy;
 					const model = memberExpression.arguments[0];
-					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 					if (!this.declarationStack.includes(model)) {
 						this.declarationStack.push(model);
 						const stack = strategy.getStackOfNodesForPosition(method.owner || className, model.end, true);
@@ -527,7 +529,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 		if (bIsSetModelMethod) {
 			const position = content.callee.property.start;
-			const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+			const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 			const classNameAtCurrentPosition = strategy.getClassNameOfTheVariableAtPosition(className, position);
 			bIsSetModelMethod =
 				classNameAtCurrentPosition === className || classNameAtCurrentPosition === "sap.ui.core.mvc.View";
@@ -539,13 +541,13 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	private _getClassNameOfTheRouterFromManifest(className: string) {
 		let routerClassName = "";
 
-		const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className);
+		const manifest = this.parser.fileReader.getManifestForClass(className);
 		if (manifest && manifest.content["sap.ui5"]?.routing?.config?.routerClass) {
 			routerClassName = manifest.content["sap.ui5"].routing.config.routerClass;
 		}
 
 		if (!routerClassName) {
-			const manifests = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getAllManifests();
+			const manifests = this.parser.fileReader.getAllManifests();
 			const manifest = manifests.find(manifest => {
 				return manifest.content["sap.ui5"]?.routing?.config?.routerClass;
 			});
@@ -559,7 +561,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 	private _getClassNameOfTheComponent(className: string) {
 		let componentClassName = "";
-		const manifest = AbstractUI5Parser.getInstance(UI5Parser).fileReader.getManifestForClass(className);
+		const manifest = this.parser.fileReader.getManifestForClass(className);
 		if (manifest && manifest.content["sap.app"]?.id) {
 			componentClassName = `${manifest.content["sap.app"]?.id}.Component`;
 		}
@@ -570,7 +572,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	private _handleBaseEventException(node: any, stack: any[], primaryClassName: string) {
 		let className = "";
 		const callExpression = stack.shift();
-		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(primaryClassName);
+		const UIClass = this.parser.classFactory.getUIClass(primaryClassName);
 		if (UIClass instanceof CustomUIClass && node.property?.name) {
 			const methodName = node.property.name;
 			const eventData = this.getEventHandlerData(node, primaryClassName);
@@ -594,7 +596,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	}
 
 	public getParametersOfTheEvent(eventName: string, className: string) {
-		const events = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getClassEvents(className);
+		const events = this.parser.classFactory.getClassEvents(className);
 		const event = events.find(event => event.name === eventName);
 		return event?.params;
 	}
@@ -602,11 +604,11 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	public getEventHandlerData(node: any, className: string) {
 		let eventHandlerData;
 
-		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = this.parser.classFactory.getUIClass(className);
 		if (UIClass instanceof CustomUIClass) {
 			const currentClassEventHandlerName = this._getEventHandlerName(node, className);
 			const viewOfTheController =
-				AbstractUI5Parser.getInstance(UI5Parser).fileReader.getViewForController(className);
+				this.parser.fileReader.getViewForController(className);
 			if (viewOfTheController && currentClassEventHandlerName) {
 				eventHandlerData = this._getEventHandlerDataFromXMLText(
 					viewOfTheController,
@@ -622,11 +624,9 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			}
 			if (currentClassEventHandlerName && !eventHandlerData) {
 				// const fragmentsOfTheController = UI5Plugin.getInstance().fileReader.getFragmentsForClass(className);
-				const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+				const UIClass = this.parser.classFactory.getUIClass(className);
 				if (UIClass instanceof CustomUIClass) {
-					const fragmentsOfTheController = AbstractUI5Parser.getInstance(
-						UI5Parser
-					).classFactory.getViewsAndFragmentsOfControlHierarchically(UIClass, [], true, true, true).fragments;
+					const fragmentsOfTheController = this.parser.classFactory.getViewsAndFragmentsOfControlHierarchically(UIClass, [], true, true, true).fragments;
 					fragmentsOfTheController.find(fragmentOfTheController => {
 						eventHandlerData = this._getEventHandlerDataFromXMLText(
 							fragmentOfTheController,
@@ -651,8 +651,8 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		eventHandlerName: string
 	): { className: string; eventName: string; node: any } | undefined {
 		let eventHandlerData;
-		const UIClass = <CustomUIClass>AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
-		const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+		const UIClass = <CustomUIClass>this.parser.classFactory.getUIClass(className);
+		const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 		const eventHandler = UIClass.methods.find(method => method.name === eventHandlerName);
 		if (eventHandler) {
 			let eventHandlerNode: any = null;
@@ -703,7 +703,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 								);
 								if (className) {
 									const events =
-										AbstractUI5Parser.getInstance(UI5Parser).classFactory.getClassEvents(className);
+										this.parser.classFactory.getClassEvents(className);
 									if (events.find(event => event.name === eventName)) {
 										eventHandlerData = {
 											className: className,
@@ -731,21 +731,21 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	private _getEventHandlerDataFromXMLText(viewOrFragment: IXMLFile, currentClassEventHandlerName: string) {
 		let eventHandlerData;
 
-		const tagsAndAttributes = XMLParser.getXMLFunctionCallTagsAndAttributes(
+		const tagsAndAttributes = this.parser.xmlParser.getXMLFunctionCallTagsAndAttributes(
 			viewOrFragment,
 			currentClassEventHandlerName
 		);
 		if (tagsAndAttributes.length > 0) {
 			const { tag, attributes } = tagsAndAttributes[0];
 			const attribute = attributes[0];
-			const { attributeName } = XMLParser.getAttributeNameAndValue(attribute);
+			const { attributeName } = this.parser.xmlParser.getAttributeNameAndValue(attribute);
 			const eventName = attributeName;
 			if (eventName) {
-				const tagPrefix = XMLParser.getTagPrefix(tag.text);
-				const classNameOfTheTag = XMLParser.getClassNameFromTag(tag.text);
+				const tagPrefix = this.parser.xmlParser.getTagPrefix(tag.text);
+				const classNameOfTheTag = this.parser.xmlParser.getClassNameFromTag(tag.text);
 
 				if (classNameOfTheTag) {
-					const libraryPath = XMLParser.getLibraryPathFromTagPrefix(
+					const libraryPath = this.parser.xmlParser.getLibraryPathFromTagPrefix(
 						viewOrFragment,
 						tagPrefix,
 						tag.positionBegin
@@ -764,7 +764,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 	private _getEventHandlerName(node: any, className: string) {
 		let eventHandlerName = "";
-		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = this.parser.classFactory.getUIClass(className);
 		if (UIClass instanceof CustomUIClass) {
 			const eventHandlerMethod = UIClass.methods.find(method => {
 				let correctMethod = false;
@@ -804,7 +804,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 					returnStatement = returnClass?.body;
 				}
 				if (returnStatement) {
-					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 					const newStack = strategy.getStackOfNodesForPosition(currentClassName, returnStatement.end, true);
 					className =
 						this.findClassNameForStack(newStack, currentClassName) ||
@@ -837,7 +837,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			!this.declarationStack.includes(identifierNode) ||
 			(this.declarationStack.length === 1 && this.declarationStack[0] === identifierNode)
 		) {
-			const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(currentClassName);
+			const UIClass = this.parser.classFactory.getUIClass(currentClassName);
 			this.declarationStack.push(identifierNode);
 			if (UIClass instanceof CustomUIClass) {
 				const acornMethod = this.findAcornNode(UIClass.acornMethodsAndFields, identifierNode.end);
@@ -848,7 +848,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 						const isFirstParamOfArrayMethod =
 							node.arguments[0]?.params && node.arguments[0]?.params[0]?.name === identifierNode.name;
 						if (isFirstParamOfArrayMethod) {
-							const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+							const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 							className =
 								strategy.acornGetClassName(currentClassName, node.callee.object.end + 1, false) || "";
 							if (className.endsWith("[]")) {
@@ -895,10 +895,9 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			usedNodeCount++;
 			node = stack[usedNodeCount];
 
-			const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(classNameParts.join("."));
+			const UIClass = this.parser.classFactory.getUIClass(classNameParts.join("."));
 			if (UIClass.classExists) {
-				const nodeDAO = new SAPNodeDAO();
-				const node = nodeDAO.findNode(UIClass.className);
+				const node = this.parser.nodeDAO.findNode(UIClass.className);
 				if (node?.getMetadata()?.getRawMetadata()?.kind === "class") {
 					break;
 				}
@@ -924,11 +923,11 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		let isGetViewByIdException = false;
 		if (
 			(className === "sap.ui.core.mvc.View" ||
-				AbstractUI5Parser.getInstance(UI5Parser).classFactory.isClassAChildOfClassB(
+				this.parser.classFactory.isClassAChildOfClassB(
 					className,
 					"sap.ui.core.Control"
 				) ||
-				AbstractUI5Parser.getInstance(UI5Parser).classFactory.isClassAChildOfClassB(
+				this.parser.classFactory.isClassAChildOfClassB(
 					className,
 					"sap.ui.core.mvc.Controller"
 				)) &&
@@ -952,7 +951,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			const controlId = callExpression.arguments[0]?.value;
 			if (controlId) {
 				className =
-					AbstractUI5Parser.getInstance(UI5Parser).fileReader.getClassNameFromView(
+					this.parser.fileReader.getClassNameFromView(
 						currentControllerName,
 						controlId
 					) || "";
@@ -966,7 +965,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		if (clearStack) {
 			this.declarationStack = [];
 		}
-		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = this.parser.classFactory.getUIClass(className);
 		if (method.returnType === "void") {
 			const innerMethod = UIClass.methods.find(innermethod => method.name === innermethod.name);
 
@@ -1029,7 +1028,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		if (![undefined, "any"].includes(field.type)) {
 			return;
 		}
-		const UIClass = AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = this.parser.classFactory.getUIClass(className);
 		if (clearStack) {
 			this.declarationStack = [];
 		}
@@ -1059,13 +1058,13 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				} else if (property.value.type === "Identifier" && property.key.name === field.name) {
 					field.type = this._getClassNameFromUIDefineDotNotation(property.value.name, UIClass);
 				} else if (property.value.type === "MemberExpression" && property.key.name === field.name) {
-					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 					const stack = strategy.getStackOfNodesForPosition(className, property.value.end, true);
 					if (stack.length > 0) {
 						const lastMember = stack.pop();
 						const type = this.findClassNameForStack(stack, className);
 						if (type) {
-							const fieldsAndMethods = strategy.destructueFieldsAndMethodsAccordingToMapParams(type);
+							const fieldsAndMethods = strategy.destructureFieldsAndMethodsAccordingToMapParams(type);
 							const fieldFromAnotherClass = fieldsAndMethods?.fields.find(
 								field => field.name === lastMember.property.name
 							);
@@ -1076,7 +1075,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 								field.type = fieldFromAnotherClass.type;
 							} else if (methodFromAnotherClass) {
 								const UIClass =
-									AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+									this.parser.classFactory.getUIClass(className);
 								UIClass.fields.splice(UIClass.fields.indexOf(field), 1);
 								UIClass.methods.push({
 									name: field.name,
@@ -1117,7 +1116,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 	private _getAcornVariableDeclarationFromUIClass(className: string, variableName: string, position: number) {
 		let variableDeclaration: any;
-		const UIClass = <CustomUIClass>AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = <CustomUIClass>this.parser.classFactory.getUIClass(className);
 
 		const functionExpression = UIClass.acornMethodsAndFields?.find(
 			(method: any) => method.start < position && method.end >= position
@@ -1146,7 +1145,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 	private _getAcornAssignmentsFromUIClass(className: string, variableName: string, position: number) {
 		let variableAssignment: any;
-		const UIClass = <CustomUIClass>AbstractUI5Parser.getInstance(UI5Parser).classFactory.getUIClass(className);
+		const UIClass = <CustomUIClass>this.parser.classFactory.getUIClass(className);
 
 		const functionExpression = UIClass.acornMethodsAndFields?.find(
 			(method: any) => method.start < position && method.end >= position
@@ -1365,14 +1364,14 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				node?.type === "MemberExpression" ||
 				node?.type === "Identifier"
 			) {
-				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+				const positionBeforeCurrentStrategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 				className =
 					positionBeforeCurrentStrategy.acornGetClassName(UIClass.className, node.end, false, true) || "";
 			} else if (node?.type === "ArrayExpression") {
 				className = "any[]";
 				if (node.elements && node.elements.length > 0) {
 					const firstElement = node.elements[0];
-					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+					const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 					const newStack = strategy.getStackOfNodesForPosition(UIClass.className, firstElement.end, true);
 					className =
 						this.findClassNameForStack(newStack, UIClass.className) ||
@@ -1416,7 +1415,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			} else if (node?.type === "ThisExpression") {
 				className = UIClass.className;
 			} else if (node?.type === "AwaitExpression" && node.argument) {
-				const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this);
+				const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 				const newStack = strategy.getStackOfNodesForPosition(UIClass.className, node.argument.end, true);
 				className = this.findClassNameForStack(newStack, UIClass.className);
 				if (node.argument.type === "AwaitExpression") {
@@ -1483,7 +1482,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	}
 
 	public findMethodHierarchically(className: string, methodName: string): IUIMethod | undefined {
-		const method = AbstractUI5Parser.getInstance(UI5Parser)
+		const method = this.parser
 			.classFactory.getClassMethods(className)
 			.find(method => method.name === methodName);
 
@@ -1491,7 +1490,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	}
 
 	private _findFieldHierarchically(className: string, fieldName: string): IUIField | undefined {
-		const field = AbstractUI5Parser.getInstance(UI5Parser)
+		const field = this.parser
 			.classFactory.getClassFields(className)
 			.find(field => field.name === fieldName);
 

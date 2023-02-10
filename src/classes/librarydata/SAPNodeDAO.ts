@@ -1,23 +1,24 @@
-import { SAPNode } from "./SAPNode";
-import { UI5Parser } from "../../UI5Parser";
+import { IUI5Parser } from "../../IUI5Parser";
 import { FileReader } from "../utils/FileReader";
-import { AbstractUI5Parser } from "../../IUI5Parser";
-interface ILooseNodeObject {
-	[key: string]: SAPNode;
-}
+import { URLBuilder } from "../utils/URLBuilder";
+import { SAPNode } from "./SAPNode";
 
 export class SAPNodeDAO {
 	private _nodes: any;
-	private static readonly _SAPNodes: SAPNode[] = [];
-	private static readonly _flatSAPNodes: ILooseNodeObject = {};
+	private readonly _SAPNodes: SAPNode[] = [];
+	private readonly _flatSAPNodes: Record<string, SAPNode> = {};
+	private readonly parser: IUI5Parser;
+	constructor(parser: IUI5Parser) {
+		this.parser = parser;
+	}
 
 	public async getAllNodes() {
-		if (SAPNodeDAO._SAPNodes.length === 0) {
+		if (this._SAPNodes.length === 0) {
 			await this._readAllNodes();
-			this._generateSAPNodes();
+			await this._generateSAPNodes();
 		}
 
-		return SAPNodeDAO._SAPNodes;
+		return this._SAPNodes;
 	}
 
 	public isInstanceOf(child: string, parent: string): boolean {
@@ -48,11 +49,11 @@ export class SAPNodeDAO {
 	}
 
 	public getAllNodesSync() {
-		return SAPNodeDAO._SAPNodes;
+		return this._SAPNodes;
 	}
 
-	private _generateSAPNodes() {
-		const libs: any = AbstractUI5Parser.getInstance(UI5Parser).configHandler.getLibsToLoad();
+	private async _generateSAPNodes() {
+		const libs: any = this.parser.configHandler.getLibsToLoad();
 		const libMap: any = {};
 		libs.forEach((lib: any) => {
 			libMap[lib] = true;
@@ -60,20 +61,16 @@ export class SAPNodeDAO {
 
 		for (const node of this._nodes.symbols) {
 			if (libMap[node.lib]) {
-				const newNode = new SAPNode(node);
-				SAPNodeDAO._SAPNodes.push(newNode);
+				const newNode = new SAPNode(node, this.parser.metadataDAO);
+				this._SAPNodes.push(newNode);
 			}
 		}
 
-		this._recursiveFlatNodeGeneration(SAPNodeDAO._SAPNodes);
-
-		import("./UI5MetadataDAO").then(({ UI5MetadataPreloader }) => {
-			UI5MetadataPreloader.libsPreloaded.then(this._recursiveModuleAssignment.bind(this));
-		});
+		this._recursiveFlatNodeGeneration(this._SAPNodes);
 	}
 
-	private _recursiveModuleAssignment() {
-		const nodes = SAPNodeDAO._SAPNodes;
+	recursiveModuleAssignment() {
+		const nodes = this._SAPNodes;
 		nodes.forEach(node => {
 			if (node.getMetadata()?.getRawMetadata()) {
 				const moduleName = node.getMetadata()?.getRawMetadata()?.module?.replace(/\//g, ".");
@@ -101,7 +98,7 @@ export class SAPNodeDAO {
 
 	private _recursiveFlatNodeGeneration(nodes: SAPNode[]) {
 		nodes.forEach(SAPNode => {
-			SAPNodeDAO._flatSAPNodes[SAPNode.getName()] = SAPNode;
+			this._flatSAPNodes[SAPNode.getName()] = SAPNode;
 			if (SAPNode.nodes) {
 				this._recursiveFlatNodeGeneration(SAPNode.nodes);
 			}
@@ -117,27 +114,25 @@ export class SAPNodeDAO {
 	}
 
 	private _getApiIndexFromCache() {
-		return AbstractUI5Parser.getInstance(UI5Parser).fileReader.getCache(FileReader.CacheType.APIIndex);
+		return this.parser.fileReader.getCache(FileReader.CacheType.APIIndex);
 	}
 
 	private _cacheApiIndex() {
 		const cache = JSON.stringify(this._nodes);
-		AbstractUI5Parser.getInstance(UI5Parser).fileReader.setCache(FileReader.CacheType.APIIndex, cache);
+		this.parser.fileReader.setCache(FileReader.CacheType.APIIndex, cache);
 	}
 
 	private async _fetchApiIndex() {
-		const { URLBuilder } = await import("../utils/URLBuilder");
-		const { HTTPHandler } = await import("../utils/HTTPHandler");
-		const path = URLBuilder.getInstance().getAPIIndexUrl();
-		const data: any = await HTTPHandler.get(path);
+		const path = new URLBuilder(this.parser.configHandler, this.parser.fileReader).getAPIIndexUrl();
+		const data: any = await this.parser.httpHandler.get(path);
 		this._nodes = data;
 	}
 
 	public findNode(name: string): SAPNode | undefined {
-		return SAPNodeDAO._flatSAPNodes[name];
+		return this._flatSAPNodes[name];
 	}
 
 	public getFlatNodes() {
-		return SAPNodeDAO._flatSAPNodes;
+		return this._flatSAPNodes;
 	}
 }
