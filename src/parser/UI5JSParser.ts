@@ -9,7 +9,7 @@ import { IUIClassFactory } from "../classes/parsing/factory/IUIClassFactory";
 import { UIClassFactory } from "../classes/parsing/factory/JSClassFactory";
 import { AcornSyntaxAnalyzer } from "../classes/parsing/jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "../classes/parsing/jsparser/ISyntaxAnalyser";
-import { CustomUIClass } from "../classes/parsing/ui5class/CustomUIClass";
+import { CustomJSClass } from "../classes/parsing/ui5class/js/CustomJSClass";
 import { FileReader } from "../classes/parsing/util/filereader/FileReader";
 import { IFileReader } from "../classes/parsing/util/filereader/IFileReader";
 import { ResourceModelData } from "../classes/parsing/util/i18n/ResourceModelData";
@@ -19,9 +19,9 @@ import { ReusableMethods } from "../classes/ReusableMethods";
 import { AbstractUI5Parser } from "./abstraction/AbstractUI5Parser";
 import { IConstructorParams } from "./abstraction/IUI5Parser";
 
-export class UI5JSParser extends AbstractUI5Parser<CustomUIClass> {
+export class UI5JSParser extends AbstractUI5Parser<CustomJSClass> {
 	readonly configHandler: IParserConfigHandler;
-	readonly classFactory: IUIClassFactory<CustomUIClass>;
+	readonly classFactory: IUIClassFactory<CustomJSClass>;
 	readonly fileReader: IFileReader;
 	readonly syntaxAnalyser: ISyntaxAnalyser;
 	readonly nodeDAO: SAPNodeDAO;
@@ -33,7 +33,7 @@ export class UI5JSParser extends AbstractUI5Parser<CustomUIClass> {
 	readonly textDocumentTransformer: TextDocumentTransformer;
 	readonly reusableMethods: ReusableMethods;
 	readonly xmlParser: XMLParser;
-	constructor(params?: IConstructorParams<CustomUIClass>) {
+	constructor(params?: IConstructorParams<CustomJSClass>) {
 		super();
 		this.syntaxAnalyser = new AcornSyntaxAnalyzer(this);
 		this.classFactory = params?.classFactory || new UIClassFactory(this.syntaxAnalyser, this);

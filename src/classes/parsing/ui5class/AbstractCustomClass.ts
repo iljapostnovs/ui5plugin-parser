@@ -1,7 +1,7 @@
 import { ICacheable } from "../abstraction/ICacheable";
 import { IViewsAndFragments } from "../factory/IUIClassFactory";
 import {
-	AbstractUIClass,
+	AbstractJSClass,
 	IMember,
 	IUIAggregation,
 	IUIAssociation,
@@ -9,7 +9,7 @@ import {
 	IUIField,
 	IUIMethod,
 	IUIProperty
-} from "./AbstractUIClass";
+} from "./js/AbstractJSClass";
 
 export interface IUIDefine<NodeType = any> extends INodeBearer<NodeType> {
 	path: string;
@@ -78,7 +78,7 @@ export abstract class AbstractCustomClass<
 		ClassNodeType = any,
 		MetadataObjectType = any
 	>
-	extends AbstractUIClass
+	extends AbstractJSClass
 	implements ICacheable, INodeBearer<ClassNodeType>
 {
 	abstract methods: ICustomClassMethod<MethodNodeType>[];

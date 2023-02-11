@@ -1,6 +1,6 @@
 import { IParserConfigHandler } from "../config/IParserConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
-import { AbstractUIClass } from "../parsing/ui5class/AbstractUIClass";
+import { AbstractJSClass } from "../parsing/ui5class/js/AbstractJSClass";
 import { IFileReader } from "../parsing/util/filereader/IFileReader";
 
 export class URLBuilder {
@@ -14,11 +14,11 @@ export class URLBuilder {
 		this._fileReader = fileReader;
 	}
 
-	getMarkupUrlForClassApi(SAPClass: SAPNode | AbstractUIClass) {
+	getMarkupUrlForClassApi(SAPClass: SAPNode | AbstractJSClass) {
 		const className =
 			SAPClass instanceof SAPNode
 				? SAPClass.getName()
-				: SAPClass instanceof AbstractUIClass
+				: SAPClass instanceof AbstractJSClass
 				? SAPClass.className
 				: "";
 
@@ -29,7 +29,7 @@ export class URLBuilder {
 		return this._wrapInMarkup(this.getUrlForClassApi(SAPClass));
 	}
 
-	getMarkupUrlForPropertiesApi(SAPClass: AbstractUIClass) {
+	getMarkupUrlForPropertiesApi(SAPClass: AbstractJSClass) {
 		if (this._fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
 			return "";
 		}
@@ -37,7 +37,7 @@ export class URLBuilder {
 		return this._wrapInMarkup(this._getUrlForPropertiesApi(SAPClass));
 	}
 
-	getMarkupUrlForAggregationApi(SAPClass: AbstractUIClass) {
+	getMarkupUrlForAggregationApi(SAPClass: AbstractJSClass) {
 		if (this._fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
 			return "";
 		}
@@ -45,7 +45,7 @@ export class URLBuilder {
 		return this._wrapInMarkup(this._geUrlForAggregationApi(SAPClass));
 	}
 
-	getMarkupUrlForAssociationApi(SAPClass: AbstractUIClass) {
+	getMarkupUrlForAssociationApi(SAPClass: AbstractJSClass) {
 		if (this._fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
 			return "";
 		}
@@ -53,7 +53,7 @@ export class URLBuilder {
 		return this._wrapInMarkup(this._geUrlForAssociationApi(SAPClass));
 	}
 
-	getMarkupUrlForEventsApi(SAPClass: AbstractUIClass, eventName = "Events") {
+	getMarkupUrlForEventsApi(SAPClass: AbstractJSClass, eventName = "Events") {
 		if (this._fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
 			return "";
 		}
@@ -61,11 +61,11 @@ export class URLBuilder {
 		return this._wrapInMarkup(this._geUrlForEventsApi(SAPClass, eventName));
 	}
 
-	getMarkupUrlForMethodApi(SAPClass: AbstractUIClass | SAPNode, methodName: string) {
+	getMarkupUrlForMethodApi(SAPClass: AbstractJSClass | SAPNode, methodName: string) {
 		const className =
 			SAPClass instanceof SAPNode
 				? SAPClass.getName()
-				: SAPClass instanceof AbstractUIClass
+				: SAPClass instanceof AbstractJSClass
 				? SAPClass.className
 				: "";
 
@@ -76,11 +76,11 @@ export class URLBuilder {
 		return this._wrapInMarkup(this.getUrlForMethodApi(SAPClass, methodName));
 	}
 
-	getUrlForClassApi(SAPClass: SAPNode | AbstractUIClass) {
+	getUrlForClassApi(SAPClass: SAPNode | AbstractJSClass) {
 		const className =
 			SAPClass instanceof SAPNode
 				? SAPClass.getName()
-				: SAPClass instanceof AbstractUIClass
+				: SAPClass instanceof AbstractJSClass
 				? SAPClass.className
 				: "";
 
@@ -91,31 +91,31 @@ export class URLBuilder {
 		return this._getUrlClassApiBase(className);
 	}
 
-	private _getUrlForPropertiesApi(SAPClass: AbstractUIClass) {
+	private _getUrlForPropertiesApi(SAPClass: AbstractJSClass) {
 		const urlBase = this._getUrlClassApiBase(SAPClass.className);
 		return `${urlBase}/controlProperties`;
 	}
 
-	private _geUrlForEventsApi(SAPClass: AbstractUIClass, eventName: string) {
+	private _geUrlForEventsApi(SAPClass: AbstractJSClass, eventName: string) {
 		const urlBase = this._getUrlClassApiBase(SAPClass.className);
 		return `${urlBase}/events/${eventName}`;
 	}
 
-	private _geUrlForAggregationApi(SAPClass: AbstractUIClass) {
+	private _geUrlForAggregationApi(SAPClass: AbstractJSClass) {
 		const urlBase = this._getUrlClassApiBase(SAPClass.className);
 		return `${urlBase}/aggregations`;
 	}
 
-	private _geUrlForAssociationApi(SAPClass: AbstractUIClass) {
+	private _geUrlForAssociationApi(SAPClass: AbstractJSClass) {
 		const urlBase = this._getUrlClassApiBase(SAPClass.className);
 		return `${urlBase}/associations`;
 	}
 
-	getUrlForMethodApi(SAPClass: AbstractUIClass | SAPNode, methodName: string) {
+	getUrlForMethodApi(SAPClass: AbstractJSClass | SAPNode, methodName: string) {
 		const className =
 			SAPClass instanceof SAPNode
 				? SAPClass.getName()
-				: SAPClass instanceof AbstractUIClass
+				: SAPClass instanceof AbstractJSClass
 				? SAPClass.className
 				: "";
 		if (this._fileReader.getManifestForClass(className) || this._isStandardClass(className)) {

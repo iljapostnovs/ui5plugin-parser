@@ -1,5 +1,5 @@
 import { IFieldsAndMethods } from "../../factory/IUIClassFactory";
-import { CustomUIClass } from "../../ui5class/CustomUIClass";
+import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 export class InterfaceMemberStrategy extends FieldPropertyMethodGetterStrategy {
@@ -8,7 +8,7 @@ export class InterfaceMemberStrategy extends FieldPropertyMethodGetterStrategy {
 		const className = this.parser.fileReader.getClassNameFromPath(document.fileName);
 		if (className) {
 			const UIClass = this.parser.classFactory.getUIClass(className);
-			if (UIClass instanceof CustomUIClass && UIClass.interfaces.length) {
+			if (UIClass instanceof CustomJSClass && UIClass.interfaces.length) {
 				const positionAtClassBodyPropertyName = this.parser.reusableMethods.getIfPositionIsInPropertyName(
 					UIClass,
 					position

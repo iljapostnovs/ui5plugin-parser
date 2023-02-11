@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
+import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 
 export interface IUIMethodParam {
 	name: string;
@@ -66,7 +66,7 @@ export interface IUIAssociation extends IName, IVisibility {
 	multiple: boolean;
 	singularName: string;
 }
-export abstract class AbstractUIClass implements IAbstract {
+export abstract class AbstractJSClass implements IAbstract {
 	public classExists: boolean;
 	public abstract: boolean;
 	public className: string;

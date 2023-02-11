@@ -2,7 +2,7 @@ import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
 import { MainLooper } from "../jsparser/MainLooper";
 import { AbstractCustomClass } from "./AbstractCustomClass";
 import {
-	AbstractUIClass,
+	AbstractJSClass,
 	ITypeValue,
 	IUIAggregation,
 	IUIAssociation,
@@ -11,7 +11,7 @@ import {
 	IUIMethod,
 	IUIMethodParam,
 	IUIProperty
-} from "./AbstractUIClass";
+} from "./js/AbstractJSClass";
 
 const aXmlnsData = [
 	{
@@ -81,7 +81,7 @@ const aFioriElementsControllers = [
 	"sap.suite.ui.generic.template.ListReport.view.ListReport"
 ];
 
-export class StandardUIClass extends AbstractUIClass {
+export class StandardUIClass extends AbstractJSClass {
 	public methods: IStandardClassUIMethod[] = [];
 
 	constructor(className: string, parser: IUI5Parser<AbstractCustomClass>) {

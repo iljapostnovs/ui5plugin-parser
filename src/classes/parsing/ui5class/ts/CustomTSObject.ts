@@ -9,14 +9,14 @@ import {
 	TypeChecker
 } from "ts-morph";
 import * as ts from "typescript";
-import { UI5TSParser } from "../../../parser/UI5TSParser";
+import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import {
 	AbstractCustomClass,
 	ICustomClassField,
 	ICustomClassMethod,
 	IUIDefine,
 	IViewsAndFragmentsCache
-} from "./AbstractCustomClass";
+} from "../AbstractCustomClass";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ICustomClassTSObjectField extends ICustomClassField<PropertyAssignment> {}
@@ -48,9 +48,7 @@ export class CustomTSObject extends AbstractCustomClass<
 	private readonly _sourceFile: SourceFile;
 	constructor(objectLiteralExpression: ObjectLiteralExpression, parser: UI5TSParser, typeChecker: TypeChecker) {
 		const sourceFile = objectLiteralExpression.getSourceFile();
-		const className = parser.fileReader.getClassNameFromPath(
-			sourceFile.compilerNode.fileName
-		);
+		const className = parser.fileReader.getClassNameFromPath(sourceFile.compilerNode.fileName);
 		super(className ?? "", parser);
 		this.typeChecker = typeChecker;
 		this.classText = sourceFile.getFullText();

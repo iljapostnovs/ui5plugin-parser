@@ -5,7 +5,7 @@ import { UI5JSParser } from "../../../../parser/UI5JSParser";
 import { IParserConfigHandler } from "../../../config/IParserConfigHandler";
 import { ICacheable } from "../../abstraction/ICacheable";
 import { IUIClassFactory } from "../../factory/IUIClassFactory";
-import { CustomUIClass } from "../../ui5class/CustomUIClass";
+import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { TextDocument } from "../textdocument/TextDocument";
 import { WorkspaceFolder } from "../textdocument/WorkspaceFolder";
 import { ITag } from "../xml/XMLParser";
@@ -20,12 +20,12 @@ export class FileReader implements IFileReader {
 	private readonly _UI5Version: string;
 	public globalStoragePath: string | undefined;
 	private readonly _configHandler: IParserConfigHandler;
-	private readonly _classFactory: IUIClassFactory<CustomUIClass>;
+	private readonly _classFactory: IUIClassFactory<CustomJSClass>;
 	private readonly _parser: UI5JSParser;
 
 	constructor(
 		configHandler: IParserConfigHandler,
-		classFactory: IUIClassFactory<CustomUIClass>,
+		classFactory: IUIClassFactory<CustomJSClass>,
 		parser: UI5JSParser
 	) {
 		this._configHandler = configHandler;
@@ -266,7 +266,7 @@ export class FileReader implements IFileReader {
 
 		if (!className) {
 			const UIClass = this._classFactory.getUIClass(controllerClassName);
-			if (UIClass instanceof CustomUIClass) {
+			if (UIClass instanceof CustomJSClass) {
 				const fragmentsAndViews = this._classFactory.getViewsAndFragmentsOfControlHierarchically(UIClass);
 				const fragmentAndViewArray = [...fragmentsAndViews.views, ...fragmentsAndViews.fragments];
 				fragmentAndViewArray.find(view => {
@@ -310,7 +310,7 @@ export class FileReader implements IFileReader {
 		let fragments: IFragment[] = [];
 		const UIClass = this._classFactory.getUIClass(className);
 
-		if (UIClass instanceof CustomUIClass) {
+		if (UIClass instanceof CustomJSClass) {
 			fragments = this.getAllFragments().filter(fragment => {
 				return UIClass.classText.indexOf(`"${fragment.name}"`) > -1;
 			});
@@ -385,7 +385,7 @@ export class FileReader implements IFileReader {
 			classNames.forEach(className => {
 				if (className) {
 					const UIClass = this._classFactory.getUIClass(className);
-					if (UIClass instanceof CustomUIClass) {
+					if (UIClass instanceof CustomJSClass) {
 						UIClass.relatedViewsAndFragments = undefined;
 						this._classFactory.enrichTypesInCustomClass(UIClass);
 					}

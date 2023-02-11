@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import * as commentParser from "comment-parser";
 import * as path from "path";
-import { UI5JSParser } from "../../../parser/UI5JSParser";
-import { IAcornLocation, IAcornPosition } from "../jsparser/AcornSyntaxAnalyzer";
-import { ISyntaxAnalyser } from "../jsparser/ISyntaxAnalyser";
+import { UI5JSParser } from "../../../../parser/UI5JSParser";
+import { IAcornLocation, IAcornPosition } from "../../jsparser/AcornSyntaxAnalyzer";
+import { ISyntaxAnalyser } from "../../jsparser/ISyntaxAnalyser";
 import {
 	AbstractCustomClass,
 	ICustomClassField,
 	ICustomClassMethod,
 	ICustomMember,
 	IUIDefine
-} from "./AbstractCustomClass";
+} from "../AbstractCustomClass";
 import {
 	IUIAggregation,
 	IUIAssociation,
@@ -19,7 +19,7 @@ import {
 	IUIMethod,
 	IUIMethodParam,
 	IUIProperty
-} from "./AbstractUIClass";
+} from "./AbstractJSClass";
 import LineColumn = require("line-column");
 const acornLoose = require("acorn-loose");
 
@@ -37,20 +37,20 @@ interface IComment {
 export interface UI5Ignoreable {
 	ui5ignored?: boolean;
 }
-export interface ICustomClassUIMethod extends ICustomClassMethod<any> {
+export interface ICustomClassJSMethod extends ICustomClassMethod<any> {
 	acornParams?: any;
 }
-export interface ICustomClassUIField extends ICustomClassField<any> {
+export interface ICustomClassJSField extends ICustomClassField<any> {
 	customData?: ILooseObject;
 }
-export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
+export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 	classText = "";
 	node: any;
 	UIDefine: IUIDefine<any>[];
 	parentClassNameDotNotation = "";
 	fsPath: string;
-	public methods: ICustomClassUIMethod[] = [];
-	public fields: ICustomClassUIField[] = [];
+	public methods: ICustomClassJSMethod[] = [];
+	public fields: ICustomClassJSField[] = [];
 	public comments: IComment[] = [];
 	public acornClassBody: any;
 	public acornMethodsAndFields: any[] = [];
@@ -269,7 +269,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		}
 	}
 
-	private _fillParamJSTypesFromTag(tag: any, params: any[], method: ICustomClassUIMethod) {
+	private _fillParamJSTypesFromTag(tag: any, params: any[], method: ICustomClassJSMethod) {
 		const tagNameParts = tag.name.split(".");
 		if (tagNameParts.length > 1) {
 			const paramName = tagNameParts.shift();
@@ -309,7 +309,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		this.methods.forEach(method => {
 			method.params.forEach(param => {
 				if (param.type === "any" || !param.type) {
-					param.type = CustomUIClass.getTypeFromHungarianNotation(param.name) || "any";
+					param.type = CustomJSClass.getTypeFromHungarianNotation(param.name) || "any";
 				}
 			});
 		});
@@ -530,7 +530,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 					property.value?.type === "FunctionExpression" ||
 					property.value?.type === "ArrowFunctionExpression"
 				) {
-					const method: ICustomClassUIMethod = {
+					const method: ICustomClassJSMethod = {
 						name: name,
 						params: this._generateParamTextForMethod(property.value.params),
 						returnType: property.returnType || property.value.async ? "Promise" : "void",
@@ -670,7 +670,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 			this._fillMethodsAndFieldsFromPrototype();
 
 			//remove duplicates
-			this.fields = this.fields.reduce((accumulator: ICustomClassUIField[], field: ICustomClassUIField) => {
+			this.fields = this.fields.reduce((accumulator: ICustomClassJSField[], field: ICustomClassJSField) => {
 				const existingField = accumulator.find(accumulatedField => accumulatedField.name === field.name);
 				if (existingField && field.type && !existingField.type) {
 					accumulator[accumulator.indexOf(existingField)] = field;
@@ -775,7 +775,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 				const name = node?.expression?.left?.property?.name;
 				const isStatic = node.expression?.left?.object?.property?.name !== "prototype";
 				if (isMethod) {
-					const method: ICustomClassUIMethod = {
+					const method: ICustomClassJSMethod = {
 						name: name,
 						params: assignmentBody.params.map((param: any) => ({
 							name: param.name,
@@ -827,7 +827,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 	public fillTypesFromHungarionNotation() {
 		this.fields.forEach(field => {
 			if (!field.type) {
-				field.type = CustomUIClass.getTypeFromHungarianNotation(field.name);
+				field.type = CustomJSClass.getTypeFromHungarianNotation(field.name);
 			}
 		});
 	}
@@ -864,7 +864,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 	}
 
 	private _fillMethodsFromMetadata() {
-		const additionalMethods: ICustomClassUIMethod[] = [];
+		const additionalMethods: ICustomClassJSMethod[] = [];
 
 		this._fillPropertyMethods(additionalMethods);
 		this._fillAggregationMethods(additionalMethods);
@@ -874,7 +874,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		this.methods = this.methods.concat(additionalMethods);
 	}
 
-	private _fillPropertyMethods(aMethods: ICustomClassUIMethod[]) {
+	private _fillPropertyMethods(aMethods: ICustomClassJSMethod[]) {
 		this.properties?.forEach(property => {
 			const propertyWithFirstBigLetter = `${property.name[0].toUpperCase()}${property.name.substring(
 				1,
@@ -922,7 +922,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		});
 	}
 
-	private _fillAggregationMethods(additionalMethods: ICustomClassUIMethod[]) {
+	private _fillAggregationMethods(additionalMethods: ICustomClassJSMethod[]) {
 		interface method {
 			name: string;
 			params: IUIMethodParam[];
@@ -1085,7 +1085,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		});
 	}
 
-	private _fillEventMethods(aMethods: ICustomClassUIMethod[]) {
+	private _fillEventMethods(aMethods: ICustomClassJSMethod[]) {
 		this.events?.forEach(event => {
 			const eventWithFirstBigLetter = `${event.name[0].toUpperCase()}${event.name.substring(
 				1,
@@ -1158,7 +1158,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 		});
 	}
 
-	private _fillAssociationMethods(additionalMethods: ICustomClassUIMethod[]) {
+	private _fillAssociationMethods(additionalMethods: ICustomClassJSMethod[]) {
 		this.associations?.forEach(association => {
 			const associationWithFirstBigLetter = `${association.singularName[0].toUpperCase()}${association.singularName.substring(
 				1,
@@ -1588,7 +1588,7 @@ export class CustomUIClass extends AbstractCustomClass<any, any, any, any> {
 										member.visibility = visibilityDoc.tag;
 									}
 									if (typeDoc && member.node) {
-										const field = member as ICustomClassUIField;
+										const field = member as ICustomClassJSField;
 										field.type = typeDoc.type;
 									}
 									if (isStatic) {

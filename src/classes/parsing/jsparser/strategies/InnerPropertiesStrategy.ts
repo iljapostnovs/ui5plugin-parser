@@ -1,7 +1,7 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import { IFieldsAndMethods } from "../../factory/IUIClassFactory";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
-import { CustomUIClass } from "../../ui5class/CustomUIClass";
+import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
@@ -99,7 +99,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 				if (classNameOfCurrentObjectExpression) {
 					const methodName = callExpression.callee?.property?.name;
 					if (methodName) {
-						const UIClass = <CustomUIClass>(
+						const UIClass = <CustomJSClass>(
 							this.parser.classFactory.getUIClass(classNameOfCurrentObjectExpression)
 						);
 						const UIMethod = UIClass.methods.find(method => method.name === methodName);
@@ -223,7 +223,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 		let models: { type: string; name: string }[] = [];
 		if (currentClassName) {
 			const UIClass = this.parser.classFactory.getUIClass(currentClassName);
-			if (UIClass instanceof CustomUIClass) {
+			if (UIClass instanceof CustomJSClass) {
 				const callExpressions = UIClass.methods.reduce((accumulator: any[], UIMethod) => {
 					if (UIMethod.node) {
 						const callExpressions = this.syntaxAnalyser
@@ -323,7 +323,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 		const stack: any[] = [];
 		const UIClass = this.parser.classFactory.getUIClass(className);
 
-		if (UIClass instanceof CustomUIClass) {
+		if (UIClass instanceof CustomJSClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {
 				return node.start < position && node.end >= position;
 			})?.value;

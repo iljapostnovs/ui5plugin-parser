@@ -1,5 +1,5 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
-import { IMember, IUIMethod } from "../../ui5class/AbstractUIClass";
+import { IMember, IUIMethod } from "../../ui5class/js/AbstractJSClass";
 import { ICommentPositions, IXMLFile } from "../filereader/FileReader";
 
 export interface ITag {

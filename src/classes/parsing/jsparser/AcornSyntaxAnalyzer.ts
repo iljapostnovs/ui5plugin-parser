@@ -1,8 +1,8 @@
 import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
 import { IFieldsAndMethods } from "../factory/IUIClassFactory";
 import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
-import { IUIField, IUIMethod } from "../ui5class/AbstractUIClass";
-import { CustomUIClass, ICustomClassUIField, ICustomClassUIMethod } from "../ui5class/CustomUIClass";
+import { IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
+import { CustomJSClass, ICustomClassJSField, ICustomClassJSMethod } from "../ui5class/js/CustomJSClass";
 import { IXMLFile } from "../util/filereader/FileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "./ISyntaxAnalyser";
@@ -262,11 +262,11 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 								className = method.returnType;
 							}
 
-							if (className === "map" && (<ICustomClassUIMethod>method).node) {
+							if (className === "map" && (<ICustomClassJSMethod>method).node) {
 								currentNode._acornSyntaxAnalyserType = "map";
 								const UIClass = this.parser.classFactory.getUIClass(currentClassName);
-								if (UIClass instanceof CustomUIClass) {
-									const body = (method as ICustomClassUIMethod).node.body?.body;
+								if (UIClass instanceof CustomJSClass) {
+									const body = (method as ICustomClassJSMethod).node.body?.body;
 									if (body) {
 										const returnStatement = body.find(
 											(node: any) => node.type === "ReturnStatement"
@@ -295,12 +295,12 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 							className = field.type;
 						}
 
-						if (className === "map" && (<ICustomClassUIField>field).node?.value) {
+						if (className === "map" && (<ICustomClassJSField>field).node?.value) {
 							currentNode._acornSyntaxAnalyserType = "map";
 							const UIClass = this.parser.classFactory.getUIClass(primaryClassName);
-							if (UIClass instanceof CustomUIClass) {
+							if (UIClass instanceof CustomJSClass) {
 								className = this.getClassNameFromSingleAcornNode(
-									(field as ICustomClassUIField).node.value,
+									(field as ICustomClassJSField).node.value,
 									UIClass,
 									stack
 								);
@@ -310,7 +310,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 					if (!className && currentClassName === "map") {
 						const UIClass = this.parser.classFactory.getUIClass(primaryClassName);
-						if (UIClass instanceof CustomUIClass) {
+						if (UIClass instanceof CustomJSClass) {
 							className = this.getClassNameFromSingleAcornNode(currentNode, UIClass, stack);
 						}
 					}
@@ -324,7 +324,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				if (currentNode.name === "sap") {
 					className = this._generateSAPStandardClassNameFromStack(stack);
 				} else {
-					const UIClass = <CustomUIClass>this.parser.classFactory.getUIClass(currentClassName);
+					const UIClass = <CustomJSClass>this.parser.classFactory.getUIClass(currentClassName);
 
 					const variableDeclaration = this._getAcornVariableDeclarationFromUIClass(
 						currentClassName,
@@ -382,11 +382,11 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 					//get hungarian notation type
 					if ((!className || className === "any" || className === "void") && !stackWasModified) {
-						className = CustomUIClass.getTypeFromHungarianNotation(currentNode.name) || "";
+						className = CustomJSClass.getTypeFromHungarianNotation(currentNode.name) || "";
 					}
 				}
 			} else if (currentNode.type === "NewExpression") {
-				const UIClass = <CustomUIClass>this.parser.classFactory.getUIClass(currentClassName);
+				const UIClass = <CustomJSClass>this.parser.classFactory.getUIClass(currentClassName);
 				if (currentNode.callee?.type === "Identifier") {
 					className = this._getClassNameFromUIDefineDotNotation(currentNode.callee?.name, UIClass);
 				} else if (currentNode.callee?.type === "MemberExpression") {
@@ -479,7 +479,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 		if (!modelClassName) {
 			const methods = this.parser.classFactory.getClassMethods(className);
-			const method = (<ICustomClassUIMethod[]>methods).find(method => {
+			const method = (<ICustomClassJSMethod[]>methods).find(method => {
 				let methodFound = false;
 				if (method.node) {
 					const content = this.expandAllContent(method.node);
@@ -566,7 +566,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		let className = "";
 		const callExpression = stack.shift();
 		const UIClass = this.parser.classFactory.getUIClass(primaryClassName);
-		if (UIClass instanceof CustomUIClass && node.property?.name) {
+		if (UIClass instanceof CustomJSClass && node.property?.name) {
 			const methodName = node.property.name;
 			const eventData = this.getEventHandlerData(node, primaryClassName);
 			if (eventData) {
@@ -598,7 +598,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		let eventHandlerData;
 
 		const UIClass = this.parser.classFactory.getUIClass(className);
-		if (UIClass instanceof CustomUIClass) {
+		if (UIClass instanceof CustomJSClass) {
 			const currentClassEventHandlerName = this._getEventHandlerName(node, className);
 			const viewOfTheController = this.parser.fileReader.getViewForController(className);
 			if (viewOfTheController && currentClassEventHandlerName) {
@@ -617,7 +617,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			if (currentClassEventHandlerName && !eventHandlerData) {
 				// const fragmentsOfTheController = UI5Plugin.getInstance().fileReader.getFragmentsForClass(className);
 				const UIClass = this.parser.classFactory.getUIClass(className);
-				if (UIClass instanceof CustomUIClass) {
+				if (UIClass instanceof CustomJSClass) {
 					const fragmentsOfTheController =
 						this.parser.classFactory.getViewsAndFragmentsOfControlHierarchically(
 							UIClass,
@@ -650,7 +650,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		eventHandlerName: string
 	): { className: string; eventName: string; node: any } | undefined {
 		let eventHandlerData;
-		const UIClass = <CustomUIClass>this.parser.classFactory.getUIClass(className);
+		const UIClass = <CustomJSClass>this.parser.classFactory.getUIClass(className);
 		const strategy = new FieldsAndMethodForPositionBeforeCurrentStrategy(this, this.parser);
 		const eventHandler = UIClass.methods.find(method => method.name === eventHandlerName);
 		if (eventHandler) {
@@ -763,7 +763,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	private _getEventHandlerName(node: any, className: string) {
 		let eventHandlerName = "";
 		const UIClass = this.parser.classFactory.getUIClass(className);
-		if (UIClass instanceof CustomUIClass) {
+		if (UIClass instanceof CustomJSClass) {
 			const eventHandlerMethod = UIClass.methods.find(method => {
 				let correctMethod = false;
 				if (method.node) {
@@ -837,7 +837,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		) {
 			const UIClass = this.parser.classFactory.getUIClass(currentClassName);
 			this.declarationStack.push(identifierNode);
-			if (UIClass instanceof CustomUIClass) {
+			if (UIClass instanceof CustomJSClass) {
 				const acornMethod = this.findAcornNode(UIClass.acornMethodsAndFields, identifierNode.end);
 				if (acornMethod) {
 					const content = this.expandAllContent(acornMethod.value);
@@ -959,7 +959,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 			if (innerMethod && innerMethod.returnType !== "void") {
 				method.returnType = innerMethod.returnType;
-			} else if (UIClass instanceof CustomUIClass) {
+			} else if (UIClass instanceof CustomJSClass) {
 				const methodNode = UIClass.acornMethodsAndFields?.find(
 					(property: any) => property.key.name === method.name
 				);
@@ -982,7 +982,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				this.findMethodReturnType(method, UIClass.parentClassNameDotNotation);
 			}
 		} else if (method.returnType === "Promise") {
-			if (UIClass instanceof CustomUIClass) {
+			if (UIClass instanceof CustomJSClass) {
 				const UIMethod = UIClass.methods.find(innerMethod => innerMethod.name === method.name);
 				if (UIMethod) {
 					const methodBody = UIMethod.node?.body?.body;
@@ -1022,13 +1022,13 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		}
 
 		const innerField = UIClass.fields.find(innerfield => innerfield.name === field.name);
-		const customField = innerField as ICustomClassUIField;
-		if (customField?.node?.value?.type === "Literal" && UIClass instanceof CustomUIClass) {
+		const customField = innerField as ICustomClassJSField;
+		if (customField?.node?.value?.type === "Literal" && UIClass instanceof CustomJSClass) {
 			customField.type = this.getClassNameFromSingleAcornNode(customField.node.value, UIClass);
 		}
 		if (innerField && innerField.type) {
 			field.type = innerField.type;
-		} else if (UIClass instanceof CustomUIClass) {
+		} else if (UIClass instanceof CustomJSClass) {
 			UIClass.acornMethodsAndFields.find((property: any) => {
 				let typeFound = false;
 				if (property.value.type === "FunctionExpression" || property.value.type === "ArrowFunctionExpression") {
@@ -1092,8 +1092,8 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		if (includeParentMethods && !field.type && UIClass.parentClassNameDotNotation) {
 			this.findFieldType(field, UIClass.parentClassNameDotNotation);
 		}
-		if (!field.type && UIClass instanceof CustomUIClass) {
-			field.type = CustomUIClass.getTypeFromHungarianNotation(field.name);
+		if (!field.type && UIClass instanceof CustomJSClass) {
+			field.type = CustomJSClass.getTypeFromHungarianNotation(field.name);
 		}
 
 		if (field.type?.includes("__map__")) {
@@ -1103,7 +1103,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 	private _getAcornVariableDeclarationFromUIClass(className: string, variableName: string, position: number) {
 		let variableDeclaration: any;
-		const UIClass = <CustomUIClass>this.parser.classFactory.getUIClass(className);
+		const UIClass = <CustomJSClass>this.parser.classFactory.getUIClass(className);
 
 		const functionExpression = UIClass.acornMethodsAndFields?.find(
 			(method: any) => method.start < position && method.end >= position
@@ -1132,7 +1132,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 	private _getAcornAssignmentsFromUIClass(className: string, variableName: string, position: number) {
 		let variableAssignment: any;
-		const UIClass = <CustomUIClass>this.parser.classFactory.getUIClass(className);
+		const UIClass = <CustomJSClass>this.parser.classFactory.getUIClass(className);
 
 		const functionExpression = UIClass.acornMethodsAndFields?.find(
 			(method: any) => method.start < position && method.end >= position
@@ -1307,7 +1307,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return innerNodes;
 	}
 
-	private _getClassNameFromAcornVariableDeclaration(declaration: any, UIClass: CustomUIClass, stack: any[] = []) {
+	private _getClassNameFromAcornVariableDeclaration(declaration: any, UIClass: CustomJSClass, stack: any[] = []) {
 		let className = "";
 		if (declaration._acornSyntaxAnalyserType) {
 			className = declaration._acornSyntaxAnalyserType;
@@ -1320,7 +1320,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 					(!className || className === "any" || className === "void") &&
 					declaration.init?.type !== "ObjectExpression"
 				) {
-					className = CustomUIClass.getTypeFromHungarianNotation(declaration.id.name) || className;
+					className = CustomJSClass.getTypeFromHungarianNotation(declaration.id.name) || className;
 				}
 
 				if (className && !className.includes("__map__") && stackWasEmpty) {
@@ -1334,7 +1334,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 	public declarationStack: any[] = [];
 
-	public getClassNameFromSingleAcornNode(node: any, UIClass: CustomUIClass, stack: any[] = []) {
+	public getClassNameFromSingleAcornNode(node: any, UIClass: CustomJSClass, stack: any[] = []) {
 		let className = "";
 		if (this.declarationStack.indexOf(node) > -1) {
 			// this.declarationStack = [];
@@ -1435,7 +1435,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return names.join(".");
 	}
 
-	private _getClassNameFromUIDefineDotNotation(UIDefineClassName: string, UIClass: CustomUIClass) {
+	private _getClassNameFromUIDefineDotNotation(UIDefineClassName: string, UIClass: CustomJSClass) {
 		let className = "";
 		if (UIDefineClassName) {
 			const UIDefine = UIClass.UIDefine?.find(UIDefine => UIDefine.className === UIDefineClassName);
@@ -1450,7 +1450,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return className;
 	}
 
-	private _getClassNameFromMethodParams(node: any, UIClass: CustomUIClass) {
+	private _getClassNameFromMethodParams(node: any, UIClass: CustomJSClass) {
 		let className = "";
 
 		const methodNode = this.findAcornNode(UIClass.acornMethodsAndFields, node.end - 1);
@@ -1487,7 +1487,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return nodes.find((node: any) => node.start < position && node.end >= position);
 	}
 
-	getAcornVariableDeclarationAtIndex(UIClass: CustomUIClass, index: number) {
+	getAcornVariableDeclarationAtIndex(UIClass: CustomJSClass, index: number) {
 		let variableDeclaration: any | undefined;
 		const method = UIClass.methods.find(method => {
 			return method.node?.start <= index && method.node?.end >= index;
@@ -1502,7 +1502,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return variableDeclaration;
 	}
 
-	getAcornAssignmentExpressionAtIndex(UIClass: CustomUIClass, index: number) {
+	getAcornAssignmentExpressionAtIndex(UIClass: CustomJSClass, index: number) {
 		let assignmentExpression: any | undefined;
 		const method = UIClass.methods.find(method => {
 			return method.node?.start <= index && method.node?.end >= index;

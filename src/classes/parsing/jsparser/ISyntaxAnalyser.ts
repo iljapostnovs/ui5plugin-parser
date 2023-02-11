@@ -1,6 +1,6 @@
 import { IFieldsAndMethods } from "../factory/IUIClassFactory";
-import { IUIEventParam, IUIField, IUIMethod } from "../ui5class/AbstractUIClass";
-import { CustomUIClass } from "../ui5class/CustomUIClass";
+import { IUIEventParam, IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
+import { CustomJSClass } from "../ui5class/js/CustomJSClass";
 import { TextDocument } from "../util/textdocument/TextDocument";
 
 export interface ISyntaxAnalyser {
@@ -26,9 +26,9 @@ export interface ISyntaxAnalyser {
 	): void;
 	findFieldType(field: IUIField, className: string, includeParentMethods: boolean, clearStack: boolean): void;
 	getContent(node: any): any[];
-	getAcornVariableDeclarationAtIndex(UIClass: CustomUIClass, index: number): any;
-	getAcornAssignmentExpressionAtIndex(UIClass: CustomUIClass, index: number): any;
-	getClassNameFromSingleAcornNode(node: any, UIClass: CustomUIClass, stack?: any[]): string;
+	getAcornVariableDeclarationAtIndex(UIClass: CustomJSClass, index: number): any;
+	getAcornAssignmentExpressionAtIndex(UIClass: CustomJSClass, index: number): any;
+	getClassNameFromSingleAcornNode(node: any, UIClass: CustomJSClass, stack?: any[]): string;
 	findAcornNode(nodes: any[], position: number): any;
 	findClassNameForStack(
 		stack: any[],

@@ -1,9 +1,9 @@
-import { CustomTSClass, ICustomClassTSField, ICustomClassTSMethod } from "./classes/parsing/ui5class/CustomTSClass";
+import { CustomTSClass, ICustomClassTSField, ICustomClassTSMethod } from "./classes/parsing/ui5class/ts/CustomTSClass";
 import {
 	CustomTSObject,
 	ICustomClassTSObjectField,
 	ICustomClassTSObjectMethod
-} from "./classes/parsing/ui5class/CustomTSObject";
+} from "./classes/parsing/ui5class/ts/CustomTSObject";
 
 export type ICustomTSField = ICustomClassTSField | ICustomClassTSObjectField;
 export type ICustomTSMethod = ICustomClassTSMethod | ICustomClassTSObjectMethod;

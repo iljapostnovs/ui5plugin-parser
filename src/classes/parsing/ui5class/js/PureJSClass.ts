@@ -1,5 +1,5 @@
-import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
-import { AbstractUIClass, IUIField, IUIMethod } from "./AbstractUIClass";
+import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
+import { AbstractJSClass, IUIField, IUIMethod } from "./AbstractJSClass";
 import * as jsClassData from "./jsclassdata/JSClassData.json";
 
 const jsClassDataCopy: any = jsClassData;
@@ -7,7 +7,7 @@ Object.keys(jsClassData).forEach(key => {
 	jsClassDataCopy[key.toLowerCase()] = jsClassDataCopy[key];
 });
 const classData: { [key: string]: { methods: IUIMethod[]; fields: IUIField[] } } = jsClassData;
-export class JSClass extends AbstractUIClass {
+export class PureJSClass extends AbstractJSClass {
 	constructor(className: string, parser: IUI5Parser) {
 		super(className, parser);
 

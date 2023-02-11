@@ -2,18 +2,18 @@ import { ClassDeclaration, ObjectLiteralExpression, Project, SourceFile, TypeChe
 import * as ts from "typescript";
 import { UI5TSParser } from "../../../parser/UI5TSParser";
 import {
-	AbstractUIClass,
+	AbstractJSClass,
 	IUIAggregation,
 	IUIAssociation,
 	IUIEvent,
 	IUIField,
 	IUIMethod,
 	IUIProperty
-} from "../ui5class/AbstractUIClass";
-import { CustomTSClass } from "../ui5class/CustomTSClass";
-import { CustomTSObject } from "../ui5class/CustomTSObject";
-import { EmptyUIClass } from "../ui5class/EmptyUIClass";
+} from "../ui5class/js/AbstractJSClass";
+import { EmptyJSClass } from "../ui5class/js/EmptyJSClass";
 import { StandardUIClass } from "../ui5class/StandardUIClass";
+import { CustomTSClass } from "../ui5class/ts/CustomTSClass";
+import { CustomTSObject } from "../ui5class/ts/CustomTSObject";
 import { IFragment, IView } from "../util/filereader/FileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
 import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./IUIClassFactory";
@@ -23,7 +23,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 	constructor(parser: UI5TSParser) {
 		this.parser = parser;
 	}
-	isCustomClass(UIClass: AbstractUIClass): UIClass is CustomTSClass | CustomTSObject {
+	isCustomClass(UIClass: AbstractJSClass): UIClass is CustomTSClass | CustomTSObject {
 		return UIClass instanceof CustomTSClass || UIClass instanceof CustomTSObject;
 	}
 
@@ -34,7 +34,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 		declaration?: ClassDeclaration | ObjectLiteralExpression,
 		typeChecker?: TypeChecker
 	) {
-		let returnClass: AbstractUIClass | undefined;
+		let returnClass: AbstractJSClass | undefined;
 		const isThisClassFromAProject = !!this.parser.fileReader.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className, this.parser);
@@ -64,10 +64,10 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 			} else if (declaration && typeChecker && declaration instanceof ObjectLiteralExpression) {
 				returnClass = new CustomTSObject(declaration, this.parser, typeChecker);
 			} else {
-				returnClass = new EmptyUIClass(className, this.parser);
+				returnClass = new EmptyJSClass(className, this.parser);
 			}
 		} else {
-			returnClass = new EmptyUIClass(className, this.parser);
+			returnClass = new EmptyJSClass(className, this.parser);
 		}
 
 		return returnClass;
@@ -663,7 +663,7 @@ export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSO
 		delete this._UIClasses[className];
 	}
 
-	public getParent(UIClass: AbstractUIClass) {
+	public getParent(UIClass: AbstractJSClass) {
 		if (UIClass.parentClassNameDotNotation) {
 			return this.getUIClass(UIClass.parentClassNameDotNotation);
 		}

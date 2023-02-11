@@ -1,13 +1,13 @@
 import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
 import {
-	AbstractUIClass,
+	AbstractJSClass,
 	IUIAggregation,
 	IUIAssociation,
 	IUIEvent,
 	IUIField,
 	IUIMethod,
 	IUIProperty
-} from "../ui5class/AbstractUIClass";
+} from "../ui5class/js/AbstractJSClass";
 import { IFragment, IView } from "../util/filereader/FileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
 
@@ -23,14 +23,14 @@ export interface IUIClassFactory<CustomClass extends AbstractCustomClass> {
 	getClassAggregations(className: string, returnDuplicates?: boolean): IUIAggregation[];
 	getClassAssociations(className: string, returnDuplicates?: boolean): IUIAssociation[];
 	getClassProperties(className: string, returnDuplicates?: boolean): IUIProperty[];
-	getUIClass(className: string): AbstractUIClass;
+	getUIClass(className: string): AbstractJSClass;
 	getAllCustomUIClasses(): CustomClass[];
 	getAllExistentUIClasses(): IUIClassMap;
 	getDefaultModelForClass(className: string): string | undefined;
 	isMethodOverriden(className: string, methodName: string): boolean;
 	removeClass(className: string): void;
-	getParent(UIClass: AbstractUIClass): AbstractUIClass | undefined;
-	isCustomClass(UIClass: AbstractUIClass): UIClass is CustomClass;
+	getParent(UIClass: AbstractJSClass): AbstractJSClass | undefined;
+	isCustomClass(UIClass: AbstractJSClass): UIClass is CustomClass;
 	setNewNameForClass(oldPath: string, newPath: string): void;
 	getViewsAndFragmentsOfControlHierarchically(
 		CurrentUIClass: CustomClass,
@@ -43,7 +43,7 @@ export interface IUIClassFactory<CustomClass extends AbstractCustomClass> {
 }
 
 export interface IUIClassMap {
-	[key: string]: AbstractUIClass;
+	[key: string]: AbstractJSClass;
 }
 export interface IFieldsAndMethods {
 	className: string;

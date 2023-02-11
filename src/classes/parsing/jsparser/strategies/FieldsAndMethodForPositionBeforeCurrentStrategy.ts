@@ -1,7 +1,7 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import { IFieldsAndMethods } from "../../factory/IUIClassFactory";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
-import { CustomUIClass } from "../../ui5class/CustomUIClass";
+import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
 import { FieldPropertyMethodGetterStrategy as FieldMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
@@ -142,7 +142,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 		const stack: any[] = [];
 		const UIClass = this.parser.classFactory.getUIClass(className);
 
-		if (UIClass instanceof CustomUIClass) {
+		if (UIClass instanceof CustomJSClass) {
 			const methodNode = UIClass.acornMethodsAndFields.find((node: any) => {
 				return node.start < position && node.end >= position;
 			})?.value;
