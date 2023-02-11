@@ -1,8 +1,8 @@
-import { IUI5Parser } from "../../../../IUI5Parser";
-import { TextDocument } from "../../abstraction/TextDocument";
+import { IUI5Parser } from "../../../../parser/IUI5Parser";
 import { IFieldsAndMethods } from "../../factory/IUIClassFactory";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
 import { CustomUIClass } from "../../ui5class/CustomUIClass";
+import { TextDocument } from "../../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "../ISyntaxAnalyser";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./FieldsAndMethodForPositionBeforeCurrentStrategy";

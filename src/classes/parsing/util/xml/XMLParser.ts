@@ -1,6 +1,6 @@
-import { IUI5Parser } from "../../IUI5Parser";
-import { IMember, IUIMethod } from "../parsing/ui5class/AbstractUIClass";
-import { ICommentPositions, IXMLFile } from "./FileReader";
+import { IUI5Parser } from "../../../../parser/IUI5Parser";
+import { IMember, IUIMethod } from "../../ui5class/AbstractUIClass";
+import { ICommentPositions, IXMLFile } from "../filereader/FileReader";
 
 export interface ITag {
 	text: string;

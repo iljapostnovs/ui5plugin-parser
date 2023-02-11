@@ -1,13 +1,21 @@
 import { ClassDeclaration, ObjectLiteralExpression, Project, SourceFile, TypeChecker } from "ts-morph";
 import * as ts from "typescript";
-import { UI5TSParser } from "../../../UI5TSParser";
-import { IFragment, IView } from "../../utils/FileReader";
-import { TextDocument } from "../abstraction/TextDocument";
-import { AbstractUIClass, IUIField, IUIMethod, IUIEvent, IUIAggregation, IUIAssociation, IUIProperty } from "../ui5class/AbstractUIClass";
+import { UI5TSParser } from "../../../parser/UI5TSParser";
+import {
+	AbstractUIClass,
+	IUIAggregation,
+	IUIAssociation,
+	IUIEvent,
+	IUIField,
+	IUIMethod,
+	IUIProperty
+} from "../ui5class/AbstractUIClass";
 import { CustomTSClass } from "../ui5class/CustomTSClass";
 import { CustomTSObject } from "../ui5class/CustomTSObject";
 import { EmptyUIClass } from "../ui5class/EmptyUIClass";
 import { StandardUIClass } from "../ui5class/StandardUIClass";
+import { IFragment, IView } from "../util/filereader/FileReader";
+import { TextDocument } from "../util/textdocument/TextDocument";
 import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./IUIClassFactory";
 
 export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSObject> {

@@ -1,6 +1,6 @@
-import { IUI5Parser } from "../../IUI5Parser";
-import { FileReader } from "../utils/FileReader";
-import { URLBuilder } from "../utils/URLBuilder";
+import { IUI5Parser } from "../../parser/IUI5Parser";
+import { URLBuilder } from "../http/URLBuilder";
+import { FileReader } from "../parsing/util/filereader/FileReader";
 import { SAPNode } from "./SAPNode";
 
 export class SAPNodeDAO {
@@ -44,7 +44,6 @@ export class SAPNodeDAO {
 			});
 		}
 
-
 		return children;
 	}
 
@@ -78,7 +77,6 @@ export class SAPNodeDAO {
 					const moduleNode = this.findNode(moduleName);
 					const nodeMetadata = node.getMetadata().getRawMetadata();
 					if (moduleNode && nodeMetadata) {
-
 						const rawMetadata = moduleNode.getMetadata().getRawMetadata();
 						if (!rawMetadata.properties) {
 							rawMetadata.properties = [];
@@ -88,7 +86,7 @@ export class SAPNodeDAO {
 							visibility: nodeMetadata.visibility,
 							description: nodeMetadata.description,
 							type: node.getName()
-						}
+						};
 						rawMetadata.properties.push(property);
 					}
 				}

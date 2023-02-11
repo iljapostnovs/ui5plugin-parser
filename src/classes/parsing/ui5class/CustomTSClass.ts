@@ -9,7 +9,7 @@ import {
 	TypeChecker
 } from "ts-morph";
 import * as ts from "typescript";
-import { UI5TSParser } from "../../../UI5TSParser";
+import { UI5TSParser } from "../../../parser/UI5TSParser";
 import {
 	AbstractCustomClass,
 	ICustomClassField,

@@ -1,10 +1,10 @@
-import { IUI5Parser } from "../../../IUI5Parser";
-import { IXMLFile } from "../../utils/FileReader";
-import { TextDocument } from "../abstraction/TextDocument";
+import { IUI5Parser } from "../../../parser/IUI5Parser";
 import { IFieldsAndMethods } from "../factory/IUIClassFactory";
 import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
 import { IUIField, IUIMethod } from "../ui5class/AbstractUIClass";
 import { CustomUIClass, ICustomClassUIField, ICustomClassUIMethod } from "../ui5class/CustomUIClass";
+import { IXMLFile } from "../util/filereader/FileReader";
+import { TextDocument } from "../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "./ISyntaxAnalyser";
 import { FieldPropertyMethodGetterStrategy } from "./strategies/abstraction/FieldPropertyMethodGetterStrategy";
 import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./strategies/FieldsAndMethodForPositionBeforeCurrentStrategy";

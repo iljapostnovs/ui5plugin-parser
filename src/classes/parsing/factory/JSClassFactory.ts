@@ -1,11 +1,19 @@
-import { UI5JSParser } from "../../../UI5JSParser";
-import { IFragment, IView } from "../../utils/FileReader";
-import { TextDocument } from "../abstraction/TextDocument";
+import { UI5JSParser } from "../../../parser/UI5JSParser";
 import { ISyntaxAnalyser } from "../jsparser/ISyntaxAnalyser";
-import { AbstractUIClass, IUIField, IUIMethod, IUIEvent, IUIAggregation, IUIAssociation, IUIProperty } from "../ui5class/AbstractUIClass";
+import {
+	AbstractUIClass,
+	IUIAggregation,
+	IUIAssociation,
+	IUIEvent,
+	IUIField,
+	IUIMethod,
+	IUIProperty
+} from "../ui5class/AbstractUIClass";
 import { CustomUIClass } from "../ui5class/CustomUIClass";
 import { JSClass } from "../ui5class/JSClass";
 import { StandardUIClass } from "../ui5class/StandardUIClass";
+import { IFragment, IView } from "../util/filereader/FileReader";
+import { TextDocument } from "../util/textdocument/TextDocument";
 import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./IUIClassFactory";
 
 export class UIClassFactory implements IUIClassFactory<CustomUIClass> {

@@ -1,5 +1,3 @@
-import { IFragment, IView } from "../../utils/FileReader";
-import { TextDocument } from "../abstraction/TextDocument";
 import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
 import {
 	AbstractUIClass,
@@ -10,6 +8,8 @@ import {
 	IUIMethod,
 	IUIProperty
 } from "../ui5class/AbstractUIClass";
+import { IFragment, IView } from "../util/filereader/FileReader";
+import { TextDocument } from "../util/textdocument/TextDocument";
 
 export interface IUIClassFactory<CustomClass extends AbstractCustomClass> {
 	isClassAChildOfClassB(classA: string, classB: string): boolean;

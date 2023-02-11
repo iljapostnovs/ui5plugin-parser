@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../IUI5Parser";
+import { IUI5Parser } from "../../parser/IUI5Parser";
 import { SAPNode } from "./SAPNode";
 import { UI5Metadata } from "./UI5Metadata";
 import { UI5MetadataPreloader } from "./UI5MetadataPreloader";
@@ -20,8 +20,10 @@ export class UI5MetadataDAO {
 	}
 
 	private _findNodeMetadata(node: SAPNode, libMetadata: any) {
-		return libMetadata?.symbols ? libMetadata.symbols.find(
-			(metadata: any) => metadata.name.replace("module:", "").replace(/\//g, ".") === node.getName()
-		) : {};
+		return libMetadata?.symbols
+			? libMetadata.symbols.find(
+					(metadata: any) => metadata.name.replace("module:", "").replace(/\//g, ".") === node.getName()
+			)
+			: {};
 	}
 }

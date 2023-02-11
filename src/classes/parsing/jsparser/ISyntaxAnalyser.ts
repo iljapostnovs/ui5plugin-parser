@@ -1,7 +1,7 @@
-import { TextDocument } from "../abstraction/TextDocument";
 import { IFieldsAndMethods } from "../factory/IUIClassFactory";
-import { IUIEventParam, IUIMethod, IUIField } from "../ui5class/AbstractUIClass";
+import { IUIEventParam, IUIField, IUIMethod } from "../ui5class/AbstractUIClass";
 import { CustomUIClass } from "../ui5class/CustomUIClass";
+import { TextDocument } from "../util/textdocument/TextDocument";
 
 export interface ISyntaxAnalyser {
 	getFieldsAndMethodsOfTheCurrentVariable(document: TextDocument, position: number): IFieldsAndMethods | undefined;

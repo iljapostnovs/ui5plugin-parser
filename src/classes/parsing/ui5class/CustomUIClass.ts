@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import * as commentParser from "comment-parser";
 import * as path from "path";
-import { UI5JSParser } from "../../../UI5JSParser";
+import { UI5JSParser } from "../../../parser/UI5JSParser";
 import { IAcornLocation, IAcornPosition } from "../jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "../jsparser/ISyntaxAnalyser";
 import {

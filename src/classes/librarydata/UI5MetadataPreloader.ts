@@ -1,15 +1,14 @@
-import { IUI5Parser } from "../../IUI5Parser";
-import { FileReader } from "../utils/FileReader";
-import { URLBuilder } from "../utils/URLBuilder";
+import { IUI5Parser } from "../../parser/IUI5Parser";
+import { URLBuilder } from "../http/URLBuilder";
+import { FileReader } from "../parsing/util/filereader/FileReader";
 import { SAPNode } from "./SAPNode";
-
 
 export class UI5MetadataPreloader {
 	private readonly _libNames: Record<string, any> = {};
 
 	namespaceDesignTimes: Record<string, any> = {};
 	private _resolveLibPreload!: (value: any) => void;
-	public libsPreloaded = new Promise((resolve) => {
+	public libsPreloaded = new Promise(resolve => {
 		this._resolveLibPreload = resolve;
 	});
 	private readonly parser: IUI5Parser;
@@ -57,7 +56,10 @@ export class UI5MetadataPreloader {
 				}
 			} else {
 				setTimeout(async () => {
-					const readPath: string = new URLBuilder(this.parser.configHandler, this.parser.fileReader).getDesignTimeUrlForLib(lib);
+					const readPath: string = new URLBuilder(
+						this.parser.configHandler,
+						this.parser.fileReader
+					).getDesignTimeUrlForLib(lib);
 					this.namespaceDesignTimes[lib] = this.parser.httpHandler.get(readPath);
 					try {
 						this.namespaceDesignTimes[lib] = await this.namespaceDesignTimes[lib];

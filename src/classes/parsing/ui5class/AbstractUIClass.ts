@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../../IUI5Parser";
+import { IUI5Parser } from "../../../parser/IUI5Parser";
 
 export interface IUIMethodParam {
 	name: string;
@@ -91,7 +91,6 @@ export abstract class AbstractUIClass implements IAbstract {
 	getMembers(): IMember[] {
 		return [...this.methods, ...this.fields];
 	}
-
 
 	protected generateTypeValues(type: string) {
 		let typeValues: ITypeValue[] = [];

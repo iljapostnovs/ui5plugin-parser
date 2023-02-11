@@ -1,7 +1,7 @@
 import { IParserConfigHandler } from "../config/IParserConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
 import { AbstractUIClass } from "../parsing/ui5class/AbstractUIClass";
-import { IFileReader } from "./IFileReader";
+import { IFileReader } from "../parsing/util/filereader/IFileReader";
 
 export class URLBuilder {
 	private readonly _UI5Version: string;

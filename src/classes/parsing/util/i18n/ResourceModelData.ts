@@ -1,6 +1,6 @@
-import { IUI5Parser } from "../../IUI5Parser";
-import { TextDocument } from "./abstraction/TextDocument";
-import { AbstractCustomClass } from "./ui5class/AbstractCustomClass";
+import { IUI5Parser } from "../../../../parser/IUI5Parser";
+import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
+import { TextDocument } from "../textdocument/TextDocument";
 
 export interface IInternalizationText {
 	text: string;

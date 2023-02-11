@@ -1,6 +1,6 @@
-import { TextDocument } from "../../abstraction/TextDocument";
 import { IFieldsAndMethods } from "../../factory/IUIClassFactory";
 import { CustomUIClass } from "../../ui5class/CustomUIClass";
+import { TextDocument } from "../../util/textdocument/TextDocument";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
 export class ParentMethodStrategy extends FieldPropertyMethodGetterStrategy {
 	getFieldsAndMethods(document: TextDocument, position: number) {

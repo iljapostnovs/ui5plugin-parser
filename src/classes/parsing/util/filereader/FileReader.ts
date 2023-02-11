@@ -1,32 +1,32 @@
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
-import { UI5TSParser } from "../../UI5TSParser";
-import { IParserConfigHandler } from "../config/IParserConfigHandler";
-import { TextDocument } from "../parsing/abstraction/TextDocument";
-import { WorkspaceFolder } from "../parsing/abstraction/WorkspaceFolder";
-import { IUIClassFactory } from "../parsing/factory/IUIClassFactory";
-import { CustomTSClass } from "../parsing/ui5class/CustomTSClass";
-import { CustomTSObject } from "../parsing/ui5class/CustomTSObject";
-import { IFragment, IIdClassMap, IManifestPaths, IUIManifest, IView, IViews, IXMLFile } from "./FileReader";
+import { UI5JSParser } from "../../../../parser/UI5JSParser";
+import { IParserConfigHandler } from "../../../config/IParserConfigHandler";
+import { ICacheable } from "../../abstraction/ICacheable";
+import { IUIClassFactory } from "../../factory/IUIClassFactory";
+import { CustomUIClass } from "../../ui5class/CustomUIClass";
+import { TextDocument } from "../textdocument/TextDocument";
+import { WorkspaceFolder } from "../textdocument/WorkspaceFolder";
+import { ITag } from "../xml/XMLParser";
 import { IFileReader } from "./IFileReader";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
-export class TSFileReader implements IFileReader {
+export class FileReader implements IFileReader {
 	private _manifests: IUIManifest[] = [];
 	private readonly _viewCache: IViews = {};
 	private readonly _fragmentCache: Fragments = {};
 	private readonly _UI5Version: string;
 	public globalStoragePath: string | undefined;
 	private readonly _configHandler: IParserConfigHandler;
-	private readonly _classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>;
-	private readonly _parser: UI5TSParser;
+	private readonly _classFactory: IUIClassFactory<CustomUIClass>;
+	private readonly _parser: UI5JSParser;
 
 	constructor(
 		configHandler: IParserConfigHandler,
-		classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>,
-		parser: UI5TSParser
+		classFactory: IUIClassFactory<CustomUIClass>,
+		parser: UI5JSParser
 	) {
 		this._configHandler = configHandler;
 		this._UI5Version = configHandler.getUI5Version();
@@ -157,11 +157,11 @@ export class TSFileReader implements IFileReader {
 		isFolder = false
 	) {
 		let FSPath;
-		let extension = ".ts";
+		let extension = ".js";
 		const manifest = this.getManifestForClass(className);
 		if (manifest) {
 			if (isController) {
-				extension = ".controller.ts";
+				extension = ".controller.js";
 			} else if (isFragment) {
 				extension = ".fragment.xml";
 			} else if (isView) {
@@ -240,9 +240,6 @@ export class TSFileReader implements IFileReader {
 	private _readFilesInWorkspace(wsFolder: WorkspaceFolder, path: string) {
 		const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
 		const exclusions: string[] = this._configHandler.getExcludeFolderPatterns();
-		exclusions.push("**/*.d.ts");
-		exclusions.push("**/src-gen/**");
-		exclusions.push("**/webapp/**");
 		const exclusionPaths = exclusions.map(excludeString => {
 			return `${wsFolderFSPath}/${excludeString}`;
 		});
@@ -269,7 +266,7 @@ export class TSFileReader implements IFileReader {
 
 		if (!className) {
 			const UIClass = this._classFactory.getUIClass(controllerClassName);
-			if (UIClass instanceof CustomTSClass) {
+			if (UIClass instanceof CustomUIClass) {
 				const fragmentsAndViews = this._classFactory.getViewsAndFragmentsOfControlHierarchically(UIClass);
 				const fragmentAndViewArray = [...fragmentsAndViews.views, ...fragmentsAndViews.fragments];
 				fragmentAndViewArray.find(view => {
@@ -313,7 +310,7 @@ export class TSFileReader implements IFileReader {
 		let fragments: IFragment[] = [];
 		const UIClass = this._classFactory.getUIClass(className);
 
-		if (UIClass instanceof CustomTSClass) {
+		if (UIClass instanceof CustomUIClass) {
 			fragments = this.getAllFragments().filter(fragment => {
 				return UIClass.classText.indexOf(`"${fragment.name}"`) > -1;
 			});
@@ -367,7 +364,34 @@ export class TSFileReader implements IFileReader {
 	readAllFiles(wsFolders: WorkspaceFolder[]) {
 		this._readAllFragmentsAndSaveInCache(wsFolders);
 		this._readAllViewsAndSaveInCache(wsFolders);
+		this._readAllJSFiles(wsFolders);
 		this._parser.resourceModelData.readTexts();
+	}
+
+	private _readAllJSFiles(wsFolders: WorkspaceFolder[]) {
+		for (const wsFolder of wsFolders) {
+			const classPaths = this._readFilesInWorkspace(wsFolder, "**/*.js");
+			const classNames = classPaths.map(path => this.getClassNameFromPath(path));
+			classNames.forEach(className => {
+				if (className) {
+					try {
+						this._classFactory.getUIClass(className);
+					} catch (error) {
+						console.error(`Error parsing ${className}: ${(<Error>error).message}`);
+					}
+				}
+			});
+
+			classNames.forEach(className => {
+				if (className) {
+					const UIClass = this._classFactory.getUIClass(className);
+					if (UIClass instanceof CustomUIClass) {
+						UIClass.relatedViewsAndFragments = undefined;
+						this._classFactory.enrichTypesInCustomClass(UIClass);
+					}
+				}
+			});
+		}
 	}
 
 	private _readAllViewsAndSaveInCache(wsFolders: WorkspaceFolder[]) {
@@ -399,7 +423,7 @@ export class TSFileReader implements IFileReader {
 
 	public getAllJSClassNamesFromProject(wsFolder: WorkspaceFolder) {
 		let classNames: string[] = [];
-		const classPaths = this._readFilesInWorkspace(wsFolder, "**/*.ts");
+		const classPaths = this._readFilesInWorkspace(wsFolder, "**/*.js");
 		classNames = classPaths.reduce((accumulator: string[], viewPath) => {
 			const path = this.getClassNameFromPath(viewPath);
 			if (path) {
@@ -418,7 +442,6 @@ export class TSFileReader implements IFileReader {
 
 		return controllerName;
 	}
-
 	getResponsibleClassForXMLDocument(document: TextDocument) {
 		const XMLDocument = this._parser.textDocumentTransformer.toXMLFile(document);
 		if (XMLDocument) {
@@ -527,7 +550,6 @@ export class TSFileReader implements IFileReader {
 	}
 
 	private _getResponsibleClassNameForFragmentFromCustomUIClasses(viewOrFragment: IXMLFile) {
-		// TODO: this
 		const allUIClasses = this._classFactory.getAllCustomUIClasses();
 		const fragmentName = this.getClassNameFromPath(viewOrFragment.fsPath);
 		const responsibleClass = allUIClasses.find(UIClass => {
@@ -583,11 +605,11 @@ export class TSFileReader implements IFileReader {
 		if (currentManifest) {
 			className = fsPath
 				.replace(currentManifest.fsPath, currentManifest.componentName)
-				.replace(/\.view\.xml$/, "")
-				.replace(/\.fragment\.xml$/, "")
-				.replace(/\.xml$/, "")
-				.replace(/\.controller\.ts$/, "")
-				.replace(/\.ts$/, "")
+				.replace(".controller", "")
+				.replace(".view.xml", "")
+				.replace(".fragment.xml", "")
+				.replace(".xml", "")
+				.replace(".js", "")
 				.replace(new RegExp(`${escapedFileSeparator}`, "g"), ".");
 		}
 
@@ -776,8 +798,9 @@ export class TSFileReader implements IFileReader {
 	}
 }
 
-interface Fragments {
-	[key: string]: IFragment;
+export interface FileData {
+	content: string;
+	fsPath: string;
 }
 
 export namespace FileReader {
@@ -786,4 +809,56 @@ export namespace FileReader {
 		APIIndex = "2",
 		Icons = "3"
 	}
+}
+
+export interface IUIManifest {
+	fsPath: string;
+	componentName: string;
+	content: any;
+}
+
+export interface IManifestPaths {
+	fsPath: string;
+}
+
+export interface IViews {
+	[key: string]: IView;
+}
+
+export interface IView extends IXMLFile, IIdClassMap {
+	controllerName: string;
+}
+export interface IFragment extends IXMLFile, IIdClassMap {}
+export interface IXMLFile extends IXMLParserCacheable, IHasFragments, ICacheable {
+	content: string;
+	fsPath: string;
+	name: string;
+}
+export interface IHasFragments {
+	fragments: IFragment[];
+}
+export interface IIdClassMap {
+	idClassMap: {
+		[key: string]: string;
+	};
+}
+interface IPrefixResults {
+	[key: string]: any[];
+}
+export interface ICommentPositions {
+	[key: number]: boolean;
+}
+interface IXMLParserData {
+	strings: boolean[];
+	tags: ITag[];
+	prefixResults: IPrefixResults;
+	areAllStringsClosed: boolean;
+	comments?: ICommentPositions;
+}
+export interface IXMLParserCacheable {
+	XMLParserData?: IXMLParserData;
+}
+
+interface Fragments {
+	[key: string]: IFragment;
 }

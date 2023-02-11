@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../../IUI5Parser";
+import { IUI5Parser } from "../../../parser/IUI5Parser";
 import { MainLooper } from "../jsparser/MainLooper";
 import { AbstractCustomClass } from "./AbstractCustomClass";
 import {
