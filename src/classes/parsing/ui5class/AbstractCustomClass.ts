@@ -1,7 +1,13 @@
-import { ICacheable } from "../../abstraction/ICacheable";
-import { IViewsAndFragments } from "../../interfaces/IUIClassFactory";
+import { ICacheable } from "../abstraction/ICacheable";
+import { IViewsAndFragments } from "../factory/IUIClassFactory";
 import {
-	AbstractUIClass, IMember, IUIAggregation, IUIAssociation, IUIEvent, IUIField, IUIMethod,
+	AbstractUIClass,
+	IMember,
+	IUIAggregation,
+	IUIAssociation,
+	IUIEvent,
+	IUIField,
+	IUIMethod,
 	IUIProperty
 } from "./AbstractUIClass";
 

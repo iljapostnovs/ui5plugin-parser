@@ -1,11 +1,11 @@
 import { AbstractUI5Parser } from "./AbstractUI5Parser";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
-import { TextDocument } from "./classes/UI5Classes/abstraction/TextDocument";
-import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
-import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
-import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
-import { ISyntaxAnalyser } from "./classes/UI5Classes/JSParser/ISyntaxAnalyser";
+import { TextDocument } from "./classes/parsing/abstraction/TextDocument";
+import { WorkspaceFolder } from "./classes/parsing/abstraction/WorkspaceFolder";
+import { IUIClassFactory } from "./classes/parsing/factory/IUIClassFactory";
+import { AcornSyntaxAnalyzer } from "./classes/parsing/jsparser/AcornSyntaxAnalyzer";
+import { ISyntaxAnalyser } from "./classes/parsing/jsparser/ISyntaxAnalyser";
 import { IFileReader } from "./classes/utils/IFileReader";
 import { XMLParser } from "./classes/utils/XMLParser";
 import { AnyCustomTSClass, ICustomTSField, ICustomTSMethod } from "./Types";
@@ -29,4 +29,3 @@ export {
 	ICustomTSMethod,
 	AnyCustomTSClass
 };
-

@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../IUI5Parser";
-import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
-import { AbstractCustomClass } from "../UI5Classes/UI5Parser/UIClass/AbstractCustomClass";
+import { TextDocument } from "../parsing/abstraction/TextDocument";
+import { AbstractCustomClass } from "../parsing/ui5class/AbstractCustomClass";
 
 export class TextDocumentTransformer {
 	private readonly _parser: IUI5Parser;
@@ -19,15 +19,9 @@ export class TextDocumentTransformer {
 			}
 			if (XMLFile && (XMLFile.content.length !== document.getText().length || forceRefresh)) {
 				if (xmlType === "view") {
-					this._parser.fileReader.setNewViewContentToCache(
-						document.getText(),
-						document.fileName
-					);
+					this._parser.fileReader.setNewViewContentToCache(document.getText(), document.fileName);
 				} else if (xmlType === "fragment") {
-					this._parser.fileReader.setNewFragmentContentToCache(
-						document.getText(),
-						document.fileName
-					);
+					this._parser.fileReader.setNewFragmentContentToCache(document.getText(), document.fileName);
 				}
 			}
 

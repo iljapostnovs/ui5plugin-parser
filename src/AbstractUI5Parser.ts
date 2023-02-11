@@ -5,11 +5,11 @@ import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
 import { SAPNodeDAO } from "./classes/librarydata/SAPNodeDAO";
 import { UI5MetadataDAO } from "./classes/librarydata/UI5MetadataDAO";
-import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
-import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
-import { ResourceModelData } from "./classes/UI5Classes/ResourceModelData";
-import { SAPIcons } from "./classes/UI5Classes/SAPIcons";
-import { AbstractCustomClass } from "./classes/UI5Classes/UI5Parser/UIClass/AbstractCustomClass";
+import { WorkspaceFolder } from "./classes/parsing/abstraction/WorkspaceFolder";
+import { IUIClassFactory } from "./classes/parsing/factory/IUIClassFactory";
+import { ResourceModelData } from "./classes/parsing/ResourceModelData";
+import { SAPIcons } from "./classes/parsing/SAPIcons";
+import { AbstractCustomClass } from "./classes/parsing/ui5class/AbstractCustomClass";
 import { HTTPHandler } from "./classes/utils/HTTPHandler";
 import { IFileReader } from "./classes/utils/IFileReader";
 import { ReusableMethods } from "./classes/utils/ReusableMethods";
@@ -17,7 +17,6 @@ import { TextDocumentTransformer } from "./classes/utils/TextDocumentTransformer
 import { URLBuilder } from "./classes/utils/URLBuilder";
 import { XMLParser } from "./classes/utils/XMLParser";
 import { IUI5Parser } from "./IUI5Parser";
-
 
 export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass> implements IUI5Parser<CustomClass> {
 	abstract configHandler: IParserConfigHandler;
@@ -32,7 +31,6 @@ export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass>
 	abstract textDocumentTransformer: TextDocumentTransformer;
 	abstract reusableMethods: ReusableMethods;
 	abstract xmlParser: XMLParser;
-
 
 	public async initialize(
 		wsFolders = [new WorkspaceFolder(process.cwd())],
@@ -61,7 +59,10 @@ export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass>
 		});
 	}
 
-	static getIsTypescriptProject(workspaceFolders: WorkspaceFolder[], configHandler: IParserConfigHandler = new PackageParserConfigHandler()) {
+	static getIsTypescriptProject(
+		workspaceFolders: WorkspaceFolder[],
+		configHandler: IParserConfigHandler = new PackageParserConfigHandler()
+	) {
 		const escapedFileSeparator = "\\" + path.sep;
 
 		const tsFiles = workspaceFolders?.flatMap(wsFolder => {

@@ -3,11 +3,11 @@ import * as glob from "glob";
 import * as path from "path";
 import { UI5JSParser } from "../../UI5JSParser";
 import { IParserConfigHandler } from "../config/IParserConfigHandler";
-import { ICacheable } from "../UI5Classes/abstraction/ICacheable";
-import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
-import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
-import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
-import { CustomUIClass } from "../UI5Classes/UI5Parser/UIClass/CustomUIClass";
+import { ICacheable } from "../parsing/abstraction/ICacheable";
+import { TextDocument } from "../parsing/abstraction/TextDocument";
+import { WorkspaceFolder } from "../parsing/abstraction/WorkspaceFolder";
+import { IUIClassFactory } from "../parsing/factory/IUIClassFactory";
+import { CustomUIClass } from "../parsing/ui5class/CustomUIClass";
 import { IFileReader } from "./IFileReader";
 import { ITag } from "./XMLParser";
 const fileSeparator = path.sep;
@@ -23,7 +23,11 @@ export class FileReader implements IFileReader {
 	private readonly _classFactory: IUIClassFactory<CustomUIClass>;
 	private readonly _parser: UI5JSParser;
 
-	constructor(configHandler: IParserConfigHandler, classFactory: IUIClassFactory<CustomUIClass>, parser: UI5JSParser) {
+	constructor(
+		configHandler: IParserConfigHandler,
+		classFactory: IUIClassFactory<CustomUIClass>,
+		parser: UI5JSParser
+	) {
 		this._configHandler = configHandler;
 		this._UI5Version = configHandler.getUI5Version();
 		this._classFactory = classFactory;

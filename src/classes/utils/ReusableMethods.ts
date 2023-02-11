@@ -1,10 +1,10 @@
-import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
-import { CustomUIClass, ICustomClassUIMethod } from "../UI5Classes/UI5Parser/UIClass/CustomUIClass";
+import { TextDocument } from "../parsing/abstraction/TextDocument";
+import { CustomUIClass, ICustomClassUIMethod } from "../parsing/ui5class/CustomUIClass";
 import { TextDocumentTransformer } from "./TextDocumentTransformer";
 
 export class ReusableMethods {
 	private readonly _documentTransformer: TextDocumentTransformer;
-	constructor (documentTransformer: TextDocumentTransformer) {
+	constructor(documentTransformer: TextDocumentTransformer) {
 		this._documentTransformer = documentTransformer;
 	}
 
@@ -31,9 +31,13 @@ export class ReusableMethods {
 	}
 
 	getIfPositionIsInTheLastOrAfterLastMember(UIClass: CustomUIClass, position: number) {
-		const currentMethod = UIClass.methods.find(method => method.node?.start < position && method.node?.end > position);
+		const currentMethod = UIClass.methods.find(
+			method => method.node?.start < position && method.node?.end > position
+		);
 		const positionIsInMethod = !!currentMethod;
-		const positionIsAfterLastMethod = positionIsInMethod ? false : this._getIfPositionIsAfterLastMember(UIClass, position);
+		const positionIsAfterLastMethod = positionIsInMethod
+			? false
+			: this._getIfPositionIsAfterLastMember(UIClass, position);
 
 		return positionIsInMethod || positionIsAfterLastMethod;
 	}
@@ -77,7 +81,6 @@ export class ReusableMethods {
 		const positionIsInPropertyKey = !!UIClass.acornClassBody.properties?.find((node: any) => {
 			return node.key?.start <= position && node.key?.end >= position;
 		});
-
 
 		bPositionIsInPropertyName = positionIsBetweenProperties || positionIsInPropertyKey;
 

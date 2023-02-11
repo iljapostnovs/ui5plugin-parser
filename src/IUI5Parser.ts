@@ -1,11 +1,11 @@
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { SAPNodeDAO } from "./classes/librarydata/SAPNodeDAO";
 import { UI5MetadataDAO } from "./classes/librarydata/UI5MetadataDAO";
-import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
-import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
-import { ResourceModelData } from "./classes/UI5Classes/ResourceModelData";
-import { SAPIcons } from "./classes/UI5Classes/SAPIcons";
-import { AbstractCustomClass } from "./classes/UI5Classes/UI5Parser/UIClass/AbstractCustomClass";
+import { WorkspaceFolder } from "./classes/parsing/abstraction/WorkspaceFolder";
+import { IUIClassFactory } from "./classes/parsing/factory/IUIClassFactory";
+import { ResourceModelData } from "./classes/parsing/ResourceModelData";
+import { SAPIcons } from "./classes/parsing/SAPIcons";
+import { AbstractCustomClass } from "./classes/parsing/ui5class/AbstractCustomClass";
 import { HTTPHandler } from "./classes/utils/HTTPHandler";
 import { IFileReader } from "./classes/utils/IFileReader";
 import { ReusableMethods } from "./classes/utils/ReusableMethods";

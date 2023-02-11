@@ -3,11 +3,11 @@ import * as glob from "glob";
 import * as path from "path";
 import { UI5TSParser } from "../../UI5TSParser";
 import { IParserConfigHandler } from "../config/IParserConfigHandler";
-import { TextDocument } from "../UI5Classes/abstraction/TextDocument";
-import { WorkspaceFolder } from "../UI5Classes/abstraction/WorkspaceFolder";
-import { IUIClassFactory } from "../UI5Classes/interfaces/IUIClassFactory";
-import { CustomTSClass } from "../UI5Classes/UI5Parser/UIClass/CustomTSClass";
-import { CustomTSObject } from "../UI5Classes/UI5Parser/UIClass/CustomTSObject";
+import { TextDocument } from "../parsing/abstraction/TextDocument";
+import { WorkspaceFolder } from "../parsing/abstraction/WorkspaceFolder";
+import { IUIClassFactory } from "../parsing/factory/IUIClassFactory";
+import { CustomTSClass } from "../parsing/ui5class/CustomTSClass";
+import { CustomTSObject } from "../parsing/ui5class/CustomTSObject";
 import { IFragment, IIdClassMap, IManifestPaths, IUIManifest, IView, IViews, IXMLFile } from "./FileReader";
 import { IFileReader } from "./IFileReader";
 const fileSeparator = path.sep;
@@ -23,7 +23,11 @@ export class TSFileReader implements IFileReader {
 	private readonly _classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>;
 	private readonly _parser: UI5TSParser;
 
-	constructor(configHandler: IParserConfigHandler, classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>, parser: UI5TSParser) {
+	constructor(
+		configHandler: IParserConfigHandler,
+		classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>,
+		parser: UI5TSParser
+	) {
 		this._configHandler = configHandler;
 		this._UI5Version = configHandler.getUI5Version();
 		this._classFactory = classFactory;

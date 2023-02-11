@@ -1,5 +1,5 @@
 import { IUI5Parser } from "../../IUI5Parser";
-import { IMember, IUIMethod } from "../UI5Classes/UI5Parser/UIClass/AbstractUIClass";
+import { IMember, IUIMethod } from "../parsing/ui5class/AbstractUIClass";
 import { ICommentPositions, IXMLFile } from "./FileReader";
 
 export interface ITag {
@@ -69,16 +69,18 @@ export class XMLParser {
 								if (functionCallClassName) {
 									const handlerField = filteredResults[0];
 									const responsibleClassName =
-									this._parser.fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
+										this._parser.fileReader.getResponsibleClassNameForViewOrFragment(
+											viewOrFragment
+										);
 									if (responsibleClassName) {
-										const fields =
-											this._parser.classFactory.getClassFields(
-												responsibleClassName
-											);
+										const fields = this._parser.classFactory.getClassFields(responsibleClassName);
 										const field = fields.find(field => field.name === handlerField);
 										if (
 											field?.type &&
-											!this._parser.classFactory.isClassAChildOfClassB(field.type, functionCallClassName)
+											!this._parser.classFactory.isClassAChildOfClassB(
+												field.type,
+												functionCallClassName
+											)
 										) {
 											return false;
 										}
@@ -90,10 +92,7 @@ export class XMLParser {
 								); //removes "'"
 							} else if (filteredResults && filteredResults.length > 2) {
 								//maybe static classes e.g. com.test.formatter.test
-								const manifest =
-									this._parser.fileReader.getManifestForClass(
-										currentEventHandlerName
-									);
+								const manifest = this._parser.fileReader.getManifestForClass(currentEventHandlerName);
 								if (manifest) {
 									const parts = currentEventHandlerName.split(".");
 									const staticEventHandlerName = parts.pop() || "";
@@ -115,21 +114,17 @@ export class XMLParser {
 								);
 								if (results) {
 									const responsibleClassName =
-									this._parser.fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
+										this._parser.fileReader.getResponsibleClassNameForViewOrFragment(
+											viewOrFragment
+										);
 									if (functionCallClassName && responsibleClassName) {
 										let handlerField = results[0];
 										if (handlerField.startsWith(".")) {
 											handlerField = handlerField.substring(1, handlerField.length);
 										}
 										const memberName = handlerField.substring(0, handlerField.length - 1);
-										const fields =
-											this._parser.classFactory.getClassFields(
-												responsibleClassName
-											);
-										const methods =
-											this._parser.classFactory.getClassMethods(
-												responsibleClassName
-											);
+										const fields = this._parser.classFactory.getClassFields(responsibleClassName);
+										const methods = this._parser.classFactory.getClassMethods(responsibleClassName);
 										const members: IMember[] = [...fields, ...methods];
 										const member = members.find(member => member.name === memberName);
 										const classFactory = this._parser.classFactory;
@@ -149,9 +144,7 @@ export class XMLParser {
 									}
 								} else {
 									const manifest =
-										this._parser.fileReader.getManifestForClass(
-											currentEventHandlerName
-										);
+										this._parser.fileReader.getManifestForClass(currentEventHandlerName);
 									const parts = currentEventHandlerName.split(".");
 									if (manifest) {
 										currentEventHandlerName = parts.pop() || "";
@@ -187,7 +180,7 @@ export class XMLParser {
 							}
 						} else if (functionCallClassName && currentEventHandlerName === eventHandlerName) {
 							const responsibleClassName =
-							this._parser.fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
+								this._parser.fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
 							if (responsibleClassName !== functionCallClassName) {
 								return false;
 							}
@@ -384,11 +377,11 @@ export class XMLParser {
 
 		const XMLText = XMLFile.content;
 		while (
-			i > 0 &&
-			(XMLText[i] !== "<" ||
-				!this.getIfPositionIsNotInComments(XMLFile, i) ||
-				this.getIfPositionIsInString(XMLFile, i)) ||
-                XMLText.substring(i, i + 2).toLowerCase() === "<!"
+			(i > 0 &&
+				(XMLText[i] !== "<" ||
+					!this.getIfPositionIsNotInComments(XMLFile, i) ||
+					this.getIfPositionIsInString(XMLFile, i))) ||
+			XMLText.substring(i, i + 2).toLowerCase() === "<!"
 		) {
 			i--;
 		}
@@ -462,7 +455,7 @@ export class XMLParser {
 
 			let i = 0;
 			while (i < position) {
-				if (XMLText[i] === "\"" && this.getIfPositionIsNotInComments(XMLFile, i)) {
+				if (XMLText[i] === '"' && this.getIfPositionIsNotInComments(XMLFile, i)) {
 					quotionMarkCount++;
 				}
 				if (XMLText[i] === "'" && this.getIfPositionIsNotInComments(XMLFile, i)) {
@@ -552,7 +545,7 @@ export class XMLParser {
 
 		if (results.length === 0) {
 			if (!tagPrefix) {
-				regExpBase = "(?<=xmlns\\s?=\\s?\").*?(?=\")";
+				regExpBase = '(?<=xmlns\\s?=\\s?").*?(?=")';
 			} else {
 				regExpBase = `(?<=xmlns(:${tagPrefix})\\s?=\\s?").*?(?=")`;
 			}
@@ -659,7 +652,7 @@ export class XMLParser {
 
 	getPositionBeforeStringBegining(XMLViewText: string, currentPosition: number) {
 		let i = currentPosition - 1;
-		while (XMLViewText[i] !== "\"" && i > 0) {
+		while (XMLViewText[i] !== '"' && i > 0) {
 			i--;
 		}
 		i--;
@@ -767,14 +760,14 @@ export class XMLParser {
 				this.getIfPositionIsNotInComments(XMLFile, i + 1);
 			if (thisIsTagEnd) {
 				const indexOfTagBegining = this._getTagBeginingIndex(XMLFile, i);
-                const tagText = XMLText.substring(indexOfTagBegining, i + 1);
-                if (!tagText.startsWith("<!") || tagText.startsWith("<!--")) {
-                    tags.push({
-                        text: tagText,
-                        positionBegin: indexOfTagBegining,
-                        positionEnd: i
-                    });
-                }
+				const tagText = XMLText.substring(indexOfTagBegining, i + 1);
+				if (!tagText.startsWith("<!") || tagText.startsWith("<!--")) {
+					tags.push({
+						text: tagText,
+						positionBegin: indexOfTagBegining,
+						positionEnd: i
+					});
+				}
 			}
 			i++;
 		}
@@ -806,19 +799,27 @@ export class XMLParser {
 		const positionMapping: boolean[] = [];
 		let quotionMarkCount = 0;
 		let secondTypeQuotionMarkCount = 0;
-        let stringOpener: string | null = null;
+		let stringOpener: string | null = null;
 
 		let i = 0;
 		while (i < document.content.length) {
 			const isInString = quotionMarkCount % 2 === 1 || secondTypeQuotionMarkCount % 2 === 1;
 			positionMapping.push(isInString);
-			if (document.content[i] === "\"" && this.getIfPositionIsNotInComments(document, i) && (!isInString || stringOpener === "\"")) {
+			if (
+				document.content[i] === '"' &&
+				this.getIfPositionIsNotInComments(document, i) &&
+				(!isInString || stringOpener === '"')
+			) {
 				quotionMarkCount++;
-                stringOpener = "\"";
+				stringOpener = '"';
 			}
-			if (document.content[i] === "'" && this.getIfPositionIsNotInComments(document, i) && (!isInString || stringOpener === "'")) {
+			if (
+				document.content[i] === "'" &&
+				this.getIfPositionIsNotInComments(document, i) &&
+				(!isInString || stringOpener === "'")
+			) {
 				secondTypeQuotionMarkCount++;
-                stringOpener = "'";
+				stringOpener = "'";
 			}
 			i++;
 		}

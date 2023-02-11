@@ -29,6 +29,7 @@
 		"@typescript-eslint/dot-notation": ["error"],
 		"func-call-spacing": "off",
 		"@typescript-eslint/func-call-spacing": ["error"],
+		"@typescript-eslint/quotes": "off",
 		"indent": "off",
 		"no-empty-function": "off",
 		"@typescript-eslint/no-empty-function": ["error"],
@@ -40,7 +41,6 @@
 		"@typescript-eslint/no-unused-vars": ["error"],
 		"object-curly-spacing": "off",
 		"@typescript-eslint/object-curly-spacing": ["error", "always"],
-		"quotes": "off",
-		"@typescript-eslint/quotes": ["error", "double"]
+		"quotes": "off"
 	}
 }

@@ -1,15 +1,14 @@
 import * as path from "path";
 import { Project, SourceFile, ts } from "ts-morph";
+import { AbstractUI5Parser } from "./AbstractUI5Parser";
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
 import { SAPNodeDAO } from "./classes/librarydata/SAPNodeDAO";
 import { UI5MetadataDAO } from "./classes/librarydata/UI5MetadataDAO";
-import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
-import { ResourceModelData } from "./classes/UI5Classes/ResourceModelData";
-import { SAPIcons } from "./classes/UI5Classes/SAPIcons";
-import { TSClassFactory } from "./classes/UI5Classes/TSClassFactory";
-import { CustomTSClass } from "./classes/UI5Classes/UI5Parser/UIClass/CustomTSClass";
-import { CustomTSObject } from "./classes/UI5Classes/UI5Parser/UIClass/CustomTSObject";
+import { WorkspaceFolder } from "./classes/parsing/abstraction/WorkspaceFolder";
+import { TSClassFactory } from "./classes/parsing/factory/TSClassFactory";
+import { ResourceModelData } from "./classes/parsing/ResourceModelData";
+import { SAPIcons } from "./classes/parsing/SAPIcons";
 import { HTTPHandler } from "./classes/utils/HTTPHandler";
 import { IFileReader } from "./classes/utils/IFileReader";
 import { ReusableMethods } from "./classes/utils/ReusableMethods";
@@ -19,7 +18,8 @@ import { URLBuilder } from "./classes/utils/URLBuilder";
 import { XMLParser } from "./classes/utils/XMLParser";
 import { IConstructorParams } from "./IUI5Parser";
 import glob = require("glob");
-import { AbstractUI5Parser } from "./AbstractUI5Parser";
+import { CustomTSClass } from "./classes/parsing/ui5class/CustomTSClass";
+import { CustomTSObject } from "./classes/parsing/ui5class/CustomTSObject";
 
 export interface UI5TSParserConstructor extends IConstructorParams<CustomTSClass | CustomTSObject> {
 	classFactory: TSClassFactory;
