@@ -17,8 +17,8 @@ import { TextDocumentTransformer } from "../classes/parsing/util/textdocument/Te
 import { WorkspaceFolder } from "../classes/parsing/util/textdocument/WorkspaceFolder";
 import { XMLParser } from "../classes/parsing/util/xml/XMLParser";
 import { ReusableMethods } from "../classes/ReusableMethods";
-import { AbstractUI5Parser } from "./AbstractUI5Parser";
-import { IConstructorParams } from "./IUI5Parser";
+import { AbstractUI5Parser } from "./abstraction/AbstractUI5Parser";
+import { IConstructorParams } from "./abstraction/IUI5Parser";
 import glob = require("glob");
 
 export interface UI5TSParserConstructor extends IConstructorParams<CustomTSClass | CustomTSObject> {

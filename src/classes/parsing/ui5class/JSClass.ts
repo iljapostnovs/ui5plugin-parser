@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../../parser/IUI5Parser";
+import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
 import { AbstractUIClass, IUIField, IUIMethod } from "./AbstractUIClass";
 import * as jsClassData from "./jsclassdata/JSClassData.json";
 

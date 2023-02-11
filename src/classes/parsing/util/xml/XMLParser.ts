@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../../../parser/IUI5Parser";
+import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import { IMember, IUIMethod } from "../../ui5class/AbstractUIClass";
 import { ICommentPositions, IXMLFile } from "../filereader/FileReader";
 

@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../../../parser/IUI5Parser";
+import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import { IFieldsAndMethods } from "../../factory/IUIClassFactory";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
 import { CustomUIClass } from "../../ui5class/CustomUIClass";

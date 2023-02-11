@@ -1,21 +1,21 @@
 import glob = require("glob");
 import path = require("path");
 import * as fs from "fs";
-import { IParserConfigHandler } from "../classes/config/IParserConfigHandler";
-import { PackageParserConfigHandler } from "../classes/config/PackageParserConfigHandler";
-import { HTTPHandler } from "../classes/http/HTTPHandler";
-import { URLBuilder } from "../classes/http/URLBuilder";
-import { SAPIcons } from "../classes/librarydata/SAPIcons";
-import { SAPNodeDAO } from "../classes/librarydata/SAPNodeDAO";
-import { UI5MetadataDAO } from "../classes/librarydata/UI5MetadataDAO";
-import { IUIClassFactory } from "../classes/parsing/factory/IUIClassFactory";
-import { AbstractCustomClass } from "../classes/parsing/ui5class/AbstractCustomClass";
-import { IFileReader } from "../classes/parsing/util/filereader/IFileReader";
-import { ResourceModelData } from "../classes/parsing/util/i18n/ResourceModelData";
-import { TextDocumentTransformer } from "../classes/parsing/util/textdocument/TextDocumentTransformer";
-import { WorkspaceFolder } from "../classes/parsing/util/textdocument/WorkspaceFolder";
-import { XMLParser } from "../classes/parsing/util/xml/XMLParser";
-import { ReusableMethods } from "../classes/ReusableMethods";
+import { IParserConfigHandler } from "../../classes/config/IParserConfigHandler";
+import { PackageParserConfigHandler } from "../../classes/config/PackageParserConfigHandler";
+import { HTTPHandler } from "../../classes/http/HTTPHandler";
+import { URLBuilder } from "../../classes/http/URLBuilder";
+import { SAPIcons } from "../../classes/librarydata/SAPIcons";
+import { SAPNodeDAO } from "../../classes/librarydata/SAPNodeDAO";
+import { UI5MetadataDAO } from "../../classes/librarydata/UI5MetadataDAO";
+import { IUIClassFactory } from "../../classes/parsing/factory/IUIClassFactory";
+import { AbstractCustomClass } from "../../classes/parsing/ui5class/AbstractCustomClass";
+import { IFileReader } from "../../classes/parsing/util/filereader/IFileReader";
+import { ResourceModelData } from "../../classes/parsing/util/i18n/ResourceModelData";
+import { TextDocumentTransformer } from "../../classes/parsing/util/textdocument/TextDocumentTransformer";
+import { WorkspaceFolder } from "../../classes/parsing/util/textdocument/WorkspaceFolder";
+import { XMLParser } from "../../classes/parsing/util/xml/XMLParser";
+import { ReusableMethods } from "../../classes/ReusableMethods";
 import { IUI5Parser } from "./IUI5Parser";
 
 export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass> implements IUI5Parser<CustomClass> {

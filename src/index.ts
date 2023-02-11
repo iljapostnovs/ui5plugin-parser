@@ -7,7 +7,7 @@ import { IFileReader } from "./classes/parsing/util/filereader/IFileReader";
 import { TextDocument } from "./classes/parsing/util/textdocument/TextDocument";
 import { WorkspaceFolder } from "./classes/parsing/util/textdocument/WorkspaceFolder";
 import { XMLParser } from "./classes/parsing/util/xml/XMLParser";
-import { AbstractUI5Parser } from "./parser/AbstractUI5Parser";
+import { AbstractUI5Parser } from "./parser/abstraction/AbstractUI5Parser";
 import { UI5JSParser } from "./parser/UI5JSParser";
 import { UI5TSParser } from "./parser/UI5TSParser";
 import { AnyCustomTSClass, ICustomTSField, ICustomTSMethod } from "./Types";

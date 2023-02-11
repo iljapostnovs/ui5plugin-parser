@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../parser/IUI5Parser";
+import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { SAPNode } from "./SAPNode";
 import { UI5Metadata } from "./UI5Metadata";
 import { UI5MetadataPreloader } from "./UI5MetadataPreloader";

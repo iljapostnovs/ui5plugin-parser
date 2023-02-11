@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../../parser/IUI5Parser";
+import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
 
 export interface IUIMethodParam {
 	name: string;

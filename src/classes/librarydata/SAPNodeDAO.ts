@@ -1,4 +1,4 @@
-import { IUI5Parser } from "../../parser/IUI5Parser";
+import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { URLBuilder } from "../http/URLBuilder";
 import { FileReader } from "../parsing/util/filereader/FileReader";
 import { SAPNode } from "./SAPNode";
