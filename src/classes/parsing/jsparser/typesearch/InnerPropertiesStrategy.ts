@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
-import { IFieldsAndMethods } from "../../factory/IClassFactory";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
+import { IFieldsAndMethods } from "../../ui5class/factory/IClassFactory";
 import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "../ISyntaxAnalyser";

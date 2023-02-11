@@ -1,14 +1,14 @@
 import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
-import { IFieldsAndMethods } from "../factory/IClassFactory";
 import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
+import { IFieldsAndMethods } from "../ui5class/factory/IClassFactory";
 import { IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
 import { CustomJSClass, ICustomClassJSField, ICustomClassJSMethod } from "../ui5class/js/CustomJSClass";
 import { IXMLFile } from "../util/filereader/FileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "./ISyntaxAnalyser";
-import { FieldPropertyMethodGetterStrategy } from "./strategies/abstraction/FieldPropertyMethodGetterStrategy";
-import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./strategies/FieldsAndMethodForPositionBeforeCurrentStrategy";
-import { InnerPropertiesStrategy } from "./strategies/InnerPropertiesStrategy";
+import { FieldPropertyMethodGetterStrategy } from "./typesearch/abstraction/FieldPropertyMethodGetterStrategy";
+import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./typesearch/FieldsAndMethodForPositionBeforeCurrentStrategy";
+import { InnerPropertiesStrategy } from "./typesearch/InnerPropertiesStrategy";
 
 export interface IAcornPosition {
 	line: number;

@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../../../../parser/abstraction/IUI5Parser";
-import { IFieldsAndMethods } from "../../../factory/IClassFactory";
 import { AbstractCustomClass } from "../../../ui5class/AbstractCustomClass";
+import { IFieldsAndMethods } from "../../../ui5class/factory/IClassFactory";
 import { TextDocument } from "../../../util/textdocument/TextDocument";
 export abstract class FieldPropertyMethodGetterStrategy {
 	protected readonly parser: IUI5Parser<AbstractCustomClass>;

@@ -7,7 +7,7 @@ import { URLBuilder } from "../classes/http/URLBuilder";
 import { SAPIcons } from "../classes/librarydata/SAPIcons";
 import { SAPNodeDAO } from "../classes/librarydata/SAPNodeDAO";
 import { UI5MetadataDAO } from "../classes/librarydata/UI5MetadataDAO";
-import { TSClassFactory } from "../classes/parsing/factory/TSClassFactory";
+import { TSClassFactory } from "../classes/parsing/ui5class/factory/TSClassFactory";
 import { CustomTSClass } from "../classes/parsing/ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../classes/parsing/ui5class/ts/CustomTSObject";
 import { IFileReader } from "../classes/parsing/util/filereader/IFileReader";

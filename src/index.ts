@@ -1,8 +1,8 @@
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
-import { IClassFactory } from "./classes/parsing/factory/IClassFactory";
 import { AcornSyntaxAnalyzer } from "./classes/parsing/jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "./classes/parsing/jsparser/ISyntaxAnalyser";
+import { IClassFactory } from "./classes/parsing/ui5class/factory/IClassFactory";
 import { IFileReader } from "./classes/parsing/util/filereader/IFileReader";
 import { TextDocument } from "./classes/parsing/util/textdocument/TextDocument";
 import { WorkspaceFolder } from "./classes/parsing/util/textdocument/WorkspaceFolder";

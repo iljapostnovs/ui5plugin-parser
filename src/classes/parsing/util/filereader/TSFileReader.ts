@@ -3,7 +3,7 @@ import * as glob from "glob";
 import * as path from "path";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import { IParserConfigHandler } from "../../../config/IParserConfigHandler";
-import { IClassFactory } from "../../factory/IClassFactory";
+import { IClassFactory } from "../../ui5class/factory/IClassFactory";
 import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
 import { TextDocument } from "../textdocument/TextDocument";

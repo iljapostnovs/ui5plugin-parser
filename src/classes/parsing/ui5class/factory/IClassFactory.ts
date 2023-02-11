@@ -1,4 +1,4 @@
-import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
+import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
 import {
 	AbstractJSClass,
 	IUIAggregation,
@@ -7,9 +7,9 @@ import {
 	IUIField,
 	IUIMethod,
 	IUIProperty
-} from "../ui5class/js/AbstractJSClass";
-import { IFragment, IView } from "../util/filereader/FileReader";
-import { TextDocument } from "../util/textdocument/TextDocument";
+} from "../../ui5class/js/AbstractJSClass";
+import { IFragment, IView } from "../../util/filereader/FileReader";
+import { TextDocument } from "../../util/textdocument/TextDocument";
 
 export interface IClassFactory<CustomClass extends AbstractCustomClass> {
 	isClassAChildOfClassB(classA: string, classB: string): boolean;

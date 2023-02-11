@@ -1,4 +1,4 @@
-import { IFieldsAndMethods } from "../factory/IClassFactory";
+import { IFieldsAndMethods } from "../ui5class/factory/IClassFactory";
 import { IUIEventParam, IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
 import { CustomJSClass } from "../ui5class/js/CustomJSClass";
 import { TextDocument } from "../util/textdocument/TextDocument";

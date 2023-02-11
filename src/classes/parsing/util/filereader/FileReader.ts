@@ -4,7 +4,7 @@ import * as path from "path";
 import { UI5JSParser } from "../../../../parser/UI5JSParser";
 import { IParserConfigHandler } from "../../../config/IParserConfigHandler";
 import { ICacheable } from "../../abstraction/ICacheable";
-import { IClassFactory } from "../../factory/IClassFactory";
+import { IClassFactory } from "../../ui5class/factory/IClassFactory";
 import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { TextDocument } from "../textdocument/TextDocument";
 import { WorkspaceFolder } from "../textdocument/WorkspaceFolder";
