@@ -3,7 +3,7 @@ import * as glob from "glob";
 import * as path from "path";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import { IParserConfigHandler } from "../../../config/IParserConfigHandler";
-import { IUIClassFactory } from "../../factory/IUIClassFactory";
+import { IClassFactory } from "../../factory/IClassFactory";
 import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
 import { TextDocument } from "../textdocument/TextDocument";
@@ -20,12 +20,12 @@ export class TSFileReader implements IFileReader {
 	private readonly _UI5Version: string;
 	public globalStoragePath: string | undefined;
 	private readonly _configHandler: IParserConfigHandler;
-	private readonly _classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>;
+	private readonly _classFactory: IClassFactory<CustomTSClass | CustomTSObject>;
 	private readonly _parser: UI5TSParser;
 
 	constructor(
 		configHandler: IParserConfigHandler,
-		classFactory: IUIClassFactory<CustomTSClass | CustomTSObject>,
+		classFactory: IClassFactory<CustomTSClass | CustomTSObject>,
 		parser: UI5TSParser
 	) {
 		this._configHandler = configHandler;

@@ -1,5 +1,5 @@
 import { ICacheable } from "../abstraction/ICacheable";
-import { IViewsAndFragments } from "../factory/IUIClassFactory";
+import { IViewsAndFragments } from "../factory/IClassFactory";
 import {
 	AbstractJSClass,
 	IMember,

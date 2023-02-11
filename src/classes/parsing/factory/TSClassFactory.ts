@@ -16,9 +16,9 @@ import { CustomTSClass } from "../ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../ui5class/ts/CustomTSObject";
 import { IFragment, IView } from "../util/filereader/FileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
-import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./IUIClassFactory";
+import { IClassFactory, IFieldsAndMethods, IUIClassMap, IViewsAndFragments } from "./IClassFactory";
 
-export class TSClassFactory implements IUIClassFactory<CustomTSClass | CustomTSObject> {
+export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObject> {
 	private readonly parser: UI5TSParser;
 	constructor(parser: UI5TSParser) {
 		this.parser = parser;

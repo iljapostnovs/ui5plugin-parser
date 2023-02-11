@@ -10,24 +10,24 @@ import {
 	IUIProperty
 } from "../ui5class/js/AbstractJSClass";
 import { CustomJSClass } from "../ui5class/js/CustomJSClass";
-import { PureJSClass } from "../ui5class/js/PureJSClass";
+import { NativeJSClass } from "../ui5class/js/NativeJSClass";
 import { StandardUIClass } from "../ui5class/StandardUIClass";
 import { IFragment, IView } from "../util/filereader/FileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
-import { IFieldsAndMethods, IUIClassFactory, IUIClassMap, IViewsAndFragments } from "./IUIClassFactory";
+import { IClassFactory, IFieldsAndMethods, IUIClassMap, IViewsAndFragments } from "./IClassFactory";
 
-export class UIClassFactory implements IUIClassFactory<CustomJSClass> {
+export class UIClassFactory implements IClassFactory<CustomJSClass> {
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
 	private readonly parser: UI5JSParser;
 	constructor(syntaxAnalyser: ISyntaxAnalyser, parser: UI5JSParser) {
 		this.syntaxAnalyser = syntaxAnalyser;
 		this.parser = parser;
 		this._UIClasses = {
-			Promise: new PureJSClass("Promise", parser),
-			array: new PureJSClass("array", parser),
-			string: new PureJSClass("string", parser),
-			Array: new PureJSClass("Array", parser),
-			String: new PureJSClass("String", parser)
+			Promise: new NativeJSClass("Promise", parser),
+			array: new NativeJSClass("array", parser),
+			string: new NativeJSClass("string", parser),
+			Array: new NativeJSClass("Array", parser),
+			String: new NativeJSClass("String", parser)
 		};
 	}
 	isCustomClass(UIClass: AbstractJSClass): UIClass is CustomJSClass {
@@ -42,7 +42,7 @@ export class UIClassFactory implements IUIClassFactory<CustomJSClass> {
 		});
 		const className = typedefDoc.name;
 		const properties = jsdoc.tags.filter((tag: any) => tag.tag === "property");
-		const typeDefClass = new PureJSClass(className, this.parser);
+		const typeDefClass = new NativeJSClass(className, this.parser);
 		typeDefClass.fields = properties.map((property: any): IUIField => {
 			return {
 				description: property.description,

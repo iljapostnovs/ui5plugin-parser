@@ -7,7 +7,7 @@ Object.keys(jsClassData).forEach(key => {
 	jsClassDataCopy[key.toLowerCase()] = jsClassDataCopy[key];
 });
 const classData: { [key: string]: { methods: IUIMethod[]; fields: IUIField[] } } = jsClassData;
-export class PureJSClass extends AbstractJSClass {
+export class NativeJSClass extends AbstractJSClass {
 	constructor(className: string, parser: IUI5Parser) {
 		super(className, parser);
 

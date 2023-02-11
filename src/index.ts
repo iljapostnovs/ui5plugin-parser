@@ -1,6 +1,6 @@
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
-import { IUIClassFactory } from "./classes/parsing/factory/IUIClassFactory";
+import { IClassFactory } from "./classes/parsing/factory/IClassFactory";
 import { AcornSyntaxAnalyzer } from "./classes/parsing/jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "./classes/parsing/jsparser/ISyntaxAnalyser";
 import { IFileReader } from "./classes/parsing/util/filereader/IFileReader";
@@ -16,7 +16,7 @@ export {
 	UI5JSParser,
 	UI5TSParser,
 	IParserConfigHandler,
-	IUIClassFactory,
+	IClassFactory as IUIClassFactory,
 	IFileReader,
 	ISyntaxAnalyser,
 	AcornSyntaxAnalyzer,

@@ -1,5 +1,5 @@
 import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
-import { IFieldsAndMethods } from "../factory/IUIClassFactory";
+import { IFieldsAndMethods } from "../factory/IClassFactory";
 import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
 import { IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
 import { CustomJSClass, ICustomClassJSField, ICustomClassJSMethod } from "../ui5class/js/CustomJSClass";

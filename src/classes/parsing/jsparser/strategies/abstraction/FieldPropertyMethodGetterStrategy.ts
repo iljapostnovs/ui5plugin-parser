@@ -1,5 +1,5 @@
 import { IUI5Parser } from "../../../../../parser/abstraction/IUI5Parser";
-import { IFieldsAndMethods } from "../../../factory/IUIClassFactory";
+import { IFieldsAndMethods } from "../../../factory/IClassFactory";
 import { AbstractCustomClass } from "../../../ui5class/AbstractCustomClass";
 import { TextDocument } from "../../../util/textdocument/TextDocument";
 export abstract class FieldPropertyMethodGetterStrategy {

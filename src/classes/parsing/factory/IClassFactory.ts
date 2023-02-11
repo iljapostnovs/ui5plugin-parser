@@ -11,7 +11,7 @@ import {
 import { IFragment, IView } from "../util/filereader/FileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
 
-export interface IUIClassFactory<CustomClass extends AbstractCustomClass> {
+export interface IClassFactory<CustomClass extends AbstractCustomClass> {
 	isClassAChildOfClassB(classA: string, classB: string): boolean;
 	setNewContentForClassUsingDocument(document: TextDocument, force?: boolean): void;
 	setNewCodeForClass(classNameDotNotation: string, classFileText: string, force?: boolean): void;

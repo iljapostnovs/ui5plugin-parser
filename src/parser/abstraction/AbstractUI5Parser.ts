@@ -8,7 +8,7 @@ import { URLBuilder } from "../../classes/http/URLBuilder";
 import { SAPIcons } from "../../classes/librarydata/SAPIcons";
 import { SAPNodeDAO } from "../../classes/librarydata/SAPNodeDAO";
 import { UI5MetadataDAO } from "../../classes/librarydata/UI5MetadataDAO";
-import { IUIClassFactory } from "../../classes/parsing/factory/IUIClassFactory";
+import { IClassFactory } from "../../classes/parsing/factory/IClassFactory";
 import { AbstractCustomClass } from "../../classes/parsing/ui5class/AbstractCustomClass";
 import { IFileReader } from "../../classes/parsing/util/filereader/IFileReader";
 import { ResourceModelData } from "../../classes/parsing/util/i18n/ResourceModelData";
@@ -20,7 +20,7 @@ import { IUI5Parser } from "./IUI5Parser";
 
 export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass> implements IUI5Parser<CustomClass> {
 	abstract configHandler: IParserConfigHandler;
-	abstract classFactory: IUIClassFactory<CustomClass>;
+	abstract classFactory: IClassFactory<CustomClass>;
 	abstract fileReader: IFileReader;
 	abstract nodeDAO: SAPNodeDAO;
 	abstract metadataDAO: UI5MetadataDAO;

@@ -4,7 +4,7 @@ import * as path from "path";
 import { UI5JSParser } from "../../../../parser/UI5JSParser";
 import { IParserConfigHandler } from "../../../config/IParserConfigHandler";
 import { ICacheable } from "../../abstraction/ICacheable";
-import { IUIClassFactory } from "../../factory/IUIClassFactory";
+import { IClassFactory } from "../../factory/IClassFactory";
 import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { TextDocument } from "../textdocument/TextDocument";
 import { WorkspaceFolder } from "../textdocument/WorkspaceFolder";
@@ -20,14 +20,10 @@ export class FileReader implements IFileReader {
 	private readonly _UI5Version: string;
 	public globalStoragePath: string | undefined;
 	private readonly _configHandler: IParserConfigHandler;
-	private readonly _classFactory: IUIClassFactory<CustomJSClass>;
+	private readonly _classFactory: IClassFactory<CustomJSClass>;
 	private readonly _parser: UI5JSParser;
 
-	constructor(
-		configHandler: IParserConfigHandler,
-		classFactory: IUIClassFactory<CustomJSClass>,
-		parser: UI5JSParser
-	) {
+	constructor(configHandler: IParserConfigHandler, classFactory: IClassFactory<CustomJSClass>, parser: UI5JSParser) {
 		this._configHandler = configHandler;
 		this._UI5Version = configHandler.getUI5Version();
 		this._classFactory = classFactory;

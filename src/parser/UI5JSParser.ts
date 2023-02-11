@@ -5,7 +5,7 @@ import { URLBuilder } from "../classes/http/URLBuilder";
 import { SAPIcons } from "../classes/librarydata/SAPIcons";
 import { SAPNodeDAO } from "../classes/librarydata/SAPNodeDAO";
 import { UI5MetadataDAO } from "../classes/librarydata/UI5MetadataDAO";
-import { IUIClassFactory } from "../classes/parsing/factory/IUIClassFactory";
+import { IClassFactory } from "../classes/parsing/factory/IClassFactory";
 import { UIClassFactory } from "../classes/parsing/factory/JSClassFactory";
 import { AcornSyntaxAnalyzer } from "../classes/parsing/jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "../classes/parsing/jsparser/ISyntaxAnalyser";
@@ -21,7 +21,7 @@ import { IConstructorParams } from "./abstraction/IUI5Parser";
 
 export class UI5JSParser extends AbstractUI5Parser<CustomJSClass> {
 	readonly configHandler: IParserConfigHandler;
-	readonly classFactory: IUIClassFactory<CustomJSClass>;
+	readonly classFactory: IClassFactory<CustomJSClass>;
 	readonly fileReader: IFileReader;
 	readonly syntaxAnalyser: ISyntaxAnalyser;
 	readonly nodeDAO: SAPNodeDAO;

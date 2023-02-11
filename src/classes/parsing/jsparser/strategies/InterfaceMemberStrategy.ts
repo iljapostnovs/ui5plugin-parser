@@ -1,4 +1,4 @@
-import { IFieldsAndMethods } from "../../factory/IUIClassFactory";
+import { IFieldsAndMethods } from "../../factory/IClassFactory";
 import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 import { FieldPropertyMethodGetterStrategy } from "./abstraction/FieldPropertyMethodGetterStrategy";
