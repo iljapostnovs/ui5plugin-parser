@@ -185,12 +185,9 @@ export class FileReader implements IFileReader {
 
 	public getManifestForClass(className = "") {
 		let  componetNameList = this._manifests.map(element => element.componentName );
-		componetNameList.sort(function(a, b){
-            return b.length - a.length;
-        });
+		componetNameList.sort(function(a, b) { return b.length - a.length; });
 		let componentName = componetNameList.find(componentName => className.startsWith(componentName + "."));
 		const returnManifest = this._manifests.find(UIManifest => UIManifest.componentName === componentName );
-		//const returnManifest = this._manifests.find(UIManifest => className.startsWith(UIManifest.componentName + "."));
 
 		return returnManifest;
 	}
