@@ -13,7 +13,7 @@ import { IFileReader } from "./IFileReader";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 
-export class FileReader implements IFileReader {
+export class JSFileReader implements IFileReader {
 	private _manifests: IUIManifest[] = [];
 	private readonly _viewCache: IViews = {};
 	private readonly _fragmentCache: Fragments = {};
@@ -612,14 +612,14 @@ export class FileReader implements IFileReader {
 		return className;
 	}
 
-	getCache(cacheType: FileReader.CacheType) {
+	getCache(cacheType: JSFileReader.CacheType) {
 		let cache;
 		const cachePath =
-			cacheType === FileReader.CacheType.Metadata
+			cacheType === JSFileReader.CacheType.Metadata
 				? this._getMetadataCachePath()
-				: cacheType === FileReader.CacheType.APIIndex
+				: cacheType === JSFileReader.CacheType.APIIndex
 				? this._getAPIIndexCachePath()
-				: cacheType === FileReader.CacheType.Icons
+				: cacheType === JSFileReader.CacheType.Icons
 				? this._getIconCachePath()
 				: null;
 
@@ -635,13 +635,13 @@ export class FileReader implements IFileReader {
 		return cache;
 	}
 
-	setCache(cacheType: FileReader.CacheType, cache: string) {
+	setCache(cacheType: JSFileReader.CacheType, cache: string) {
 		const cachePath =
-			cacheType === FileReader.CacheType.Metadata
+			cacheType === JSFileReader.CacheType.Metadata
 				? this._getMetadataCachePath()
-				: cacheType === FileReader.CacheType.APIIndex
+				: cacheType === JSFileReader.CacheType.APIIndex
 				? this._getAPIIndexCachePath()
-				: cacheType === FileReader.CacheType.Icons
+				: cacheType === JSFileReader.CacheType.Icons
 				? this._getIconCachePath()
 				: null;
 
@@ -799,7 +799,7 @@ export interface FileData {
 	fsPath: string;
 }
 
-export namespace FileReader {
+export namespace JSFileReader {
 	export enum CacheType {
 		Metadata = "1",
 		APIIndex = "2",

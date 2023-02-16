@@ -1,6 +1,6 @@
 import { TextDocument } from "../textdocument/TextDocument";
 import { WorkspaceFolder } from "../textdocument/WorkspaceFolder";
-import { FileReader, IFragment, IManifestPaths, IUIManifest, IView, IXMLFile } from "./FileReader";
+import { IFragment, IManifestPaths, IUIManifest, IView, IXMLFile, JSFileReader } from "./JSFileReader";
 
 export interface IFileReader {
 	globalStoragePath: string | undefined;
@@ -48,6 +48,6 @@ export interface IFileReader {
 	getXMLFile(className: string, fileType?: string): IXMLFile | undefined;
 	getDocumentTextFromCustomClassName(className: string, isFragment?: boolean): string | undefined;
 	getClassFSPathFromClassName(className: string, isFragment?: boolean): string | undefined;
-	setCache(cacheType: FileReader.CacheType, cache: string): void;
-	getCache(cacheType: FileReader.CacheType): any;
+	setCache(cacheType: JSFileReader.CacheType, cache: string): void;
+	getCache(cacheType: JSFileReader.CacheType): any;
 }

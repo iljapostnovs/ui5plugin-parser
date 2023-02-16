@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { URLBuilder } from "../http/URLBuilder";
-import { FileReader } from "../parsing/util/filereader/FileReader";
+import { JSFileReader } from "../parsing/util/filereader/JSFileReader";
 
 export class SAPIcons {
 	public icons: string[] = [];
@@ -10,10 +10,10 @@ export class SAPIcons {
 	}
 
 	async preloadIcons() {
-		this.icons = this.parser.fileReader.getCache(FileReader.CacheType.Icons);
+		this.icons = this.parser.fileReader.getCache(JSFileReader.CacheType.Icons);
 		if (!this.icons) {
 			this.icons = await this._loadIcons();
-			this.parser.fileReader.setCache(FileReader.CacheType.Icons, JSON.stringify(this.icons));
+			this.parser.fileReader.setCache(JSFileReader.CacheType.Icons, JSON.stringify(this.icons));
 		}
 	}
 

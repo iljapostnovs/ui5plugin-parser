@@ -3,7 +3,7 @@ import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
 import { IFieldsAndMethods } from "../ui5class/factory/IClassFactory";
 import { IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
 import { CustomJSClass, ICustomClassJSField, ICustomClassJSMethod } from "../ui5class/js/CustomJSClass";
-import { IXMLFile } from "../util/filereader/FileReader";
+import { IXMLFile } from "../util/filereader/JSFileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "./ISyntaxAnalyser";
 import { FieldPropertyMethodGetterStrategy } from "./typesearch/abstraction/FieldPropertyMethodGetterStrategy";

@@ -14,7 +14,7 @@ import { EmptyJSClass } from "../../ui5class/js/EmptyJSClass";
 import { StandardUIClass } from "../../ui5class/StandardUIClass";
 import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
-import { IFragment, IView } from "../../util/filereader/FileReader";
+import { IFragment, IView } from "../../util/filereader/JSFileReader";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 import { IClassFactory, IFieldsAndMethods, IUIClassMap, IViewsAndFragments } from "./IClassFactory";
 

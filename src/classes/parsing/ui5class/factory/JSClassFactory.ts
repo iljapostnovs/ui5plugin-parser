@@ -12,7 +12,7 @@ import {
 import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { NativeJSClass } from "../../ui5class/js/NativeJSClass";
 import { StandardUIClass } from "../../ui5class/StandardUIClass";
-import { IFragment, IView } from "../../util/filereader/FileReader";
+import { IFragment, IView } from "../../util/filereader/JSFileReader";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 import { IClassFactory, IFieldsAndMethods, IUIClassMap, IViewsAndFragments } from "./IClassFactory";
 

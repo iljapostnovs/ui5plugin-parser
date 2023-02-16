@@ -8,8 +8,8 @@ import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
 import { TextDocument } from "../textdocument/TextDocument";
 import { WorkspaceFolder } from "../textdocument/WorkspaceFolder";
-import { IFragment, IIdClassMap, IManifestPaths, IUIManifest, IView, IViews, IXMLFile } from "./FileReader";
 import { IFileReader } from "./IFileReader";
+import { IFragment, IIdClassMap, IManifestPaths, IUIManifest, IView, IViews, IXMLFile } from "./JSFileReader";
 const fileSeparator = path.sep;
 const escapedFileSeparator = "\\" + path.sep;
 

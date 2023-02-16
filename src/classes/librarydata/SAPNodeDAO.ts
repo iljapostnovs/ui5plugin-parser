@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { URLBuilder } from "../http/URLBuilder";
-import { FileReader } from "../parsing/util/filereader/FileReader";
+import { JSFileReader } from "../parsing/util/filereader/JSFileReader";
 import { SAPNode } from "./SAPNode";
 
 export class SAPNodeDAO {
@@ -112,12 +112,12 @@ export class SAPNodeDAO {
 	}
 
 	private _getApiIndexFromCache() {
-		return this.parser.fileReader.getCache(FileReader.CacheType.APIIndex);
+		return this.parser.fileReader.getCache(JSFileReader.CacheType.APIIndex);
 	}
 
 	private _cacheApiIndex() {
 		const cache = JSON.stringify(this._nodes);
-		this.parser.fileReader.setCache(FileReader.CacheType.APIIndex, cache);
+		this.parser.fileReader.setCache(JSFileReader.CacheType.APIIndex, cache);
 	}
 
 	private async _fetchApiIndex() {

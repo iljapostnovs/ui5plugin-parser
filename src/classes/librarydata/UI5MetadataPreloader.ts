@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { URLBuilder } from "../http/URLBuilder";
-import { FileReader } from "../parsing/util/filereader/FileReader";
+import { JSFileReader } from "../parsing/util/filereader/JSFileReader";
 import { SAPNode } from "./SAPNode";
 
 export class UI5MetadataPreloader {
@@ -73,12 +73,12 @@ export class UI5MetadataPreloader {
 	}
 
 	private _loadCache() {
-		return this.parser.fileReader.getCache(FileReader.CacheType.Metadata);
+		return this.parser.fileReader.getCache(JSFileReader.CacheType.Metadata);
 	}
 
 	private _writeCache() {
 		const cache = JSON.stringify(this.namespaceDesignTimes);
-		this.parser.fileReader.setCache(FileReader.CacheType.Metadata, cache);
+		this.parser.fileReader.setCache(JSFileReader.CacheType.Metadata, cache);
 	}
 
 	private _getUniqueLibNames(node: SAPNode) {

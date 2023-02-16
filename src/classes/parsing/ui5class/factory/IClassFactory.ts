@@ -8,7 +8,7 @@ import {
 	IUIMethod,
 	IUIProperty
 } from "../../ui5class/js/AbstractJSClass";
-import { IFragment, IView } from "../../util/filereader/FileReader";
+import { IFragment, IView } from "../../util/filereader/JSFileReader";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 
 export interface IClassFactory<CustomClass extends AbstractCustomClass> {

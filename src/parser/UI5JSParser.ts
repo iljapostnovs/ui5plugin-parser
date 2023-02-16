@@ -10,8 +10,8 @@ import { ISyntaxAnalyser } from "../classes/parsing/jsparser/ISyntaxAnalyser";
 import { IClassFactory } from "../classes/parsing/ui5class/factory/IClassFactory";
 import { UIClassFactory } from "../classes/parsing/ui5class/factory/JSClassFactory";
 import { CustomJSClass } from "../classes/parsing/ui5class/js/CustomJSClass";
-import { FileReader } from "../classes/parsing/util/filereader/FileReader";
 import { IFileReader } from "../classes/parsing/util/filereader/IFileReader";
+import { JSFileReader } from "../classes/parsing/util/filereader/JSFileReader";
 import { ResourceModelData } from "../classes/parsing/util/i18n/ResourceModelData";
 import { TextDocumentTransformer } from "../classes/parsing/util/textdocument/TextDocumentTransformer";
 import { XMLParser } from "../classes/parsing/util/xml/XMLParser";
@@ -38,7 +38,7 @@ export class UI5JSParser extends AbstractUI5Parser<CustomJSClass> {
 		this.syntaxAnalyser = new AcornSyntaxAnalyzer(this);
 		this.classFactory = params?.classFactory || new UIClassFactory(this.syntaxAnalyser, this);
 		this.configHandler = params?.configHandler || new PackageParserConfigHandler();
-		this.fileReader = params?.fileReader || new FileReader(this.configHandler, this.classFactory, this);
+		this.fileReader = params?.fileReader || new JSFileReader(this.configHandler, this.classFactory, this);
 		this.icons = new SAPIcons(this);
 		this.metadataDAO = new UI5MetadataDAO(this);
 		this.nodeDAO = new SAPNodeDAO(this);
