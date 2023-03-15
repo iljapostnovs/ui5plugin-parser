@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { URLBuilder } from "../http/URLBuilder";
-import { JSFileReader } from "../parsing/util/filereader/JSFileReader";
+import { IFileReader } from "../parsing/util/filereader/IFileReader";
 import { SAPNode } from "./SAPNode";
 
 export class SAPNodeDAO {
@@ -12,7 +12,7 @@ export class SAPNodeDAO {
 		this.parser = parser;
 	}
 
-	public async getAllNodes() {
+	async getAllNodes() {
 		if (this._SAPNodes.length === 0) {
 			await this._readAllNodes();
 			await this._generateSAPNodes();
@@ -21,7 +21,7 @@ export class SAPNodeDAO {
 		return this._SAPNodes;
 	}
 
-	public isInstanceOf(child: string, parent: string): boolean {
+	isInstanceOf(child: string, parent: string): boolean {
 		let isInstance = child === parent;
 		const parentNode = this.findNode(parent);
 
@@ -47,7 +47,7 @@ export class SAPNodeDAO {
 		return children;
 	}
 
-	public getAllNodesSync() {
+	getAllNodesSync() {
 		return this._SAPNodes;
 	}
 
@@ -112,12 +112,12 @@ export class SAPNodeDAO {
 	}
 
 	private _getApiIndexFromCache() {
-		return this.parser.fileReader.getCache(JSFileReader.CacheType.APIIndex);
+		return this.parser.fileReader.getCache(IFileReader.CacheType.APIIndex);
 	}
 
 	private _cacheApiIndex() {
 		const cache = JSON.stringify(this._nodes);
-		this.parser.fileReader.setCache(JSFileReader.CacheType.APIIndex, cache);
+		this.parser.fileReader.setCache(IFileReader.CacheType.APIIndex, cache);
 	}
 
 	private async _fetchApiIndex() {
@@ -126,11 +126,11 @@ export class SAPNodeDAO {
 		this._nodes = data;
 	}
 
-	public findNode(name: string): SAPNode | undefined {
+	findNode(name: string): SAPNode | undefined {
 		return this._flatSAPNodes[name];
 	}
 
-	public getFlatNodes() {
+	getFlatNodes() {
 		return this._flatSAPNodes;
 	}
 }

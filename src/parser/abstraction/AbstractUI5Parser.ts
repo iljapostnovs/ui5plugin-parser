@@ -1,6 +1,7 @@
 import glob = require("glob");
 import path = require("path");
 import * as fs from "fs";
+import { join } from "path";
 import { IParserConfigHandler } from "../../classes/config/IParserConfigHandler";
 import { PackageParserConfigHandler } from "../../classes/config/PackageParserConfigHandler";
 import { HTTPHandler } from "../../classes/http/HTTPHandler";
@@ -16,6 +17,7 @@ import { TextDocumentTransformer } from "../../classes/parsing/util/textdocument
 import { WorkspaceFolder } from "../../classes/parsing/util/textdocument/WorkspaceFolder";
 import { XMLParser } from "../../classes/parsing/util/xml/XMLParser";
 import { ReusableMethods } from "../../classes/ReusableMethods";
+import ParserPool from "../pool/ParserPool";
 import { IUI5Parser } from "./IUI5Parser";
 
 export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass> implements IUI5Parser<CustomClass> {
@@ -31,22 +33,41 @@ export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass>
 	abstract textDocumentTransformer: TextDocumentTransformer;
 	abstract reusableMethods: ReusableMethods;
 	abstract xmlParser: XMLParser;
+	abstract workspaceFolder: WorkspaceFolder;
+	packagePath: string;
+	private readonly _customData: Record<string, any> = {};
 
-	public async initialize(
-		wsFolders = [new WorkspaceFolder(process.cwd())],
-		globalStoragePath = path.join(__dirname, "./node_modules/.cache/ui5plugin")
-	) {
+	constructor(packagePath: string = join(process.cwd(), "/package.json")) {
+		this.packagePath = packagePath;
+		ParserPool.register(this);
+	}
+	setCustomData(key: string, data: any): void {
+		this._customData[key] = data;
+	}
+	getCustomData<T>(key: string): T | undefined {
+		return this._customData[key];
+	}
+
+	async initializeLibsAndManifest(globalStoragePath = path.join(__dirname, "./node_modules/.cache/ui5plugin")) {
 		this.fileReader.globalStoragePath = globalStoragePath;
-		await this._preloadAllNecessaryData(wsFolders);
+		await this._preloadStandardLibMetadata();
+		this.fileReader.rereadAllManifests();
 	}
 
-	protected async _preloadAllNecessaryData(wsFolders: WorkspaceFolder[]) {
-		await this._preloadUI5Metadata();
-		this.fileReader.rereadAllManifests(wsFolders);
-		this.fileReader.readAllFiles(wsFolders);
+	initializeCustomClasses() {
+		this.fileReader.readCustomClasses();
+	}
+	initializeFragments() {
+		this.fileReader.readFragments();
+	}
+	initializeViews() {
+		this.fileReader.readViews();
+	}
+	initializeI18n() {
+		this.fileReader.readI18n();
 	}
 
-	protected async _preloadUI5Metadata() {
+	protected async _preloadStandardLibMetadata() {
 		const SAPNodes = await this.nodeDAO.getAllNodes();
 		await Promise.all([this.metadataDAO.loadMetadata(SAPNodes), this.icons.preloadIcons()]);
 		this.nodeDAO.recursiveModuleAssignment();
@@ -60,26 +81,21 @@ export abstract class AbstractUI5Parser<CustomClass extends AbstractCustomClass>
 	}
 
 	static getIsTypescriptProject(
-		workspaceFolders: WorkspaceFolder[],
+		workspaceFolder: WorkspaceFolder,
 		configHandler: IParserConfigHandler = new PackageParserConfigHandler()
 	) {
 		const escapedFileSeparator = "\\" + path.sep;
 
-		const tsFiles = workspaceFolders?.flatMap(wsFolder => {
-			const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
-			const exclusions: string[] = configHandler.getExcludeFolderPatterns();
-			const exclusionPaths = exclusions.map(excludeString => {
-				return `${wsFolderFSPath}/${excludeString}`;
-			});
-			return glob.sync(`${wsFolderFSPath}/**/*.ts`, {
-				ignore: exclusionPaths
-			});
+		const wsFolderFSPath = workspaceFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
+		const exclusions: string[] = configHandler.getExcludeFolderPatterns();
+		const exclusionPaths = exclusions.map(excludeString => {
+			return `${wsFolderFSPath}/${excludeString}`;
 		});
-		const tsconfig = workspaceFolders?.flatMap(wsFolder => {
-			const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
-			return glob.sync(`${wsFolderFSPath}/tsconfig.json`);
+		const tsFiles = glob.sync(`${wsFolderFSPath}/**/*.ts`, {
+			ignore: exclusionPaths
 		});
+		const tsConfig = glob.sync(`${wsFolderFSPath}/tsconfig.json`);
 
-		return (!!tsFiles?.length && !!tsconfig?.length) || false;
+		return (!!tsFiles.length && !!tsConfig.length) || false;
 	}
 }

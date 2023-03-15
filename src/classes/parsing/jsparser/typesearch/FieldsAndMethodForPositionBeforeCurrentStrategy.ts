@@ -32,7 +32,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 
 		return fieldsAndMethods;
 	}
-	public destructureFieldsAndMethodsAccordingToMapParams(className: string): IFieldsAndMethods | undefined {
+	destructureFieldsAndMethodsAccordingToMapParams(className: string): IFieldsAndMethods | undefined {
 		let fieldsAndMethods: IFieldsAndMethods | undefined;
 		const isMap = className.includes("__map__");
 		const classNamePartsFromMapParam = className.split("__mapparam__");
@@ -119,11 +119,11 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 		return returnObject;
 	}
 
-	public getClassNameOfTheVariableAtPosition(className: string, position: number) {
+	getClassNameOfTheVariableAtPosition(className: string, position: number) {
 		return this.acornGetClassName(className, position);
 	}
 
-	public acornGetClassName(className: string, position: number, clearStack = true, checkForLastPosition = false) {
+	acornGetClassName(className: string, position: number, clearStack = true, checkForLastPosition = false) {
 		let classNameOfTheCurrentVariable;
 		const stack = this.getStackOfNodesForPosition(className, position, checkForLastPosition);
 		if (stack.length > 0) {
@@ -138,7 +138,7 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 		return classNameOfTheCurrentVariable;
 	}
 
-	public getStackOfNodesForPosition(className: string, position: number, checkForLastPosition = false) {
+	getStackOfNodesForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
 		const UIClass = this.parser.classFactory.getUIClass(className);
 

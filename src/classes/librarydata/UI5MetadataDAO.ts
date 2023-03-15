@@ -12,7 +12,7 @@ export class UI5MetadataDAO {
 		return this.metadataPreloader.preloadLibs(nodes);
 	}
 
-	public getPreloadedMetadataForNode(node: SAPNode) {
+	getPreloadedMetadataForNode(node: SAPNode) {
 		const libMetadata = this.metadataPreloader.namespaceDesignTimes[node.getLib()];
 		const metadata = this._findNodeMetadata(node, libMetadata);
 
@@ -23,7 +23,7 @@ export class UI5MetadataDAO {
 		return libMetadata?.symbols
 			? libMetadata.symbols.find(
 					(metadata: any) => metadata.name.replace("module:", "").replace(/\//g, ".") === node.getName()
-			)
+			  )
 			: {};
 	}
 }

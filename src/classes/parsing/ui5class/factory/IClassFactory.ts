@@ -1,3 +1,4 @@
+import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
 import {
 	AbstractJSClass,
@@ -8,7 +9,7 @@ import {
 	IUIMethod,
 	IUIProperty
 } from "../../ui5class/js/AbstractJSClass";
-import { IFragment, IView } from "../../util/filereader/JSFileReader";
+import { IFragment, IView } from "../../util/filereader/IFileReader";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 
 export interface IClassFactory<CustomClass extends AbstractCustomClass> {
@@ -24,7 +25,7 @@ export interface IClassFactory<CustomClass extends AbstractCustomClass> {
 	getClassAssociations(className: string, returnDuplicates?: boolean): IUIAssociation[];
 	getClassProperties(className: string, returnDuplicates?: boolean): IUIProperty[];
 	getUIClass(className: string): AbstractJSClass;
-	getAllCustomUIClasses(): CustomClass[];
+	getAllCustomUIClasses(): AbstractCustomClass[];
 	getAllExistentUIClasses(): IUIClassMap;
 	getDefaultModelForClass(className: string): string | undefined;
 	isMethodOverriden(className: string, methodName: string): boolean;
@@ -40,6 +41,8 @@ export interface IClassFactory<CustomClass extends AbstractCustomClass> {
 		includeMentioned?: boolean,
 		includeParents?: boolean
 	): IViewsAndFragments;
+
+	setParser(parser: IUI5Parser): void;
 }
 
 export interface IUIClassMap {

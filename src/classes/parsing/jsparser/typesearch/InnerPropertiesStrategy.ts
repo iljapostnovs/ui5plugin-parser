@@ -319,7 +319,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 		return fieldsAndMethods;
 	}
 
-	public getStackOfNodesForInnerParamsForPosition(className: string, position: number, checkForLastPosition = false) {
+	getStackOfNodesForInnerParamsForPosition(className: string, position: number, checkForLastPosition = false) {
 		const stack: any[] = [];
 		const UIClass = this.parser.classFactory.getUIClass(className);
 

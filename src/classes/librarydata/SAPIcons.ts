@@ -1,19 +1,19 @@
 import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { URLBuilder } from "../http/URLBuilder";
-import { JSFileReader } from "../parsing/util/filereader/JSFileReader";
+import { IFileReader } from "../parsing/util/filereader/IFileReader";
 
 export class SAPIcons {
-	public icons: string[] = [];
+	icons: string[] = [];
 	private readonly parser: IUI5Parser;
 	constructor(parser: IUI5Parser) {
 		this.parser = parser;
 	}
 
 	async preloadIcons() {
-		this.icons = this.parser.fileReader.getCache(JSFileReader.CacheType.Icons);
+		this.icons = this.parser.fileReader.getCache(IFileReader.CacheType.Icons);
 		if (!this.icons) {
 			this.icons = await this._loadIcons();
-			this.parser.fileReader.setCache(JSFileReader.CacheType.Icons, JSON.stringify(this.icons));
+			this.parser.fileReader.setCache(IFileReader.CacheType.Icons, JSON.stringify(this.icons));
 		}
 	}
 

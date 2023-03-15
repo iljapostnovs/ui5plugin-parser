@@ -67,18 +67,18 @@ export interface IUIAssociation extends IName, IVisibility {
 	singularName: string;
 }
 export abstract class AbstractJSClass implements IAbstract {
-	public classExists: boolean;
-	public abstract: boolean;
-	public className: string;
-	public methods: IUIMethod[] = [];
-	public fields: IUIField[] = [];
-	public properties: IUIProperty[] = [];
-	public aggregations: IUIAggregation[] = [];
-	public events: IUIEvent[] = [];
-	public associations: IUIAssociation[] = [];
-	public interfaces: string[] = [];
-	public parentClassNameDotNotation = "";
-	public deprecated = false;
+	classExists: boolean;
+	abstract: boolean;
+	className: string;
+	methods: IUIMethod[] = [];
+	fields: IUIField[] = [];
+	properties: IUIProperty[] = [];
+	aggregations: IUIAggregation[] = [];
+	events: IUIEvent[] = [];
+	associations: IUIAssociation[] = [];
+	interfaces: string[] = [];
+	parentClassNameDotNotation = "";
+	deprecated = false;
 	protected readonly parser: IUI5Parser;
 
 	constructor(className: string, parser: IUI5Parser) {

@@ -49,15 +49,15 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 	UIDefine: IUIDefine<any>[];
 	parentClassNameDotNotation = "";
 	fsPath: string;
-	public methods: ICustomClassJSMethod[] = [];
-	public fields: ICustomClassJSField[] = [];
-	public comments: IComment[] = [];
-	public acornClassBody: any;
-	public acornMethodsAndFields: any[] = [];
-	public fileContent: any;
+	methods: ICustomClassJSMethod[] = [];
+	fields: ICustomClassJSField[] = [];
+	comments: IComment[] = [];
+	acornClassBody: any;
+	acornMethodsAndFields: any[] = [];
+	fileContent: any;
 	private _parentVariableName: any;
-	public acornReturnedClassExtendBody: any | undefined;
-	public classBodyAcornVariableName: string | undefined;
+	acornReturnedClassExtendBody: any | undefined;
+	classBodyAcornVariableName: string | undefined;
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
 
 	constructor(className: string, syntaxAnalyser: ISyntaxAnalyser, parser: UI5JSParser, documentText?: string) {
@@ -499,7 +499,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 		return propertyName === "extend" || propertyName === "declareStaticClass" || propertyName === "controller";
 	}
 
-	public isAssignmentStatementForThisVariable(node: any) {
+	isAssignmentStatementForThisVariable(node: any) {
 		return (
 			node.type === "AssignmentExpression" &&
 			node.operator === "=" &&
@@ -735,7 +735,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 		return looseObject;
 	}
 
-	public getUIDefineAcornBody() {
+	getUIDefineAcornBody() {
 		let UIDefineBody;
 		const body = this.fileContent;
 
@@ -818,13 +818,13 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 		}
 	}
 
-	public static generateDescriptionForMethod(method: IUIMethod) {
+	static generateDescriptionForMethod(method: IUIMethod) {
 		return `(${method.params.map(param => param.name).join(", ")}) : ${
 			method.returnType ? method.returnType : "void"
 		}`;
 	}
 
-	public fillTypesFromHungarionNotation() {
+	fillTypesFromHungarionNotation() {
 		this.fields.forEach(field => {
 			if (!field.type) {
 				field.type = CustomJSClass.getTypeFromHungarianNotation(field.name);
@@ -832,7 +832,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 		});
 	}
 
-	public static getTypeFromHungarianNotation(variable = ""): string | undefined {
+	static getTypeFromHungarianNotation(variable = ""): string | undefined {
 		let type;
 
 		if (variable.length >= 2) {

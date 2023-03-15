@@ -82,7 +82,7 @@ const aFioriElementsControllers = [
 ];
 
 export class StandardUIClass extends AbstractJSClass {
-	public methods: IStandardClassUIMethod[] = [];
+	methods: IStandardClassUIMethod[] = [];
 
 	constructor(className: string, parser: IUI5Parser<AbstractCustomClass>) {
 		super(className, parser);
@@ -294,7 +294,7 @@ export class StandardUIClass extends AbstractJSClass {
 		return this.parser.nodeDAO.findNode(className);
 	}
 
-	public static removeTags(text = "") {
+	static removeTags(text = "") {
 		let textWithoutTags = "";
 		let i = 0;
 

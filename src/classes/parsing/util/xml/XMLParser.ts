@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import { IMember, IUIMethod } from "../../ui5class/js/AbstractJSClass";
-import { ICommentPositions, IXMLFile } from "../filereader/JSFileReader";
+import { ICommentPositions, IXMLFile } from "../filereader/IFileReader";
 
 export interface ITag {
 	text: string;
@@ -181,9 +181,11 @@ export class XMLParser {
 						} else if (functionCallClassName && currentEventHandlerName === eventHandlerName) {
 							const responsibleClassName =
 								this._parser.fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
-							if (responsibleClassName !== functionCallClassName) {
-								return false;
-							}
+
+								return responsibleClassName ? this._parser.classFactory.isClassAChildOfClassB(
+									responsibleClassName,
+									functionCallClassName
+								) : false;
 						}
 
 						return currentEventHandlerName === eventHandlerName;
@@ -316,7 +318,7 @@ export class XMLParser {
 		return parentTag;
 	}
 
-	public getTagInPosition(XMLFile: IXMLFile, position: number) {
+	getTagInPosition(XMLFile: IXMLFile, position: number) {
 		let tag = this._getTagInPosition(XMLFile, position);
 		if (tag) {
 			return tag;
@@ -370,7 +372,7 @@ export class XMLParser {
 		return tag;
 	}
 
-	public getTagBeginEndPosition(XMLFile: IXMLFile, position: number) {
+	getTagBeginEndPosition(XMLFile: IXMLFile, position: number) {
 		let i = position;
 		let tagPositionBegin = 0;
 		let tagPositionEnd = 0;
@@ -403,7 +405,7 @@ export class XMLParser {
 		};
 	}
 
-	public getIfPositionIsNotInComments(document: IXMLFile, position: number) {
+	getIfPositionIsNotInComments(document: IXMLFile, position: number) {
 		let comments: ICommentPositions = {};
 
 		if (document.XMLParserData?.comments) {
@@ -706,7 +708,7 @@ export class XMLParser {
 		return prefix;
 	}
 
-	public getTagHierarchy(XMLFile: IXMLFile) {
+	getTagHierarchy(XMLFile: IXMLFile) {
 		const tags = this.getAllTags(XMLFile).filter(tag => !tag.text.startsWith("<!--"));
 		const tagHierarchy: IHierarchicalTag[] = [];
 
@@ -742,7 +744,7 @@ export class XMLParser {
 		}
 	}
 
-	public getAllTags(XMLFile: IXMLFile) {
+	getAllTags(XMLFile: IXMLFile) {
 		const XMLText = XMLFile.content;
 		if (XMLFile.XMLParserData && XMLFile.XMLParserData.tags.length > 0) {
 			return XMLFile.XMLParserData?.tags;
@@ -846,7 +848,7 @@ export class XMLParser {
 		return i;
 	}
 
-	public getAttributesOfTheTag(tag: ITag | string) {
+	getAttributesOfTheTag(tag: ITag | string) {
 		const tagOfTagInterface = tag as ITag;
 		const tagAsString = tag as string;
 
@@ -869,7 +871,7 @@ export class XMLParser {
 
 		return tags;
 	}
-	public getAttributeNameAndValue(attribute: string) {
+	getAttributeNameAndValue(attribute: string) {
 		const indexOfEqualSign = attribute.indexOf("=");
 		const attributeName = attribute.substring(0, indexOfEqualSign).trim();
 		let attributeValue = attribute.replace(attributeName, "").replace("=", "").trim();
@@ -881,7 +883,7 @@ export class XMLParser {
 		};
 	}
 
-	public getPositionsOfFunctionCallInXMLText(functionCallName: string, XMLText: string) {
+	getPositionsOfFunctionCallInXMLText(functionCallName: string, XMLText: string) {
 		const positions: number[] = [];
 
 		const regExpString = `\\.?${functionCallName}("|'|\\(|\\.)`;
@@ -895,7 +897,7 @@ export class XMLParser {
 		return positions;
 	}
 
-	public getEventHandlerNameFromAttributeValue(attributeValue: string) {
+	getEventHandlerNameFromAttributeValue(attributeValue: string) {
 		let eventHandlerName = attributeValue;
 
 		if (eventHandlerName.startsWith(".")) {

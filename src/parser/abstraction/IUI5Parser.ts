@@ -17,11 +17,11 @@ export interface IConstructorParams<CustomClass extends AbstractCustomClass> {
 	fileReader?: IFileReader;
 	classFactory?: IClassFactory<CustomClass>;
 	configHandler?: IParserConfigHandler;
+	workspaceFolder: WorkspaceFolder;
 }
 
 export interface IUI5Parser<CustomClass extends AbstractCustomClass = AbstractCustomClass> {
 	readonly configHandler: IParserConfigHandler;
-
 	readonly classFactory: IClassFactory<CustomClass>;
 	readonly fileReader: IFileReader;
 	readonly nodeDAO: SAPNodeDAO;
@@ -33,8 +33,18 @@ export interface IUI5Parser<CustomClass extends AbstractCustomClass = AbstractCu
 	readonly textDocumentTransformer: TextDocumentTransformer;
 	readonly reusableMethods: ReusableMethods;
 	readonly xmlParser: XMLParser;
+	readonly workspaceFolder: WorkspaceFolder;
+	readonly packagePath: string;
 
-	initialize(wsFolders: WorkspaceFolder[], globalStoragePath: string): Promise<void>;
+	setCustomData(key: string, data: any): void;
+	getCustomData<T>(key: string): T | undefined;
+
+	initializeLibsAndManifest(globalStoragePath: string): Promise<void>;
+	initializeFragments(): void;
+	initializeViews(): void;
+	initializeI18n(): void;
+
+	initializeCustomClasses(): void;
 
 	clearCache(globalStoragePath: string): void;
 }

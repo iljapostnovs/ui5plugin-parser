@@ -8,6 +8,8 @@ import { TextDocument } from "./classes/parsing/util/textdocument/TextDocument";
 import { WorkspaceFolder } from "./classes/parsing/util/textdocument/WorkspaceFolder";
 import { XMLParser } from "./classes/parsing/util/xml/XMLParser";
 import { AbstractUI5Parser } from "./parser/abstraction/AbstractUI5Parser";
+import ParserFactory from "./parser/factory/ParserFactory";
+import ParserPool from "./parser/pool/ParserPool";
 import { UI5JSParser } from "./parser/UI5JSParser";
 import { UI5TSParser } from "./parser/UI5TSParser";
 import { AnyCustomTSClass, ICustomTSField, ICustomTSMethod } from "./Types";
@@ -16,7 +18,7 @@ export {
 	UI5JSParser,
 	UI5TSParser,
 	IParserConfigHandler,
-	IClassFactory as IUIClassFactory,
+	IClassFactory,
 	IFileReader,
 	ISyntaxAnalyser,
 	AcornSyntaxAnalyzer,
@@ -27,5 +29,7 @@ export {
 	WorkspaceFolder,
 	ICustomTSField,
 	ICustomTSMethod,
-	AnyCustomTSClass
+	AnyCustomTSClass,
+	ParserFactory,
+	ParserPool
 };

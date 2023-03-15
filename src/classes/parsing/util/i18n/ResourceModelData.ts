@@ -18,7 +18,7 @@ export class ResourceModelData {
 	constructor(parser: IUI5Parser<AbstractCustomClass>) {
 		this.parser = parser;
 	}
-	public resourceModels: IResourceModel = {};
+	resourceModels: IResourceModel = {};
 
 	async readTexts() {
 		const resourceModelFiles = this.parser.fileReader.getResourceModelFiles();

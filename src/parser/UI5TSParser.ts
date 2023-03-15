@@ -19,10 +19,9 @@ import { XMLParser } from "../classes/parsing/util/xml/XMLParser";
 import { ReusableMethods } from "../classes/ReusableMethods";
 import { AbstractUI5Parser } from "./abstraction/AbstractUI5Parser";
 import { IConstructorParams } from "./abstraction/IUI5Parser";
-import glob = require("glob");
 
 export interface UI5TSParserConstructor extends IConstructorParams<CustomTSClass | CustomTSObject> {
-	classFactory: TSClassFactory;
+	classFactory?: TSClassFactory;
 }
 
 export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObject> {
@@ -39,12 +38,16 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObjec
 	readonly textDocumentTransformer: TextDocumentTransformer;
 	readonly reusableMethods: ReusableMethods;
 	readonly xmlParser: XMLParser;
+	readonly workspaceFolder: WorkspaceFolder;
 
-	constructor(params?: UI5TSParserConstructor) {
-		super();
-		this.classFactory = params?.classFactory || new TSClassFactory(this);
-		this.configHandler = params?.configHandler || new PackageParserConfigHandler();
-		this.fileReader = params?.fileReader || new TSFileReader(this.configHandler, this.classFactory, this);
+	constructor(params: UI5TSParserConstructor, packagePath?: string) {
+		super(packagePath);
+		this.workspaceFolder = params.workspaceFolder;
+		this.classFactory = params?.classFactory || new TSClassFactory();
+		this.classFactory.setParser(this);
+		this.configHandler = params?.configHandler || new PackageParserConfigHandler(packagePath);
+		this.fileReader = params?.fileReader || new TSFileReader(this.configHandler, this.classFactory);
+		this.fileReader.setParser(this);
 		this.icons = new SAPIcons(this);
 		this.metadataDAO = new UI5MetadataDAO(this);
 		this.nodeDAO = new SAPNodeDAO(this);
@@ -83,47 +86,9 @@ export class UI5TSParser extends AbstractUI5Parser<CustomTSClass | CustomTSObjec
 		});
 	}
 
-	protected async _preloadAllNecessaryData(wsFolders: WorkspaceFolder[]) {
-		const validWsFolders = this._getValidWsFolders(wsFolders);
-		const initializedProjects = validWsFolders.map(wsFolder => {
-			const { project, paths, sourceFiles } = this._initializeTS(wsFolder.fsPath);
-			const projectPaths = paths.map(initializedPath =>
-				path.resolve(wsFolder.fsPath, initializedPath.replace(/\*/g, ""))
-			);
-
-			return { projectPaths, sourceFiles, project };
-		});
-		const paths = initializedProjects.flatMap(project => project.projectPaths);
-		const notDuplicatedPaths = paths.filter(initializedPath => {
-			return !validWsFolders.some(wsFolder => initializedPath.startsWith(wsFolder.fsPath));
-		});
-		const tsWsFolders = notDuplicatedPaths.map(path => new WorkspaceFolder(path));
-
-		await super._preloadAllNecessaryData(tsWsFolders.concat(validWsFolders));
-
-		initializedProjects.forEach(initializedProject => {
-			this.processSourceFiles(initializedProject.project, initializedProject.sourceFiles);
-		});
-	}
-
-	private _getValidWsFolders(wsFolders: WorkspaceFolder[]) {
-		return wsFolders.filter(wsFolder => {
-			const escapedFileSeparator = "\\" + path.sep;
-			const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
-			const exclusions: string[] = this.configHandler.getExcludeFolderPatterns();
-			const exclusionPaths = exclusions.map(excludeString => {
-				return `${wsFolderFSPath}/${excludeString}`;
-			});
-			const tsFiles = glob.sync(`${wsFolderFSPath}/**/*.ts`, {
-				ignore: exclusionPaths
-			});
-			const tsconfig = glob.sync(`${wsFolderFSPath}/tsconfig.json`);
-			const manifest = glob.sync(`${wsFolderFSPath}/**/manifest.json`, {
-				ignore: exclusionPaths
-			});
-
-			return tsFiles.length > 0 && tsconfig.length > 0 && manifest.length > 0;
-		});
+	initializeCustomClasses() {
+		const { project, sourceFiles } = this._initializeTS(this.workspaceFolder.fsPath);
+		this.processSourceFiles(project, sourceFiles);
 	}
 
 	_initializeTS(folderPath: string) {

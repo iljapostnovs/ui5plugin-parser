@@ -1,9 +1,9 @@
 import { UI5Metadata } from "./UI5Metadata";
 import { UI5MetadataDAO } from "./UI5MetadataDAO";
 export class SAPNode {
-	public node: any;
-	public metadata: UI5Metadata | undefined;
-	public nodes: SAPNode[] = [];
+	node: any;
+	metadata: UI5Metadata | undefined;
+	nodes: SAPNode[] = [];
 
 	readonly metadataDAO: UI5MetadataDAO;
 	constructor(node: any, metadataDAO: UI5MetadataDAO) {
@@ -22,33 +22,33 @@ export class SAPNode {
 		}
 	}
 
-	public getName(): string {
+	getName(): string {
 		return this.node.name.replace("module:", "").replace(/\//g, ".");
 	}
 
-	public getLib() {
+	getLib() {
 		return this.node.lib;
 	}
 
-	public getKind() {
+	getKind() {
 		return this.node.kind;
 	}
 
-	public getDisplayName() {
+	getDisplayName() {
 		return this.node.displayName || this.node.name.split(".")[this.node.name.split(".").length - 1];
 	}
 
-	public getIsDeprecated() {
+	getIsDeprecated() {
 		return this.node.bIsDeprecated || this.node.deprecated;
 	}
 
-	public getFields() {
+	getFields() {
 		const metadata = this.getMetadata();
 		const rawMetadata = metadata?.getRawMetadata();
-		const fields = rawMetadata?.properties?.filter((field: any) =>
-			field.visibility === "public" ||
-			field.visibility === "protected"
-		) || [];
+		const fields =
+			rawMetadata?.properties?.filter(
+				(field: any) => field.visibility === "public" || field.visibility === "protected"
+			) || [];
 		fields.forEach((field: any) => {
 			field.name = field.name.replace(rawMetadata?.name + "." || "", "");
 		});
@@ -59,8 +59,8 @@ export class SAPNode {
 				const field = { ...node };
 				field.type = node.name || "string";
 				field.name = node.name.replace(`${this.node.type || this.node.name}.`, "");
-				field.description = node.description || ""
-				field.deprecated = node.deprecated || node.bIsDeprecated || false
+				field.description = node.description || "";
+				field.deprecated = node.deprecated || node.bIsDeprecated || false;
 				return field;
 			});
 			fields.push(...nodeFields);
@@ -69,41 +69,57 @@ export class SAPNode {
 		return fields;
 	}
 
-	public getProperties(): any[] {
+	getProperties(): any[] {
 		const metadata = this.getMetadata();
 		const properties: any[] = [];
-		const nodeProperties = metadata?.getUI5Metadata()?.properties?.filter((property: any) => !property.deprecatedText && (property.visibility === "public" || property.visibility === "protected"));
+		const nodeProperties = metadata
+			?.getUI5Metadata()
+			?.properties?.filter(
+				(property: any) =>
+					!property.deprecatedText &&
+					(property.visibility === "public" || property.visibility === "protected")
+			);
 		if (nodeProperties) {
-			properties.push(...nodeProperties)
+			properties.push(...nodeProperties);
 		}
 		return properties;
 	}
 
-	public getAggregations(): any[] {
+	getAggregations(): any[] {
 		const metadata = this.getMetadata();
 		const UI5Metadata: any = metadata?.getUI5Metadata();
-		return UI5Metadata?.aggregations?.filter((aggregation: any) => !aggregation.deprecated && (aggregation.visibility === "public" || aggregation.visibility === "protected")) || [];
+		return (
+			UI5Metadata?.aggregations?.filter(
+				(aggregation: any) =>
+					!aggregation.deprecated &&
+					(aggregation.visibility === "public" || aggregation.visibility === "protected")
+			) || []
+		);
 	}
 
-	public getEvents(): any[] {
+	getEvents(): any[] {
 		const metadata = this.getMetadata();
 		const UI5Metadata: any = metadata?.getRawMetadata();
 		return UI5Metadata?.events?.filter((event: any) => !event.deprecated && event.visibility === "public") || [];
 	}
 
-	public getAssociations(): any[] {
+	getAssociations(): any[] {
 		const metadata = this.getMetadata();
 		const UI5Metadata: any = metadata?.getUI5Metadata();
-		return UI5Metadata?.associations?.filter((association: any) => !association.deprecated && association.visibility === "public") || [];
+		return (
+			UI5Metadata?.associations?.filter(
+				(association: any) => !association.deprecated && association.visibility === "public"
+			) || []
+		);
 	}
 
-	public getMethods(): any[] {
+	getMethods(): any[] {
 		const metadata = this.getMetadata();
 		const rawMetadata: any = metadata?.getRawMetadata();
 		return rawMetadata?.methods?.filter((method: any) => ["public", "protected"].includes(method.visibility)) || [];
 	}
 
-	public getMetadata() {
+	getMetadata() {
 		if (!this.metadata) {
 			this.metadata = this.metadataDAO.getPreloadedMetadataForNode(this);
 		}

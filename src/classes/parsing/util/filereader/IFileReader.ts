@@ -1,6 +1,8 @@
+import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
+import { ICacheable } from "../../abstraction/ICacheable";
 import { TextDocument } from "../textdocument/TextDocument";
 import { WorkspaceFolder } from "../textdocument/WorkspaceFolder";
-import { IFragment, IManifestPaths, IUIManifest, IView, IXMLFile, JSFileReader } from "./JSFileReader";
+import { ITag } from "../xml/XMLParser";
 
 export interface IFileReader {
 	globalStoragePath: string | undefined;
@@ -15,7 +17,7 @@ export interface IFileReader {
 		isFolder?: boolean
 	): string | undefined;
 	getAllManifests(): IUIManifest[];
-	rereadAllManifests(wsFolders: WorkspaceFolder[]): void;
+	rereadAllManifests(): void;
 	getManifestFSPathsInWorkspaceFolder(wsFolder: WorkspaceFolder): IManifestPaths[];
 	getClassNameFromView(controllerClassName: string, controlId: string): string | undefined;
 	getViewForController(controllerName: string): IView | undefined;
@@ -23,7 +25,14 @@ export interface IFileReader {
 	getFragmentsInXMLFile(XMLFile: IXMLFile): IFragment[];
 	getFirstFragmentForClass(className: string): IFragment | undefined;
 	getViewText(controllerName: string): string | undefined;
-	readAllFiles(wsFolders: WorkspaceFolder[]): void;
+
+	readFragments(): void;
+
+	readViews(): void;
+
+	readI18n(): void;
+
+	readCustomClasses(): void;
 	getAllJSClassNamesFromProject(wsFolder: WorkspaceFolder): string[];
 	getControllerNameFromView(viewContent: string): string | undefined;
 	getResponsibleClassForXMLDocument(document: TextDocument): string | undefined;
@@ -48,6 +57,74 @@ export interface IFileReader {
 	getXMLFile(className: string, fileType?: string): IXMLFile | undefined;
 	getDocumentTextFromCustomClassName(className: string, isFragment?: boolean): string | undefined;
 	getClassFSPathFromClassName(className: string, isFragment?: boolean): string | undefined;
-	setCache(cacheType: JSFileReader.CacheType, cache: string): void;
-	getCache(cacheType: JSFileReader.CacheType): any;
+	setCache(cacheType: IFileReader.CacheType, cache: string): void;
+	getCache(cacheType: IFileReader.CacheType): any;
+	setParser(parser: IUI5Parser): void;
+	readFiles(path: string): string[];
+	reloadFragmentReferences(): void;
+}
+
+export interface FileData {
+	content: string;
+	fsPath: string;
+}
+
+export namespace IFileReader {
+	export enum CacheType {
+		Metadata = "1",
+		APIIndex = "2",
+		Icons = "3"
+	}
+}
+
+export interface IUIManifest {
+	fsPath: string;
+	componentName: string;
+	content: any;
+}
+
+export interface IManifestPaths {
+	fsPath: string;
+}
+
+export interface IViews {
+	[key: string]: IView;
+}
+
+export interface IView extends IXMLFile, IIdClassMap {
+	controllerName: string;
+}
+export interface IFragment extends IXMLFile, IIdClassMap {}
+export interface IXMLFile extends IXMLParserCacheable, IHasFragments, ICacheable {
+	content: string;
+	fsPath: string;
+	name: string;
+}
+export interface IHasFragments {
+	fragments: IFragment[];
+}
+export interface IIdClassMap {
+	idClassMap: {
+		[key: string]: string;
+	};
+}
+interface IPrefixResults {
+	[key: string]: any[];
+}
+export interface ICommentPositions {
+	[key: number]: boolean;
+}
+export interface IXMLParserData {
+	strings: boolean[];
+	tags: ITag[];
+	prefixResults: IPrefixResults;
+	areAllStringsClosed: boolean;
+	comments?: ICommentPositions;
+}
+export interface IXMLParserCacheable {
+	XMLParserData?: IXMLParserData;
+}
+
+export interface Fragments {
+	[key: string]: IFragment;
 }

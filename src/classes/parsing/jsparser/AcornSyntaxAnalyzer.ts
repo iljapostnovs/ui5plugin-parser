@@ -1,9 +1,10 @@
 import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
+import ParserPool from "../../../parser/pool/ParserPool";
 import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
 import { IFieldsAndMethods } from "../ui5class/factory/IClassFactory";
 import { IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
 import { CustomJSClass, ICustomClassJSField, ICustomClassJSMethod } from "../ui5class/js/CustomJSClass";
-import { IXMLFile } from "../util/filereader/JSFileReader";
+import { IXMLFile } from "../util/filereader/IFileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "./ISyntaxAnalyser";
 import { FieldPropertyMethodGetterStrategy } from "./typesearch/abstraction/FieldPropertyMethodGetterStrategy";
@@ -42,7 +43,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return fieldsAndMethods;
 	}
 
-	public findInnerNode(node: any, position: number): any | undefined {
+	findInnerNode(node: any, position: number): any | undefined {
 		let innerNode: any;
 		if (node.type === "VariableDeclaration") {
 			const declaration = this.findAcornNode(node.declarations, position - 1);
@@ -179,7 +180,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return correctPart;
 	}
 
-	public findClassNameForStack(
+	findClassNameForStack(
 		stack: any[],
 		currentClassName: string,
 		primaryClassName: string = currentClassName,
@@ -427,7 +428,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return className;
 	}
 
-	public getResultOfPromise(className: string) {
+	getResultOfPromise(className: string) {
 		if (/Promise<.*?>/.test(className)) {
 			className = this._removeOnePromiseLevel(className);
 		} else if (className === "Promise") {
@@ -463,7 +464,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return className.substring(startIndex + 1, endIndex) + className.substring(endIndex + 1, className.length);
 	}
 
-	public getClassNameOfTheModelFromManifest(modelName: string, className: string, clearStack = false) {
+	getClassNameOfTheModelFromManifest(modelName: string, className: string, clearStack = false) {
 		const stackCopy = [...this.declarationStack];
 		if (clearStack) {
 			this.declarationStack = [];
@@ -540,7 +541,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		}
 
 		if (!routerClassName) {
-			const manifests = this.parser.fileReader.getAllManifests();
+			const manifests = ParserPool.getAllManifests();
 			const manifest = manifests.find(manifest => {
 				return manifest.content["sap.ui5"]?.routing?.config?.routerClass;
 			});
@@ -588,13 +589,13 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return className;
 	}
 
-	public getParametersOfTheEvent(eventName: string, className: string) {
+	getParametersOfTheEvent(eventName: string, className: string) {
 		const events = this.parser.classFactory.getClassEvents(className);
 		const event = events.find(event => event.name === eventName);
 		return event?.params;
 	}
 
-	public getEventHandlerData(node: any, className: string) {
+	getEventHandlerData(node: any, className: string) {
 		let eventHandlerData;
 
 		const UIClass = this.parser.classFactory.getUIClass(className);
@@ -949,7 +950,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return className;
 	}
 
-	public findMethodReturnType(method: IUIMethod, className: string, includeParentMethods = true, clearStack = false) {
+	findMethodReturnType(method: IUIMethod, className: string, includeParentMethods = true, clearStack = false) {
 		if (clearStack) {
 			this.declarationStack = [];
 		}
@@ -1012,7 +1013,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		}
 	}
 
-	public findFieldType(field: IUIField, className: string, includeParentMethods = true, clearStack = false) {
+	findFieldType(field: IUIField, className: string, includeParentMethods = true, clearStack = false) {
 		if (![undefined, "any"].includes(field.type)) {
 			return;
 		}
@@ -1159,7 +1160,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return assignments;
 	}
 
-	public expandAllContent(node: any, content: any[] = []) {
+	expandAllContent(node: any, content: any[] = []) {
 		if (node.expandedContent) {
 			content.push(...node.expandedContent);
 		} else {
@@ -1178,7 +1179,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 		return content;
 	}
-	public getContent(node: any) {
+	getContent(node: any) {
 		let innerNodes: any[] = [];
 
 		if (node.type === "VariableDeclaration") {
@@ -1332,9 +1333,9 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return className;
 	}
 
-	public declarationStack: any[] = [];
+	declarationStack: any[] = [];
 
-	public getClassNameFromSingleAcornNode(node: any, UIClass: CustomJSClass, stack: any[] = []) {
+	getClassNameFromSingleAcornNode(node: any, UIClass: CustomJSClass, stack: any[] = []) {
 		let className = "";
 		if (this.declarationStack.indexOf(node) > -1) {
 			// this.declarationStack = [];
@@ -1471,7 +1472,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return className;
 	}
 
-	public findMethodHierarchically(className: string, methodName: string): IUIMethod | undefined {
+	findMethodHierarchically(className: string, methodName: string): IUIMethod | undefined {
 		const method = this.parser.classFactory.getClassMethods(className).find(method => method.name === methodName);
 
 		return method;
@@ -1483,7 +1484,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		return field;
 	}
 
-	public findAcornNode(nodes: any[] = [], position: number) {
+	findAcornNode(nodes: any[] = [], position: number) {
 		return nodes.find((node: any) => node.start < position && node.end >= position);
 	}
 

@@ -1,6 +1,6 @@
-import { IParserConfigHandler } from "./IParserConfigHandler";
-import { join } from "path";
 import * as fs from "fs";
+import { join } from "path";
+import { IParserConfigHandler } from "./IParserConfigHandler";
 
 export class PackageParserConfigHandler implements IParserConfigHandler {
 	static readonly packageCache: { [key: string]: IUI5PackageConfigEntry } = {};
@@ -60,18 +60,18 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 	}
 }
 
-export interface IUI5ParserEntryFields {
-	ui5version?: string;
-	excludeFolderPatterns?: string[];
-	dataSource?: string;
-	rejectUnauthorized?: boolean;
-	libsToLoad?: string[];
+export interface IUI5PackageConfigEntry {
+	ui5?: IUI5ParserEntry;
 }
 
 export interface IUI5ParserEntry {
 	ui5parser?: IUI5ParserEntryFields;
 }
 
-export interface IUI5PackageConfigEntry {
-	ui5?: IUI5ParserEntry;
+export interface IUI5ParserEntryFields {
+	ui5version?: string;
+	excludeFolderPatterns?: string[];
+	dataSource?: string;
+	rejectUnauthorized?: boolean;
+	libsToLoad?: string[];
 }

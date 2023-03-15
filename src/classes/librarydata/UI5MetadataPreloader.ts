@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { URLBuilder } from "../http/URLBuilder";
-import { JSFileReader } from "../parsing/util/filereader/JSFileReader";
+import { IFileReader } from "../parsing/util/filereader/IFileReader";
 import { SAPNode } from "./SAPNode";
 
 export class UI5MetadataPreloader {
@@ -8,7 +8,7 @@ export class UI5MetadataPreloader {
 
 	namespaceDesignTimes: Record<string, any> = {};
 	private _resolveLibPreload!: (value: any) => void;
-	public libsPreloaded = new Promise(resolve => {
+	libsPreloaded = new Promise(resolve => {
 		this._resolveLibPreload = resolve;
 	});
 	private readonly parser: IUI5Parser;
@@ -16,7 +16,7 @@ export class UI5MetadataPreloader {
 		this.parser = parser;
 	}
 
-	public async preloadLibs(nodes: SAPNode[]) {
+	async preloadLibs(nodes: SAPNode[]) {
 		let cache = this._loadCache();
 		if (!cache) {
 			const promises = [];
@@ -40,7 +40,7 @@ export class UI5MetadataPreloader {
 		}
 	}
 
-	public async getMetadataForLib(lib: string) {
+	async getMetadataForLib(lib: string) {
 		return await this._fetchMetadataForLib(lib);
 	}
 
@@ -73,12 +73,12 @@ export class UI5MetadataPreloader {
 	}
 
 	private _loadCache() {
-		return this.parser.fileReader.getCache(JSFileReader.CacheType.Metadata);
+		return this.parser.fileReader.getCache(IFileReader.CacheType.Metadata);
 	}
 
 	private _writeCache() {
 		const cache = JSON.stringify(this.namespaceDesignTimes);
-		this.parser.fileReader.setCache(JSFileReader.CacheType.Metadata, cache);
+		this.parser.fileReader.setCache(IFileReader.CacheType.Metadata, cache);
 	}
 
 	private _getUniqueLibNames(node: SAPNode) {

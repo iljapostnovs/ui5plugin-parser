@@ -8,12 +8,13 @@ import { UI5MetadataDAO } from "../classes/librarydata/UI5MetadataDAO";
 import { AcornSyntaxAnalyzer } from "../classes/parsing/jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "../classes/parsing/jsparser/ISyntaxAnalyser";
 import { IClassFactory } from "../classes/parsing/ui5class/factory/IClassFactory";
-import { UIClassFactory } from "../classes/parsing/ui5class/factory/JSClassFactory";
+import { JSClassFactory } from "../classes/parsing/ui5class/factory/JSClassFactory";
 import { CustomJSClass } from "../classes/parsing/ui5class/js/CustomJSClass";
 import { IFileReader } from "../classes/parsing/util/filereader/IFileReader";
 import { JSFileReader } from "../classes/parsing/util/filereader/JSFileReader";
 import { ResourceModelData } from "../classes/parsing/util/i18n/ResourceModelData";
 import { TextDocumentTransformer } from "../classes/parsing/util/textdocument/TextDocumentTransformer";
+import { WorkspaceFolder } from "../classes/parsing/util/textdocument/WorkspaceFolder";
 import { XMLParser } from "../classes/parsing/util/xml/XMLParser";
 import { ReusableMethods } from "../classes/ReusableMethods";
 import { AbstractUI5Parser } from "./abstraction/AbstractUI5Parser";
@@ -33,12 +34,17 @@ export class UI5JSParser extends AbstractUI5Parser<CustomJSClass> {
 	readonly textDocumentTransformer: TextDocumentTransformer;
 	readonly reusableMethods: ReusableMethods;
 	readonly xmlParser: XMLParser;
-	constructor(params?: IConstructorParams<CustomJSClass>) {
-		super();
+	readonly workspaceFolder: WorkspaceFolder;
+
+	constructor(params: IConstructorParams<CustomJSClass>, packagePath?: string) {
+		super(packagePath);
+		this.workspaceFolder = params.workspaceFolder;
 		this.syntaxAnalyser = new AcornSyntaxAnalyzer(this);
-		this.classFactory = params?.classFactory || new UIClassFactory(this.syntaxAnalyser, this);
-		this.configHandler = params?.configHandler || new PackageParserConfigHandler();
-		this.fileReader = params?.fileReader || new JSFileReader(this.configHandler, this.classFactory, this);
+		this.classFactory = params?.classFactory ?? new JSClassFactory(this.syntaxAnalyser);
+		this.classFactory.setParser(this);
+		this.configHandler = params?.configHandler ?? new PackageParserConfigHandler(packagePath);
+		this.fileReader = params?.fileReader ?? new JSFileReader(this.configHandler, this.classFactory);
+		this.fileReader.setParser(this);
 		this.icons = new SAPIcons(this);
 		this.metadataDAO = new UI5MetadataDAO(this);
 		this.nodeDAO = new SAPNodeDAO(this);

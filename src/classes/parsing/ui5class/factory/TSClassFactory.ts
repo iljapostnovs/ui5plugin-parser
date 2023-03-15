@@ -1,5 +1,6 @@
 import { ClassDeclaration, ObjectLiteralExpression, Project, SourceFile, TypeChecker } from "ts-morph";
 import * as ts from "typescript";
+import ParserPool from "../../../../parser/pool/ParserPool";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import {
 	AbstractJSClass,
@@ -14,20 +15,21 @@ import { EmptyJSClass } from "../../ui5class/js/EmptyJSClass";
 import { StandardUIClass } from "../../ui5class/StandardUIClass";
 import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
-import { IFragment, IView } from "../../util/filereader/JSFileReader";
+import { IFragment, IView } from "../../util/filereader/IFileReader";
 import { TextDocument } from "../../util/textdocument/TextDocument";
+import { AbstractCustomClass } from "../AbstractCustomClass";
 import { IClassFactory, IFieldsAndMethods, IUIClassMap, IViewsAndFragments } from "./IClassFactory";
 
 export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObject> {
-	private readonly parser: UI5TSParser;
-	constructor(parser: UI5TSParser) {
+	private readonly _UIClasses: IUIClassMap = {};
+	private parser!: UI5TSParser;
+	setParser(parser: UI5TSParser) {
 		this.parser = parser;
 	}
+
 	isCustomClass(UIClass: AbstractJSClass): UIClass is CustomTSClass | CustomTSObject {
 		return UIClass instanceof CustomTSClass || UIClass instanceof CustomTSObject;
 	}
-
-	private readonly _UIClasses: IUIClassMap = {};
 
 	private _getInstance(
 		className: string,
@@ -73,7 +75,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return returnClass;
 	}
 
-	public isClassAChildOfClassB(classA: string, classB: string): boolean {
+	isClassAChildOfClassB(classA: string, classB: string): boolean {
 		let isExtendedBy = false;
 		const UIClass = this.getUIClass(classA);
 
@@ -86,7 +88,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return isExtendedBy;
 	}
 
-	public setNewContentForClassUsingDocument(document: TextDocument, force = false) {
+	setNewContentForClassUsingDocument(document: TextDocument, force = false) {
 		const documentText = document.getText();
 		const currentClassName = this.parser.fileReader.getClassNameFromPath(document.fileName);
 
@@ -95,7 +97,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		}
 	}
 
-	public setNewCodeForClass(
+	setNewCodeForClass(
 		classNameDotNotation: string,
 		classFileText: string,
 		force = false,
@@ -170,7 +172,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		}
 	}
 
-	public enrichTypesInCustomClass(UIClass: CustomTSClass | CustomTSObject) {
+	enrichTypesInCustomClass(UIClass: CustomTSClass | CustomTSObject) {
 		this._enrichAreMethodsEventHandlers(UIClass);
 		this._checkIfMembersAreUsedInXMLDocuments(UIClass);
 	}
@@ -230,7 +232,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		});
 	}
 
-	public getFieldsAndMethodsForClass(className: string, returnDuplicates = true) {
+	getFieldsAndMethodsForClass(className: string, returnDuplicates = true) {
 		const fieldsAndMethods: IFieldsAndMethods = {
 			className: className,
 			fields: [],
@@ -245,7 +247,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return fieldsAndMethods;
 	}
 
-	public getClassFields(className: string, returnDuplicates = true) {
+	getClassFields(className: string, returnDuplicates = true) {
 		let fields: IUIField[] = [];
 		const UIClass = this.getUIClass(className);
 		fields = UIClass.fields;
@@ -267,7 +269,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return fields;
 	}
 
-	public getClassMethods(className: string, returnDuplicates = true, methods: IUIMethod[] = []) {
+	getClassMethods(className: string, returnDuplicates = true, methods: IUIMethod[] = []) {
 		const UIClass = this.getUIClass(className);
 		methods.push(...UIClass.methods);
 		if (UIClass.parentClassNameDotNotation) {
@@ -290,7 +292,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return methods;
 	}
 
-	public getClassEvents(className: string, returnDuplicates = true) {
+	getClassEvents(className: string, returnDuplicates = true) {
 		const UIClass = this.getUIClass(className);
 		let events: IUIEvent[] = UIClass.events;
 		if (UIClass.parentClassNameDotNotation) {
@@ -311,7 +313,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return events;
 	}
 
-	public getClassAggregations(className: string, returnDuplicates = true) {
+	getClassAggregations(className: string, returnDuplicates = true) {
 		const UIClass = this.getUIClass(className);
 		let aggregations: IUIAggregation[] = UIClass.aggregations;
 		if (UIClass.parentClassNameDotNotation) {
@@ -333,7 +335,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return aggregations;
 	}
 
-	public getClassAssociations(className: string, returnDuplicates = true) {
+	getClassAssociations(className: string, returnDuplicates = true) {
 		const UIClass = this.getUIClass(className);
 		let associations: IUIAssociation[] = UIClass.associations;
 		if (UIClass.parentClassNameDotNotation) {
@@ -355,7 +357,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return associations;
 	}
 
-	public getClassProperties(className: string, returnDuplicates = true) {
+	getClassProperties(className: string, returnDuplicates = true) {
 		const UIClass = this.getUIClass(className);
 		let properties: IUIProperty[] = UIClass.properties;
 		if (UIClass.parentClassNameDotNotation) {
@@ -377,7 +379,16 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return properties;
 	}
 
-	public getUIClass(className: string) {
+	getUIClass(className: string) {
+		if (!this._UIClasses[className]) {
+			const parser = ParserPool.getParserForCustomClass(className);
+			if (parser && parser !== this.parser) {
+				const UIClass = parser?.classFactory.getUIClass(className);
+				if (UIClass) {
+					return UIClass;
+				}
+			}
+		}
 		if (!this._UIClasses[className]) {
 			const theClass = this._getInstance(className);
 			if (theClass) {
@@ -393,7 +404,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 	}
 
 	getViewsAndFragmentsOfControlHierarchically(
-		CurrentUIClass: CustomTSClass | CustomTSObject,
+		CurrentUIClass: AbstractCustomClass,
 		checkedClasses: string[] = [],
 		removeDuplicates = true,
 		includeChildren = false,
@@ -423,7 +434,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		checkedClasses.push(CurrentUIClass.className);
 		const viewsAndFragments: IViewsAndFragments = this.getViewsAndFragmentsRelatedTo(CurrentUIClass);
 
-		const relatedClasses: (CustomTSClass | CustomTSObject)[] = [];
+		const relatedClasses: AbstractCustomClass[] = [];
 		if (includeParents) {
 			const parentUIClasses = this.getAllCustomUIClasses().filter(
 				UIClass =>
@@ -443,7 +454,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 			});
 		}
 		const relatedViewsAndFragments = relatedClasses.reduce(
-			(accumulator: IViewsAndFragments, relatedUIClass: CustomTSClass | CustomTSObject) => {
+			(accumulator: IViewsAndFragments, relatedUIClass: AbstractCustomClass) => {
 				const relatedFragmentsAndViews = this.getViewsAndFragmentsOfControlHierarchically(
 					relatedUIClass,
 					checkedClasses,
@@ -514,7 +525,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		}, []);
 	}
 
-	getViewsAndFragmentsRelatedTo(CurrentUIClass: CustomTSClass | CustomTSObject) {
+	getViewsAndFragmentsRelatedTo(CurrentUIClass: AbstractCustomClass) {
 		const viewsAndFragments: IViewsAndFragments = {
 			views: [],
 			fragments: []
@@ -529,8 +540,8 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		}
 		viewsAndFragments.views = views;
 
-		const fragments = this.parser.fileReader.getAllFragments();
-		const allViews = this.parser.fileReader.getAllViews();
+		const fragments = ParserPool.getAllFragments();
+		const allViews = ParserPool.getAllViews();
 
 		//check for mentioning
 		fragments.forEach(fragment => {
@@ -558,7 +569,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		});
 	}
 
-	private _getAllChildrenOfClass(UIClass: CustomTSClass | CustomTSObject, bFirstLevelinheritance = false) {
+	private _getAllChildrenOfClass(UIClass: AbstractCustomClass, bFirstLevelinheritance = false) {
 		if (bFirstLevelinheritance) {
 			return this.getAllCustomUIClasses().filter(CurrentUIClass => {
 				return CurrentUIClass.parentClassNameDotNotation === UIClass.className;
@@ -573,17 +584,14 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		}
 	}
 
-	public getAllCustomUIClasses(): (CustomTSClass | CustomTSObject)[] {
-		const allUIClasses = this.getAllExistentUIClasses();
+	getAllCustomUIClasses(): AbstractCustomClass[] {
+		const allUIClasses = ParserPool.getAllExistentUIClasses();
 
 		return Object.keys(allUIClasses)
 			.filter(UIClassName => {
-				return (
-					allUIClasses[UIClassName] instanceof CustomTSClass ||
-					allUIClasses[UIClassName] instanceof CustomTSObject
-				);
+				return allUIClasses[UIClassName] instanceof AbstractCustomClass;
 			})
-			.map(UIClassName => allUIClasses[UIClassName] as CustomTSClass | CustomTSObject);
+			.map(UIClassName => allUIClasses[UIClassName] as AbstractCustomClass);
 	}
 
 	private _getFragmentFromViewManifestExtensions(className: string, view: IView) {
@@ -598,7 +606,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 					const extension = viewExtension[key];
 					if (extension.type === "XML" && extension.className === "sap.ui.core.Fragment") {
 						const fragmentName = extension.fragmentName;
-						const fragment = this.parser.fileReader.getFragment(fragmentName);
+						const fragment = ParserPool.getFragment(fragmentName);
 						if (fragment) {
 							const fragmentsInFragment: IFragment[] =
 								this.parser.fileReader.getFragmentsInXMLFile(fragment);
@@ -612,11 +620,11 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return fragments;
 	}
 
-	public getAllExistentUIClasses() {
+	getAllExistentUIClasses() {
 		return this._UIClasses;
 	}
 
-	public isMethodOverriden(className: string, methodName: string) {
+	isMethodOverriden(className: string, methodName: string) {
 		let isMethodOverriden = false;
 		let sameField = false;
 		const UIClass = this.getUIClass(className);
@@ -659,17 +667,17 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		return isMethodOverriden;
 	}
 
-	public removeClass(className: string) {
+	removeClass(className: string) {
 		delete this._UIClasses[className];
 	}
 
-	public getParent(UIClass: AbstractJSClass) {
+	getParent(UIClass: AbstractJSClass) {
 		if (UIClass.parentClassNameDotNotation) {
 			return this.getUIClass(UIClass.parentClassNameDotNotation);
 		}
 	}
 
-	public setNewNameForClass(oldPath: string, newPath: string) {
+	setNewNameForClass(oldPath: string, newPath: string) {
 		const oldName = this.parser.fileReader.getClassNameFromPath(oldPath);
 		const newName = this.parser.fileReader.getClassNameFromPath(newPath);
 		if (oldName && newName) {
@@ -698,7 +706,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		}
 	}
 
-	public getDefaultModelForClass(className: string): string | undefined {
+	getDefaultModelForClass(className: string): string | undefined {
 		let defaultModel;
 		const UIClass = this.getUIClass(className);
 		if (UIClass instanceof CustomTSClass) {
