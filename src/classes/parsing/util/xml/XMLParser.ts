@@ -1,4 +1,5 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
+import ParserPool from "../../../../parser/pool/ParserPool";
 import { IMember, IUIMethod } from "../../ui5class/js/AbstractJSClass";
 import { ICommentPositions, IXMLFile } from "../filereader/IFileReader";
 
@@ -92,7 +93,7 @@ export class XMLParser {
 								); //removes "'"
 							} else if (filteredResults && filteredResults.length > 2) {
 								//maybe static classes e.g. com.test.formatter.test
-								const manifest = this._parser.fileReader.getManifestForClass(currentEventHandlerName);
+								const manifest = ParserPool.getManifestForClass(currentEventHandlerName);
 								if (manifest) {
 									const parts = currentEventHandlerName.split(".");
 									const staticEventHandlerName = parts.pop() || "";
@@ -143,8 +144,7 @@ export class XMLParser {
 										currentEventHandlerName = eventHandlerName;
 									}
 								} else {
-									const manifest =
-										this._parser.fileReader.getManifestForClass(currentEventHandlerName);
+									const manifest = ParserPool.getManifestForClass(currentEventHandlerName);
 									const parts = currentEventHandlerName.split(".");
 									if (manifest) {
 										currentEventHandlerName = parts.pop() || "";
@@ -182,10 +182,12 @@ export class XMLParser {
 							const responsibleClassName =
 								this._parser.fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
 
-								return responsibleClassName ? this._parser.classFactory.isClassAChildOfClassB(
-									responsibleClassName,
-									functionCallClassName
-								) : false;
+							return responsibleClassName
+								? this._parser.classFactory.isClassAChildOfClassB(
+										responsibleClassName,
+										functionCallClassName
+								)
+								: false;
 						}
 
 						return currentEventHandlerName === eventHandlerName;
@@ -687,9 +689,7 @@ export class XMLParser {
 		const UIClass = this._parser.classFactory.getUIClass(className);
 		methods = UIClass.methods;
 
-		const isThisClassFromAProject = !!this._parser.fileReader.getManifestForClass(
-			UIClass.parentClassNameDotNotation
-		);
+		const isThisClassFromAProject = !!ParserPool.getManifestForClass(UIClass.parentClassNameDotNotation);
 		if (UIClass.parentClassNameDotNotation && (!onlyCustomMethods || isThisClassFromAProject)) {
 			methods = methods.concat(this._getClassMethodsRecursively(UIClass.parentClassNameDotNotation));
 		}

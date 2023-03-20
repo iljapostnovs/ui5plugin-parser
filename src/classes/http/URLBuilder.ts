@@ -1,17 +1,15 @@
+import ParserPool from "../../parser/pool/ParserPool";
 import { IParserConfigHandler } from "../config/IParserConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
 import { AbstractJSClass } from "../parsing/ui5class/js/AbstractJSClass";
-import { IFileReader } from "../parsing/util/filereader/IFileReader";
 
 export class URLBuilder {
 	private readonly _UI5Version: string;
 	private readonly _URLHost: string;
-	private readonly _fileReader: IFileReader;
 
-	constructor(configHandler: IParserConfigHandler, fileReader: IFileReader) {
+	constructor(configHandler: IParserConfigHandler) {
 		this._URLHost = configHandler.getDataSource();
 		this._UI5Version = configHandler.getUI5Version();
-		this._fileReader = fileReader;
 	}
 
 	getMarkupUrlForClassApi(SAPClass: SAPNode | AbstractJSClass) {
@@ -22,7 +20,7 @@ export class URLBuilder {
 				? SAPClass.className
 				: "";
 
-		if (this._fileReader.getManifestForClass(className) || this._isStandardClass(className)) {
+		if (ParserPool.getManifestForClass(className) || this._isNativeClass(className)) {
 			return "";
 		}
 
@@ -30,7 +28,7 @@ export class URLBuilder {
 	}
 
 	getMarkupUrlForPropertiesApi(SAPClass: AbstractJSClass) {
-		if (this._fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
+		if (ParserPool.getManifestForClass(SAPClass.className) || this._isNativeClass(SAPClass.className)) {
 			return "";
 		}
 
@@ -38,7 +36,7 @@ export class URLBuilder {
 	}
 
 	getMarkupUrlForAggregationApi(SAPClass: AbstractJSClass) {
-		if (this._fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
+		if (ParserPool.getManifestForClass(SAPClass.className) || this._isNativeClass(SAPClass.className)) {
 			return "";
 		}
 
@@ -46,7 +44,7 @@ export class URLBuilder {
 	}
 
 	getMarkupUrlForAssociationApi(SAPClass: AbstractJSClass) {
-		if (this._fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
+		if (ParserPool.getManifestForClass(SAPClass.className) || this._isNativeClass(SAPClass.className)) {
 			return "";
 		}
 
@@ -54,7 +52,7 @@ export class URLBuilder {
 	}
 
 	getMarkupUrlForEventsApi(SAPClass: AbstractJSClass, eventName = "Events") {
-		if (this._fileReader.getManifestForClass(SAPClass.className) || this._isStandardClass(SAPClass.className)) {
+		if (ParserPool.getManifestForClass(SAPClass.className) || this._isNativeClass(SAPClass.className)) {
 			return "";
 		}
 
@@ -69,7 +67,7 @@ export class URLBuilder {
 				? SAPClass.className
 				: "";
 
-		if (this._fileReader.getManifestForClass(className) || this._isStandardClass(className)) {
+		if (ParserPool.getManifestForClass(className) || this._isNativeClass(className)) {
 			return "";
 		}
 
@@ -84,7 +82,7 @@ export class URLBuilder {
 				? SAPClass.className
 				: "";
 
-		if (this._fileReader.getManifestForClass(className) || this._isStandardClass(className)) {
+		if (ParserPool.getManifestForClass(className) || this._isNativeClass(className)) {
 			return "";
 		}
 
@@ -118,7 +116,7 @@ export class URLBuilder {
 				: SAPClass instanceof AbstractJSClass
 				? SAPClass.className
 				: "";
-		if (this._fileReader.getManifestForClass(className) || this._isStandardClass(className)) {
+		if (ParserPool.getManifestForClass(className) || this._isNativeClass(className)) {
 			return "";
 		}
 
@@ -126,7 +124,7 @@ export class URLBuilder {
 		return `${urlBase}/methods/${methodName}`;
 	}
 
-	private _isStandardClass(className: string) {
+	private _isNativeClass(className: string) {
 		const standardClasses = ["array", "object", "promise", "function", "boolean", "void", "map"];
 
 		return standardClasses.includes(className.toLowerCase());

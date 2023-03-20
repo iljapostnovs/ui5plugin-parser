@@ -1,4 +1,5 @@
 import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
+import ParserPool from "../../../parser/pool/ParserPool";
 import { MainLooper } from "../jsparser/MainLooper";
 import { AbstractCustomClass } from "./AbstractCustomClass";
 import {
@@ -380,7 +381,7 @@ export class StandardUIClass extends AbstractJSClass {
 
 	private _generateAdditionalDescriptionFrom(className: string) {
 		let additionalDescription = "";
-		const isThisClassFromAProject = !!this.parser.fileReader.getManifestForClass(className);
+		const isThisClassFromAProject = !!ParserPool.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			const SAPNode = this._findSAPNode(className);
 			additionalDescription =
@@ -397,7 +398,7 @@ export class StandardUIClass extends AbstractJSClass {
 	protected generateTypeValues(type: string) {
 		let typeValues = super.generateTypeValues(type);
 
-		const isThisClassFromAProject = !!this.parser.fileReader.getManifestForClass(type);
+		const isThisClassFromAProject = !!ParserPool.getManifestForClass(type);
 		if (typeValues.length === 0 && !isThisClassFromAProject) {
 			const typeNode = this._findSAPNode(type);
 			const metadata = typeNode?.getMetadata();

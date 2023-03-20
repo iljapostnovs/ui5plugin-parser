@@ -16,6 +16,7 @@ import { StandardUIClass } from "../../ui5class/StandardUIClass";
 import { IFragment, IView } from "../../util/filereader/IFileReader";
 import { TextDocument } from "../../util/textdocument/TextDocument";
 import { AbstractCustomClass } from "../AbstractCustomClass";
+import { EmptyJSClass } from "../js/EmptyJSClass";
 import { IClassFactory, IFieldsAndMethods, IUIClassMap, IViewsAndFragments } from "./IClassFactory";
 
 export class JSClassFactory implements IClassFactory<CustomJSClass> {
@@ -65,19 +66,24 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 
 	private _getInstance(className: string, documentText?: string) {
 		let returnClass: AbstractJSClass;
-		const isThisClassFromAProject = !!this.parser.fileReader.getManifestForClass(className);
+		const isThisClassFromAProject = !!ParserPool.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className, this.parser);
 		} else {
 			returnClass = new CustomJSClass(className, this.syntaxAnalyser, this.parser, documentText);
-			(returnClass as CustomJSClass).comments?.forEach(comment => {
-				const typedefDoc = comment.jsdoc?.tags?.find((tag: any) => {
-					return tag.tag === "typedef";
+			if (!returnClass.classExists) {
+				returnClass = new EmptyJSClass(className, this.parser);
+			}
+			if (returnClass instanceof CustomJSClass) {
+				returnClass.comments?.forEach(comment => {
+					const typedefDoc = comment.jsdoc?.tags?.find((tag: any) => {
+						return tag.tag === "typedef";
+					});
+					if (typedefDoc) {
+						this._createTypeDefDocClass(comment.jsdoc);
+					}
 				});
-				if (typedefDoc) {
-					this._createTypeDefDocClass(comment.jsdoc);
-				}
-			});
+			}
 		}
 
 		return returnClass;
@@ -107,7 +113,7 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 
 	setNewCodeForClass(classNameDotNotation: string, classFileText: string, force = false) {
 		const previousClassInstance = this._UIClasses[classNameDotNotation];
-		const classDoesNotExist = !previousClassInstance;
+		const classDoesNotExist = !previousClassInstance || previousClassInstance instanceof EmptyJSClass;
 		if (
 			force ||
 			classDoesNotExist ||
@@ -424,7 +430,7 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 
 		const relatedClasses: AbstractCustomClass[] = [];
 		if (includeParents) {
-			const parentUIClasses = this.getAllCustomUIClasses().filter(
+			const parentUIClasses = ParserPool.getAllCustomUIClasses().filter(
 				UIClass =>
 					this.isClassAChildOfClassB(CurrentUIClass.className, UIClass.className) &&
 					CurrentUIClass !== UIClass
@@ -547,7 +553,7 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 	}
 
 	private _getAllClassesWhereClassIsImported(className: string) {
-		return this.getAllCustomUIClasses().filter(UIClass => {
+		return ParserPool.getAllCustomUIClasses().filter(UIClass => {
 			return (
 				UIClass.parentClassNameDotNotation !== className &&
 				!!UIClass.UIDefine.find(UIDefine => {
@@ -559,11 +565,11 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 
 	private _getAllChildrenOfClass(UIClass: AbstractCustomClass, bFirstLevelinheritance = false) {
 		if (bFirstLevelinheritance) {
-			return this.getAllCustomUIClasses().filter(CurrentUIClass => {
+			return ParserPool.getAllCustomUIClasses().filter(CurrentUIClass => {
 				return CurrentUIClass.parentClassNameDotNotation === UIClass.className;
 			});
 		} else {
-			return this.getAllCustomUIClasses().filter(CurrentUIClass => {
+			return ParserPool.getAllCustomUIClasses().filter(CurrentUIClass => {
 				return (
 					this.isClassAChildOfClassB(CurrentUIClass.className, UIClass.className) &&
 					UIClass.className !== CurrentUIClass.className
@@ -573,7 +579,7 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 	}
 
 	getAllCustomUIClasses(): AbstractCustomClass[] {
-		const allUIClasses = ParserPool.getAllExistentUIClasses();
+		const allUIClasses = this.getAllExistentUIClasses();
 
 		return Object.keys(allUIClasses)
 			.filter(UIClassName => {
@@ -713,7 +719,7 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 				}
 			}
 
-			this.getAllCustomUIClasses().forEach(UIClass => {
+			ParserPool.getAllCustomUIClasses().forEach(UIClass => {
 				if (UIClass.parentClassNameDotNotation === oldName) {
 					UIClass.parentClassNameDotNotation = newName;
 				}

@@ -9,6 +9,7 @@ import {
 	TypeChecker
 } from "ts-morph";
 import * as ts from "typescript";
+import ParserPool from "../../../../parser/pool/ParserPool";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import {
 	AbstractCustomClass,
@@ -84,7 +85,7 @@ export class CustomTSObject extends AbstractCustomClass<
 		let className = moduleNameSlash.replace(/\//g, ".");
 
 		if (moduleNameSlash?.startsWith(".")) {
-			const manifest = this.parser.fileReader.getManifestForClass(this.className);
+			const manifest = ParserPool.getManifestForClass(this.className);
 
 			if (manifest && this.fsPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);

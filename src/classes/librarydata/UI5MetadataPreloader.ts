@@ -56,10 +56,7 @@ export class UI5MetadataPreloader {
 				}
 			} else {
 				setTimeout(async () => {
-					const readPath: string = new URLBuilder(
-						this.parser.configHandler,
-						this.parser.fileReader
-					).getDesignTimeUrlForLib(lib);
+					const readPath: string = new URLBuilder(this.parser.configHandler).getDesignTimeUrlForLib(lib);
 					this.namespaceDesignTimes[lib] = this.parser.httpHandler.get(readPath);
 					try {
 						this.namespaceDesignTimes[lib] = await this.namespaceDesignTimes[lib];

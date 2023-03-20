@@ -121,7 +121,7 @@ export class SAPNodeDAO {
 	}
 
 	private async _fetchApiIndex() {
-		const path = new URLBuilder(this.parser.configHandler, this.parser.fileReader).getAPIIndexUrl();
+		const path = new URLBuilder(this.parser.configHandler).getAPIIndexUrl();
 		const data: any = await this.parser.httpHandler.get(path);
 		this._nodes = data;
 	}

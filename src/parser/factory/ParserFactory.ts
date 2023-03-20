@@ -13,7 +13,8 @@ export default class ParserFactory {
 	static async createInstances(
 		wsFolders: WorkspaceFolder[],
 		globalStoragePath: string = path.join(__dirname, "./node_modules/.cache/ui5plugin"),
-		configHandler: IParserConfigHandler = new PackageParserConfigHandler()
+		configHandler: IParserConfigHandler = new PackageParserConfigHandler(),
+		clearCache = false
 	) {
 		const manifestInfos = wsFolders.flatMap(wsFolder => {
 			const manifestPaths = AbstractFileReader.readFilesInWorkspace(wsFolder, "**/manifest.json", configHandler);
@@ -26,6 +27,11 @@ export default class ParserFactory {
 
 		const parsers = manifestInfos.map(manifestInfo => this._createParser(manifestInfo));
 
+		if (clearCache) {
+			parsers.forEach(parser => {
+				parser.fileReader.clearCache();
+			});
+		}
 		const initializations = parsers.map(parser => parser.initializeLibsAndManifest(globalStoragePath));
 		await Promise.all(initializations);
 		parsers.forEach(parser => parser.initializeFragments());

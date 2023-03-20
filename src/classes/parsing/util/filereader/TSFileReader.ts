@@ -18,7 +18,7 @@ export class TSFileReader extends AbstractFileReader<CustomTSClass | CustomTSObj
 	) {
 		let FSPath;
 		let extension = ".ts";
-		const manifest = this.getManifestForClass(className);
+		const manifest = ParserPool.getManifestForClass(className);
 		if (manifest) {
 			if (isController) {
 				extension = ".controller.ts";

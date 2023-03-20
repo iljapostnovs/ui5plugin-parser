@@ -1,3 +1,4 @@
+import { AbstractCustomClass } from "../../classes/parsing/ui5class/AbstractCustomClass";
 import { IUIClassMap } from "../../classes/parsing/ui5class/factory/IClassFactory";
 import { IFileReader } from "../../classes/parsing/util/filereader/IFileReader";
 import { IUI5Parser } from "../abstraction/IUI5Parser";
@@ -8,15 +9,27 @@ export default class ParserPool {
 		this._parsers.push(parser);
 	}
 
+	static deregister(parserToDeregister: IUI5Parser) {
+		const parserRegistered = this._parsers.some(cachedParser => cachedParser === parserToDeregister);
+		if (parserRegistered) {
+			const indexOfParser = this._parsers.indexOf(parserToDeregister);
+			this._parsers.splice(indexOfParser, 1);
+		}
+	}
+
 	static getParserForCustomClass<Parser extends IUI5Parser = IUI5Parser>(className: string) {
-		return this._parsers.find(parser => {
-			return !!parser.fileReader.getManifestForClass(className);
+		const manifests = this.getAllManifests();
+		const manifest = manifests.find(manifest => className.startsWith(manifest.componentName));
+		return manifest && this._parsers.find(parser => {
+			return parser.fileReader.getAllManifests().includes(manifest);
 		}) as Parser | undefined;
 	}
 
 	static getParserForFile<Parser extends IUI5Parser = IUI5Parser>(fsPath: string) {
-		return this._parsers.find(parser => {
-			return !!parser.fileReader.getClassNameFromPath(fsPath);
+		const manifests = this.getAllManifests();
+		const manifest = manifests.find(manifest => fsPath.startsWith(manifest.fsPath));
+		return manifest && this._parsers.find(parser => {
+			return parser.fileReader.getAllManifests().includes(manifest);
 		}) as Parser | undefined;
 	}
 
@@ -52,7 +65,19 @@ export default class ParserPool {
 	}
 
 	static getAllManifests() {
-		return this.getAllFileReaders().flatMap(fileReader => fileReader.getAllManifests());
+		const manifests = this.getAllFileReaders().flatMap(fileReader => fileReader.getAllManifests());
+		const sortedByNameManifests = manifests.sort((firstManifest, secondManifest) => {
+			return secondManifest.componentName.length - firstManifest.componentName.length;
+		});
+
+		return sortedByNameManifests;
+	}
+
+	static getManifestForClass(className = "") {
+		const manifests = this.getAllManifests();
+		const manifest = manifests.find(manifest => className.startsWith(manifest.componentName));
+
+		return manifest;
 	}
 
 	static getAllExistentUIClasses(): IUIClassMap {
@@ -65,6 +90,16 @@ export default class ParserPool {
 			};
 			return UIClasses;
 		}, {});
+	}
+
+	static getAllCustomUIClasses() {
+		const allUIClasses = this.getAllExistentUIClasses();
+
+		return Object.keys(allUIClasses)
+			.filter(UIClassName => {
+				return allUIClasses[UIClassName] instanceof AbstractCustomClass;
+			})
+			.map(UIClassName => allUIClasses[UIClassName] as AbstractCustomClass);
 	}
 
 	static clearCache() {

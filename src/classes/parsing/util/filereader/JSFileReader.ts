@@ -19,7 +19,7 @@ export class JSFileReader extends AbstractFileReader<CustomJSClass, UI5JSParser>
 	) {
 		let FSPath;
 		let extension = ".js";
-		const manifest = this.getManifestForClass(className);
+		const manifest = ParserPool.getManifestForClass(className);
 		if (manifest) {
 			if (isController) {
 				extension = ".controller.js";

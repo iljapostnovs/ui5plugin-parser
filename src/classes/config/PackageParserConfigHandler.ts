@@ -19,7 +19,7 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 	}
 
 	getUI5Version() {
-		return this._package?.ui5?.ui5parser?.ui5version || "1.84.29";
+		return this._package?.ui5?.ui5parser?.ui5version || "1.84.30";
 	}
 
 	getExcludeFolderPatterns() {

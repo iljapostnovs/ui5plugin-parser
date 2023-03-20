@@ -37,7 +37,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		typeChecker?: TypeChecker
 	) {
 		let returnClass: AbstractJSClass | undefined;
-		const isThisClassFromAProject = !!this.parser.fileReader.getManifestForClass(className);
+		const isThisClassFromAProject = !!ParserPool.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className, this.parser);
 		} else if (isThisClassFromAProject) {
@@ -436,7 +436,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 
 		const relatedClasses: AbstractCustomClass[] = [];
 		if (includeParents) {
-			const parentUIClasses = this.getAllCustomUIClasses().filter(
+			const parentUIClasses = ParserPool.getAllCustomUIClasses().filter(
 				UIClass =>
 					this.isClassAChildOfClassB(CurrentUIClass.className, UIClass.className) &&
 					CurrentUIClass !== UIClass
@@ -559,7 +559,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 	}
 
 	private _getAllClassesWhereClassIsImported(className: string) {
-		return this.getAllCustomUIClasses().filter(UIClass => {
+		return ParserPool.getAllCustomUIClasses().filter(UIClass => {
 			return (
 				UIClass.parentClassNameDotNotation !== className &&
 				!!UIClass.UIDefine.find(UIDefine => {
@@ -571,11 +571,11 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 
 	private _getAllChildrenOfClass(UIClass: AbstractCustomClass, bFirstLevelinheritance = false) {
 		if (bFirstLevelinheritance) {
-			return this.getAllCustomUIClasses().filter(CurrentUIClass => {
+			return ParserPool.getAllCustomUIClasses().filter(CurrentUIClass => {
 				return CurrentUIClass.parentClassNameDotNotation === UIClass.className;
 			});
 		} else {
-			return this.getAllCustomUIClasses().filter(CurrentUIClass => {
+			return ParserPool.getAllCustomUIClasses().filter(CurrentUIClass => {
 				return (
 					this.isClassAChildOfClassB(CurrentUIClass.className, UIClass.className) &&
 					UIClass.className !== CurrentUIClass.className
@@ -698,7 +698,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 				}
 			}
 
-			this.getAllCustomUIClasses().forEach(UIClass => {
+			ParserPool.getAllCustomUIClasses().forEach(UIClass => {
 				if (UIClass.parentClassNameDotNotation === oldName) {
 					UIClass.parentClassNameDotNotation = newName;
 				}

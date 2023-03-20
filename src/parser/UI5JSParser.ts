@@ -48,7 +48,7 @@ export class UI5JSParser extends AbstractUI5Parser<CustomJSClass> {
 		this.icons = new SAPIcons(this);
 		this.metadataDAO = new UI5MetadataDAO(this);
 		this.nodeDAO = new SAPNodeDAO(this);
-		this.urlBuilder = new URLBuilder(this.configHandler, this.fileReader);
+		this.urlBuilder = new URLBuilder(this.configHandler);
 		this.httpHandler = new HTTPHandler(this.configHandler);
 		this.resourceModelData = new ResourceModelData(this);
 		this.textDocumentTransformer = new TextDocumentTransformer(this);

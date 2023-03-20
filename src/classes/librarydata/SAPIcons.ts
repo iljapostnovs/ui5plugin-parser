@@ -18,7 +18,7 @@ export class SAPIcons {
 	}
 
 	private async _loadIcons() {
-		const uris: string[] = new URLBuilder(this.parser.configHandler, this.parser.fileReader).getIconURIs();
+		const uris: string[] = new URLBuilder(this.parser.configHandler).getIconURIs();
 		let icons: string[] = [];
 		const aIconResponses = await Promise.all(uris.map(uri => this._requestJSONData(uri)));
 		aIconResponses.forEach((iconResponse: any) => {

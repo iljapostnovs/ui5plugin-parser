@@ -470,7 +470,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			this.declarationStack = [];
 		}
 		let modelClassName = "";
-		const manifest = this.parser.fileReader.getManifestForClass(className);
+		const manifest = ParserPool.getManifestForClass(className);
 		if (manifest && manifest.content["sap.ui5"]?.models) {
 			const modelEntry = manifest.content["sap.ui5"].models[modelName];
 			if (modelEntry?.type) {
@@ -535,7 +535,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 	private _getClassNameOfTheRouterFromManifest(className: string) {
 		let routerClassName = "";
 
-		const manifest = this.parser.fileReader.getManifestForClass(className);
+		const manifest = ParserPool.getManifestForClass(className);
 		if (manifest && manifest.content["sap.ui5"]?.routing?.config?.routerClass) {
 			routerClassName = manifest.content["sap.ui5"].routing.config.routerClass;
 		}
@@ -555,7 +555,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 
 	private _getClassNameOfTheComponent(className: string) {
 		let componentClassName = "";
-		const manifest = this.parser.fileReader.getManifestForClass(className);
+		const manifest = ParserPool.getManifestForClass(className);
 		if (manifest && manifest.content["sap.app"]?.id) {
 			componentClassName = `${manifest.content["sap.app"]?.id}.Component`;
 		}

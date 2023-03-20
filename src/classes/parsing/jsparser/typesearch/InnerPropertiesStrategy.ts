@@ -1,4 +1,5 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
+import ParserPool from "../../../../parser/pool/ParserPool";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
 import { IFieldsAndMethods } from "../../ui5class/factory/IClassFactory";
 import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
@@ -207,7 +208,7 @@ export class InnerPropertiesStrategy extends FieldPropertyMethodGetterStrategy {
 		const fileName = document.fileName;
 		const currentClassName = fileName && this.parser.fileReader.getClassNameFromPath(fileName);
 		if (currentClassName) {
-			const manifest = this.parser.fileReader.getManifestForClass(currentClassName);
+			const manifest = ParserPool.getManifestForClass(currentClassName);
 			if (manifest && manifest.content["sap.ui5"]?.models) {
 				models = Object.keys(manifest.content["sap.ui5"]?.models).map(key => ({
 					type: manifest.content["sap.ui5"]?.models[key].type,

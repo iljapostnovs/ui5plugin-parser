@@ -186,7 +186,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 	}
 
 	getManifestForClass(className = "") {
-		return ParserPool.getAllManifests().find(UIManifest => className.startsWith(UIManifest.componentName + "."));
+		return this._manifests.find(UIManifest => className.startsWith(UIManifest.componentName + "."));
 	}
 
 	protected _fetchAllWorkspaceManifests() {
@@ -392,7 +392,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 	}
 
 	getManifestExtensionsForClass(className: string): any | undefined {
-		const manifest = this.getManifestForClass(className);
+		const manifest = ParserPool.getManifestForClass(className);
 		return manifest?.content["sap.ui5"]?.extends?.extensions;
 	}
 
@@ -455,7 +455,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 	}
 
 	protected _getResponsibleClassNameForFragmentFromCustomUIClasses(viewOrFragment: IXMLFile) {
-		const allUIClasses = this._classFactory.getAllCustomUIClasses();
+		const allUIClasses = ParserPool.getAllCustomUIClasses();
 		const fragmentName = this.getClassNameFromPath(viewOrFragment.fsPath);
 		const responsibleClass = allUIClasses.find(UIClass => {
 			return UIClass.classText.includes(`${fragmentName}`);
@@ -506,6 +506,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 		fsPath = fsPath.replace(/\//g, fileSeparator);
 		let className: string | undefined;
 		const manifests = ParserPool.getAllManifests();
+		// TODO: this
 		const currentManifest = manifests.find(manifest => fsPath.startsWith(manifest.fsPath));
 		if (currentManifest) {
 			className = fsPath

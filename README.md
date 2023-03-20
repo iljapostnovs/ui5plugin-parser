@@ -107,7 +107,7 @@ Default package.json config looks as follows:
 {
 	"ui5": {
 		"ui5parser": {
-			"ui5version": "1.84.29",
+			"ui5version": "1.84.30",
 			"excludeFolderPatterns": ["**/resources/**", "**/dist/**/**", "**/node_modules/**"],
 			"dataSource": "https://ui5.sap.com/",
 			"rejectUnauthorized": false,

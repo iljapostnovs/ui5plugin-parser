@@ -21,6 +21,7 @@ import {
 	IUIProperty
 } from "./AbstractJSClass";
 import LineColumn = require("line-column");
+import ParserPool from "../../../../parser/pool/ParserPool";
 const acornLoose = require("acorn-loose");
 
 interface ILooseObject {
@@ -384,7 +385,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 		let className = classPath.replace(/\//g, ".");
 
 		if (classPath?.startsWith(".")) {
-			const manifest = this.parser.fileReader.getManifestForClass(this.className);
+			const manifest = ParserPool.getManifestForClass(this.className);
 
 			if (manifest && this.fsPath) {
 				const normalizedManifestPath = path.normalize(manifest.fsPath);
@@ -468,7 +469,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 
 	private _getParentNameFromManifest() {
 		let parentName: string | undefined;
-		const manifest = this.parser.fileReader.getManifestForClass(this.className);
+		const manifest = ParserPool.getManifestForClass(this.className);
 		if (
 			manifest?.content &&
 			manifest?.content["sap.ui5"]?.extends?.extensions &&
