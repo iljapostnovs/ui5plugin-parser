@@ -186,7 +186,10 @@ export class XMLParser {
 								? this._parser.classFactory.isClassAChildOfClassB(
 										responsibleClassName,
 										functionCallClassName
-								)
+								) || this._parser.classFactory.isClassAChildOfClassB(
+									functionCallClassName,
+									responsibleClassName
+							)
 								: false;
 						}
 

@@ -96,6 +96,7 @@ interface IUI5ParserEntryFields {
 	dataSource?: string;
 	rejectUnauthorized?: boolean;
 	libsToLoad?: string[];
+	additionalWorkspace?: string[];
 }
 ```
 
@@ -125,7 +126,9 @@ Default package.json config looks as follows:
 				"sap.ushell",
 				"sap.tnt",
 				"sap.suite.ui.microchart"
-			]
+			],
+			//Handy to add additional workspace paths if e.g. library is outside of CWD
+			"additionalWorkspaces": ["../MyLibrary"]
 		}
 	}
 }

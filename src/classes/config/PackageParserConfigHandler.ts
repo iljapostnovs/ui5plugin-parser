@@ -18,13 +18,17 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 		}
 	}
 
+	getAdditionalWorkspaces() {
+		return this._package.ui5?.ui5parser?.additionalWorkspaces ?? [];
+	}
+
 	getUI5Version() {
-		return this._package?.ui5?.ui5parser?.ui5version || "1.84.30";
+		return this._package?.ui5?.ui5parser?.ui5version ?? "1.84.30";
 	}
 
 	getExcludeFolderPatterns() {
 		return (
-			this._package?.ui5?.ui5parser?.excludeFolderPatterns || [
+			this._package?.ui5?.ui5parser?.excludeFolderPatterns ?? [
 				"**/resources/**",
 				"**/dist/**/**",
 				"**/node_modules/**"
@@ -33,15 +37,15 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 	}
 
 	getDataSource() {
-		return this._package?.ui5?.ui5parser?.dataSource || "https://ui5.sap.com/";
+		return this._package?.ui5?.ui5parser?.dataSource ?? "https://ui5.sap.com/";
 	}
 
 	getRejectUnauthorized() {
-		return this._package?.ui5?.ui5parser?.rejectUnauthorized || false;
+		return this._package?.ui5?.ui5parser?.rejectUnauthorized ?? false;
 	}
 
 	getLibsToLoad() {
-		const additionalLibsToLoad = this._package?.ui5?.ui5parser?.libsToLoad || [];
+		const additionalLibsToLoad = this._package?.ui5?.ui5parser?.libsToLoad ?? [];
 		return [
 			"sap.m",
 			"sap.ui.comp",
@@ -74,4 +78,5 @@ export interface IUI5ParserEntryFields {
 	dataSource?: string;
 	rejectUnauthorized?: boolean;
 	libsToLoad?: string[];
+	additionalWorkspaces?: string[];
 }
