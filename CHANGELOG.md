@@ -4,6 +4,7 @@
 -   Remove all singletones. Now parser supports multiple parser instances
 -   `additionalWorkspaces` config entry added
 -   `proxyWorkspaces` config entry added
+-   `webapp` folder is not automatically excluded for TS projects anymore
 
 ## 0.7.11 (04-02-2023)
 
