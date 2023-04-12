@@ -148,8 +148,12 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 			return true;
 		}
 
-		const fileNames = fs.readdirSync(directoryName);
-		if (fileNames.indexOf(path.basename(filepath)) === -1) {
+		try {
+			const fileNames = fs.readdirSync(directoryName);
+			if (fileNames.indexOf(path.basename(filepath)) === -1) {
+				return false;
+			}
+		} catch (error) {
 			return false;
 		}
 
