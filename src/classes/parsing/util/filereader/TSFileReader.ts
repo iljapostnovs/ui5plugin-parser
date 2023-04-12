@@ -16,6 +16,11 @@ export class TSFileReader extends AbstractFileReader<CustomTSClass | CustomTSObj
 		isView = false,
 		isFolder = false
 	) {
+		const parser = ParserPool.getParserForCustomClass(className);
+		if (parser !== this._parser) {
+			return parser?.fileReader.convertClassNameToFSPath(className, isController, isFragment, isView, isFolder);
+		}
+		
 		let FSPath;
 		let extension = ".ts";
 		const manifest = ParserPool.getManifestForClass(className);

@@ -1,6 +1,6 @@
 import * as path from "path";
-import ParserPool from "../../../../parser/pool/ParserPool";
 import { UI5JSParser } from "../../../../parser/UI5JSParser";
+import ParserPool from "../../../../parser/pool/ParserPool";
 import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
 import { AbstractFileReader } from "./AbstractFileReader";
 import { IFragment } from "./IFileReader";
@@ -17,6 +17,11 @@ export class JSFileReader extends AbstractFileReader<CustomJSClass, UI5JSParser>
 		isView = false,
 		isFolder = false
 	) {
+		const parser = ParserPool.getParserForCustomClass(className);
+		if (parser !== this._parser) {
+			return parser?.fileReader.convertClassNameToFSPath(className, isController, isFragment, isView, isFolder);
+		}
+
 		let FSPath;
 		let extension = ".js";
 		const manifest = ParserPool.getManifestForClass(className);
