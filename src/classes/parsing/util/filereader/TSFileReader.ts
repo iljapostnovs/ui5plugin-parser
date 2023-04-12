@@ -4,7 +4,7 @@ import ParserPool from "../../../../parser/pool/ParserPool";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
-import { AbstractFileReader } from "./AbstractFileReader";
+import { AbstractFileReader, toNative } from "./AbstractFileReader";
 import { IFragment } from "./IFileReader";
 const escapedFileSeparator = "\\" + path.sep;
 
@@ -48,13 +48,14 @@ export class TSFileReader extends AbstractFileReader<CustomTSClass | CustomTSObj
 		const exclusions: string[] = this._configHandler.getExcludeFolderPatterns();
 		exclusions.push("**/*.d.ts");
 		exclusions.push("**/src-gen/**");
-		exclusions.push("**/webapp/**");
 		const exclusionPaths = exclusions.map(excludeString => {
 			return `${wsFolderFSPath}/${excludeString}`;
 		});
-		const filePaths = glob.sync(`${wsFolderFSPath}/${path}`, {
-			ignore: exclusionPaths
-		});
+		const filePaths = glob
+			.sync(`${wsFolderFSPath}/${path}`, {
+				ignore: exclusionPaths
+			})
+			.map(filePath => toNative(filePath));
 
 		return filePaths;
 	}
@@ -125,5 +126,15 @@ export class TSFileReader extends AbstractFileReader<CustomTSClass | CustomTSObj
 		}, []);
 
 		return classNames;
+	}
+
+	reEnrichAllCustomClasses() {
+		const UIClasses = this._classFactory.getAllCustomUIClasses();
+		UIClasses.forEach(UIClass => {
+			if (UIClass instanceof CustomTSClass) {
+				UIClass.relatedViewsAndFragments = undefined;
+				this._classFactory.enrichTypesInCustomClass(UIClass);
+			}
+		});
 	}
 }

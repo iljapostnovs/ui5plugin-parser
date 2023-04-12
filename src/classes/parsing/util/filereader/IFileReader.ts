@@ -62,6 +62,7 @@ export interface IFileReader {
 	setParser(parser: IUI5Parser): void;
 	readFiles(path: string): string[];
 	reloadFragmentReferences(): void;
+	reEnrichAllCustomClasses(): void;
 }
 
 export interface FileData {

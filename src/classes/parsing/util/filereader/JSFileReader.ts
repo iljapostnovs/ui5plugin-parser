@@ -106,16 +106,6 @@ export class JSFileReader extends AbstractFileReader<CustomJSClass, UI5JSParser>
 				}
 			}
 		});
-
-		classNames.forEach(className => {
-			if (className) {
-				const UIClass = this._classFactory.getUIClass(className);
-				if (UIClass instanceof CustomJSClass) {
-					UIClass.relatedViewsAndFragments = undefined;
-					this._classFactory.enrichTypesInCustomClass(UIClass);
-				}
-			}
-		});
 	}
 
 	getAllJSClassNamesFromProject() {
@@ -131,5 +121,15 @@ export class JSFileReader extends AbstractFileReader<CustomJSClass, UI5JSParser>
 		}, []);
 
 		return classNames;
+	}
+
+	reEnrichAllCustomClasses() {
+		const UIClasses = this._classFactory.getAllCustomUIClasses();
+		UIClasses.forEach(UIClass => {
+			if (UIClass instanceof CustomJSClass) {
+				UIClass.relatedViewsAndFragments = undefined;
+				this._classFactory.enrichTypesInCustomClass(UIClass);
+			}
+		});
 	}
 }

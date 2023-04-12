@@ -1,17 +1,29 @@
 import * as fs from "fs";
 import { join } from "path";
+import { toNative } from "../parsing/util/filereader/AbstractFileReader";
 import { IParserConfigHandler } from "./IParserConfigHandler";
 
 export class PackageParserConfigHandler implements IParserConfigHandler {
 	static readonly packageCache: { [key: string]: IUI5PackageConfigEntry } = {};
-	private readonly _package: IUI5PackageConfigEntry;
+	private _package!: IUI5PackageConfigEntry;
+	packagePath: string;
 	constructor(packagePath = join(process.cwd(), "/package.json")) {
+		this.packagePath = toNative(packagePath);
+		this.loadCache();
+	}
+
+	getProxyWorkspaces(): string[] | undefined {
+		this.loadCache();
+		return this._package.ui5?.ui5parser?.proxyWorkspaces;
+	}
+
+	loadCache() {
 		try {
-			if (PackageParserConfigHandler.packageCache[packagePath]) {
-				this._package = PackageParserConfigHandler.packageCache[packagePath];
+			if (PackageParserConfigHandler.packageCache[this.packagePath]) {
+				this._package = PackageParserConfigHandler.packageCache[this.packagePath];
 			} else {
-				this._package = JSON.parse(fs.readFileSync(packagePath, "utf8")) || {};
-				PackageParserConfigHandler.packageCache[packagePath] = this._package;
+				this._package = JSON.parse(fs.readFileSync(this.packagePath, "utf8")) || {};
+				PackageParserConfigHandler.packageCache[this.packagePath] = this._package;
 			}
 		} catch (error) {
 			this._package = {};
@@ -27,13 +39,9 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 	}
 
 	getExcludeFolderPatterns() {
-		return (
-			this._package?.ui5?.ui5parser?.excludeFolderPatterns ?? [
-				"**/resources/**",
-				"**/dist/**/**",
-				"**/node_modules/**"
-			]
-		);
+		const userExclusions = this._package?.ui5?.ui5parser?.excludeFolderPatterns ?? [];
+		userExclusions.push("**/resources/**", "**/dist/**", "**/node_modules/**");
+		return userExclusions;
 	}
 
 	getDataSource() {
@@ -79,4 +87,5 @@ export interface IUI5ParserEntryFields {
 	rejectUnauthorized?: boolean;
 	libsToLoad?: string[];
 	additionalWorkspaces?: string[];
+	proxyWorkspaces?: string[];
 }

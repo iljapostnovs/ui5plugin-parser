@@ -3,7 +3,10 @@ import { PackageParserConfigHandler } from "./classes/config/PackageParserConfig
 import { AcornSyntaxAnalyzer } from "./classes/parsing/jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "./classes/parsing/jsparser/ISyntaxAnalyser";
 import { IClassFactory } from "./classes/parsing/ui5class/factory/IClassFactory";
+import { toNative } from "./classes/parsing/util/filereader/AbstractFileReader";
 import { IFileReader } from "./classes/parsing/util/filereader/IFileReader";
+import { ReferenceFinder } from "./classes/parsing/util/referencefinder/ReferenceFinder";
+import { TSReferenceFinder } from "./classes/parsing/util/referencefinder/TSReferenceFinder";
 import { TextDocument } from "./classes/parsing/util/textdocument/TextDocument";
 import { WorkspaceFolder } from "./classes/parsing/util/textdocument/WorkspaceFolder";
 import { XMLParser } from "./classes/parsing/util/xml/XMLParser";
@@ -31,5 +34,8 @@ export {
 	ICustomTSMethod,
 	AnyCustomTSClass,
 	ParserFactory,
-	ParserPool
+	ParserPool,
+	ReferenceFinder,
+	TSReferenceFinder,
+	toNative
 };

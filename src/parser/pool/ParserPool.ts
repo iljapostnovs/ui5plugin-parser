@@ -20,17 +20,24 @@ export default class ParserPool {
 	static getParserForCustomClass<Parser extends IUI5Parser = IUI5Parser>(className: string) {
 		const manifests = this.getAllManifests();
 		const manifest = manifests.find(manifest => className.startsWith(manifest.componentName));
-		return manifest && this._parsers.find(parser => {
-			return parser.fileReader.getAllManifests().includes(manifest);
-		}) as Parser | undefined;
+		return (
+			manifest &&
+			(this._parsers.find(parser => {
+				return parser.fileReader.getAllManifests().includes(manifest);
+			}) as Parser | undefined)
+		);
 	}
 
 	static getParserForFile<Parser extends IUI5Parser = IUI5Parser>(fsPath: string) {
+		const fsPathLower = fsPath.toLowerCase();
 		const manifests = this.getAllManifests();
-		const manifest = manifests.find(manifest => fsPath.startsWith(manifest.fsPath));
-		return manifest && this._parsers.find(parser => {
-			return parser.fileReader.getAllManifests().includes(manifest);
-		}) as Parser | undefined;
+		const manifest = manifests.find(manifest => fsPathLower.startsWith(manifest.fsPath.toLowerCase()));
+		return (
+			manifest &&
+			(this._parsers.find(parser => {
+				return parser.fileReader.getAllManifests().includes(manifest);
+			}) as Parser | undefined)
+		);
 	}
 
 	static getAllParsers() {

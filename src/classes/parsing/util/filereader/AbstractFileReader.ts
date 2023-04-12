@@ -26,6 +26,8 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 	implements IFileReader
 {
 	protected _manifests: IUIManifest[] = [];
+	private static readonly _classNameToPathCache: Record<string, string | undefined> = {};
+	private static readonly _pathToClassNameCache: Record<string, string | undefined> = {};
 	protected readonly _viewCache: IViews = {};
 	protected readonly _fragmentCache: Fragments = {};
 	protected readonly _UI5Version: string;
@@ -40,6 +42,8 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 		this._classFactory = classFactory;
 	}
 
+	abstract reEnrichAllCustomClasses(): void;
+
 	setParser(parser: Parser) {
 		this._parser = parser;
 	}
@@ -47,7 +51,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 	reloadFragmentReferences() {
 		this.getAllFragments().forEach(fragment => {
 			fragment.fragments = this.getFragmentsFromXMLDocumentText(fragment.content);
-		})
+		});
 		this.getAllViews().forEach(view => {
 			view.fragments = this.getFragmentsFromXMLDocumentText(view.content);
 		});
@@ -153,6 +157,10 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 	}
 
 	getClassFSPathFromClassName(className: string, isFragment?: boolean) {
+		if (AbstractFileReader._pathToClassNameCache[`${className},${isFragment}`]) {
+			return AbstractFileReader._pathToClassNameCache[`${className},${isFragment}`];
+		}
+
 		let classPath = this.convertClassNameToFSPath(className, false, isFragment);
 
 		if (classPath) {
@@ -164,6 +172,8 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 				}
 			}
 		}
+
+		AbstractFileReader._pathToClassNameCache[`${className},${isFragment}`] = classPath;
 
 		return classPath;
 	}
@@ -499,27 +509,39 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 	}
 
 	protected _getFragmentTags(documentText: string) {
-		return documentText.match(/<.*?:Fragment\s(.|\s)*?\/>/g) || [];
+		return documentText.match(/<.*?:Fragment\s(.|\s)*?\/?>/g) || [];
 	}
 
 	getClassNameFromPath(fsPath: string) {
-		fsPath = fsPath.replace(/\//g, fileSeparator);
+		if (AbstractFileReader._classNameToPathCache[fsPath]) {
+			return AbstractFileReader._classNameToPathCache[fsPath];
+		}
+
+		fsPath = toNative(fsPath.replace(/\//g, fileSeparator));
 		let className: string | undefined;
 		const manifests = ParserPool.getAllManifests();
 		// TODO: this
-		const currentManifest = manifests.find(manifest => fsPath.startsWith(manifest.fsPath));
+		const currentManifest = manifests.find(manifest =>
+			fsPath.toLowerCase().startsWith(manifest.fsPath.toLowerCase())
+		);
 		if (currentManifest) {
-			className = fsPath
-				.replace(currentManifest.fsPath, currentManifest.componentName)
-				.replace(/\.view\.xml$/, "")
-				.replace(/\.fragment\.xml$/, "")
-				.replace(/\.xml$/, "")
-				.replace(/\.controller\.js$/, "")
-				.replace(/\.js$/, "")
-				.replace(/\.controller\.ts$/, "")
-				.replace(/\.ts$/, "")
-				.replace(new RegExp(`${escapedFileSeparator}`, "g"), ".");
+			const manifestPathLength = currentManifest.fsPath.length;
+			className =
+				currentManifest.componentName +
+				fsPath
+					.substring(manifestPathLength, fsPath.length)
+					// .replace(currentManifest.fsPath.toLowerCase(), currentManifest.componentName)
+					.replace(/\.view\.xml$/, "")
+					.replace(/\.fragment\.xml$/, "")
+					.replace(/\.xml$/, "")
+					.replace(/\.controller\.js$/, "")
+					.replace(/\.js$/, "")
+					.replace(/\.controller\.ts$/, "")
+					.replace(/\.ts$/, "")
+					.replace(new RegExp(`${escapedFileSeparator}`, "g"), ".");
 		}
+
+		AbstractFileReader._classNameToPathCache[fsPath] = className;
 
 		return className;
 	}
@@ -715,10 +737,28 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 		const exclusionPaths = exclusions.map(excludeString => {
 			return `${wsFolderFSPath}/${excludeString}`;
 		});
-		const filePaths = glob.sync(`${wsFolderFSPath}/${path}`, {
-			ignore: exclusionPaths
-		});
+		const filePaths = glob
+			.sync(`${wsFolderFSPath}/${path}`, {
+				ignore: exclusionPaths
+			})
+			.map(filePath => toNative(filePath));
 
 		return filePaths;
+	}
+}
+
+const toNativeCache: Record<string, string> = {};
+export function toNative(fsPath: string) {
+	if (toNativeCache[fsPath]) {
+		return toNativeCache[fsPath];
+	}
+
+	try {
+		const realPath = fs.realpathSync.native(fsPath);
+		toNativeCache[fsPath] = realPath;
+
+		return realPath;
+	} catch (error) {
+		return fsPath;
 	}
 }

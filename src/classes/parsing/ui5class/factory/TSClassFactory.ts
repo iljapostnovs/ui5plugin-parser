@@ -1,7 +1,8 @@
 import { ClassDeclaration, ObjectLiteralExpression, Project, SourceFile, TypeChecker } from "ts-morph";
 import * as ts from "typescript";
-import ParserPool from "../../../../parser/pool/ParserPool";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
+import ParserPool from "../../../../parser/pool/ParserPool";
+import { StandardUIClass } from "../../ui5class/StandardUIClass";
 import {
 	AbstractJSClass,
 	IUIAggregation,
@@ -12,7 +13,6 @@ import {
 	IUIProperty
 } from "../../ui5class/js/AbstractJSClass";
 import { EmptyJSClass } from "../../ui5class/js/EmptyJSClass";
-import { StandardUIClass } from "../../ui5class/StandardUIClass";
 import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
 import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
 import { IFragment, IView } from "../../util/filereader/IFileReader";
@@ -118,6 +118,9 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 				const fileName = this.parser.fileReader.getClassFSPathFromClassName(classNameDotNotation);
 				project = fileName ? this.parser.getProject(fileName) : undefined;
 				sourceFile = fileName ? project?.getSourceFile(fileName) : undefined;
+				if (project && !sourceFile && fileName) {
+					sourceFile = project.addSourceFileAtPathIfExists(fileName);
+				}
 			}
 
 			if (project && sourceFile) {
@@ -685,18 +688,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 			if (!oldClass) {
 				return;
 			}
-			this._UIClasses[newName] = oldClass;
-			oldClass.className = newName;
-
-			if (oldClass instanceof CustomTSClass || oldClass instanceof CustomTSObject) {
-				const newClassFSPath = this.parser.fileReader.convertClassNameToFSPath(
-					newName,
-					oldClass.fsPath?.endsWith(".controller.js") || oldClass.fsPath?.endsWith(".controller.ts")
-				);
-				if (newClassFSPath) {
-					oldClass.fsPath = newClassFSPath;
-				}
-			}
+			delete this._UIClasses[oldName];
 
 			ParserPool.getAllCustomUIClasses().forEach(UIClass => {
 				if (UIClass.parentClassNameDotNotation === oldName) {
@@ -753,7 +745,11 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 			const child = fnForEachChild(method.node?.compilerNode);
 			const args = child?.arguments;
 			const firstArg = args?.[0];
-			if (firstArg && ts.isCallExpression(firstArg) && ts.isStringLiteral(firstArg.arguments[0])) {
+			if (
+				firstArg &&
+				((ts.isCallExpression(firstArg) && ts.isStringLiteral(firstArg.arguments[0])) ||
+					ts.isNewExpression(firstArg))
+			) {
 				// const modelName = firstArg.arguments[0].text;
 				const modelType = UIClass.typeChecker.compilerObject.getTypeAtLocation(firstArg);
 				const modelSymbol = modelType.getSymbol();
