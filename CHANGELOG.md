@@ -1,3 +1,10 @@
+## 1.0.0 (12-04-2023)
+
+-   Typescript updated to v5.0.2
+-   Remove all singletones. Now parser supports multiple parser instances
+-   `additionalWorkspaces` config entry added
+-   `proxyWorkspaces` config entry added
+
 ## 0.7.11 (04-02-2023)
 
 -   Add exclusion for doctype tag
@@ -25,7 +32,7 @@
 
 ## 0.7.5 (28-11-2022)
 
--   Now parser checks both for ```.ts``` files and ```tsconfig.json``` existence
+-   Now parser checks both for `.ts` files and `tsconfig.json` existence
 
 ## 0.7.4 (06-11-2022)
 

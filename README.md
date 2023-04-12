@@ -12,69 +12,6 @@ Any support is highly appreciated!<br/>
 
 ---
 
-## How to use
-
-Parser is a singleton, so you should get an instance first and initialize right away.
-Initialization process reads the metadata of standard SAPUI5 classes and parses all projects in CWD (Current working directory).
-
-```ts
-const parser = AbstractUI5Parser.getInstance(UI5Parser);
-//or
-const parser = AbstractUI5Parser.getInstance(UI5TSParser);
-//Only one parser can be used in one session!
-
-await parser.initialize();
-```
-
-### TS vs JS
-
-#### Initialization
-
-If any `.ts` file and `tsconfig.json` is found in the project, parser considers that it's TS project. <br/>
-`tsconfig.json` should be located in CWD.
-
-#### Folder exclusions
-
-For convenience purposes `UI5TSParser` ignores `webapp` and `src-gen` folders, because they contain transpiled JS/XML files, which can make the parser to think that source files are there. If build folder name is different, is should be added to `excludeFolderPatterns` in your config (`VSCode Preferences` in case of UI5 Extension, `package.json` in case of cli usage).
-
-### Constructor
-
-It is possible to pass parameters to getInstance method, its signature allowes to pass an object which implements such an interface:
-
-```ts
-interface IConstructorParams {
-	fileReader?: IFileReader;
-	classFactory?: IUIClassFactory;
-	configHandler?: IParserConfigHandler;
-}
-```
-
-The only parameter which theoretically could be interesting to anybody is configHandler.
-It is possible to implement `IParserConfigHandler` interface and provide your own config handling.
-IParserConfigHandler looks as follows:
-
-```ts
-interface IParserConfigHandler {
-	getUI5Version(): string;
-	getExcludeFolderPatterns(): string[];
-	getDataSource(): string;
-	getRejectUnauthorized(): boolean;
-	getLibsToLoad(): string[];
-}
-```
-
-### Usage
-
-How to get info about a JS/TS Class:
-
-```ts
-const UIClass = parser.classFactory.getUIClass("com.test.any.class");
-```
-
-UIClass will have class metadata such as fields, methods, properties, aggregations, associations, events etc.
-
-> _TS only!_ For performance reasons TS parser doesn't parse types right away. If you want to load all type info such as method return type, parameter types etc, please use `UIClass.loadTypes()`
-
 ### Default Config Handler
 
 By default parser uses PackageParserConfigHandler, which reads the data from `package.json` in CWD.
@@ -96,6 +33,8 @@ interface IUI5ParserEntryFields {
 	dataSource?: string;
 	rejectUnauthorized?: boolean;
 	libsToLoad?: string[];
+	additionalWorkspaces?: string[];
+	proxyWorkspaces?: string[];
 }
 ```
 
@@ -107,8 +46,8 @@ Default package.json config looks as follows:
 {
 	"ui5": {
 		"ui5parser": {
-			"ui5version": "1.84.29",
-			"excludeFolderPatterns": ["**/resources/**", "**/dist/**/**", "**/node_modules/**"],
+			"ui5version": "1.84.30",
+			"excludeFolderPatterns": ["**/resources/**", "**/dist/**", "**/node_modules/**"],
 			"dataSource": "https://ui5.sap.com/",
 			"rejectUnauthorized": false,
 			"libsToLoad": [
@@ -125,12 +64,57 @@ Default package.json config looks as follows:
 				"sap.ushell",
 				"sap.tnt",
 				"sap.suite.ui.microchart"
-			]
+			],
+			//Handy to add additional workspace paths if e.g. library is outside of CWD
+			"additionalWorkspaces": ["../MyLibrary"],
+			//option to tell explicitly where UI5 projects are relative to CWD, useful for CAP projects
+			"proxyWorkspaces": ["./MyFEApp1", "./MyFEApp2"]
 		}
 	}
 }
 ```
 
-Theese are default values, which can be overriden.
+These are default values, which can be overriden.
 
-> In case of `libsToLoad` all additional libraries which are added in package.json will be added to the default values, not rewritten.
+> In case of `libsToLoad` and `excludeFolderPatterns` all additional values which are added in package.json will be added to the default values, not rewritten.
+
+---
+
+## How to use
+
+Initialization process reads the metadata of standard SAPUI5 classes and parses all projects in CWD (Current working directory), it's encapsulated into `createInstances` method. For getting parsers just call it.
+
+```ts
+const wsFolders = [new WorkspaceFolder("Absolute path to the workspace")];
+const parsers = await ParserFactory.createInstances(wsFolders);
+```
+
+Necessary methods for getting information about the classes exists `ParserPool` class, which works with all parser instances. As an example, to get the parser for custom class, `getParserForCustomClass` can be used:
+
+```ts
+const parser = ParserPool.getParserForCustomClass("com.test.any.class");
+const UIClass = parser.classFactory.getUIClass("com.test.any.class");
+```
+
+### TS vs JS
+
+#### Initialization
+
+If `tsconfig.json` is found in the CWD and any `.ts` files are found in the workspace, parser considers that it's TS project. <br/>
+`tsconfig.json` should be located in CWD.
+
+#### Folder exclusions
+
+For convenience purposes `UI5TSParser` ignores `src-gen` folder, because they contain transpiled JS/XML files, which can make the parser to think that source files are there. If build folder name is different, is should be added to `excludeFolderPatterns` in your `package.json`. If you are using older tooling with manual babel transpiler which generates `webapp` folder, it should be added to `excludeFolderPatterns` as well
+
+### Usage
+
+How to get info about a JS/TS Class:
+
+```ts
+const UIClass = parser.classFactory.getUIClass("com.test.any.class");
+```
+
+UIClass will have class metadata such as fields, methods, properties, aggregations, associations, events etc.
+
+> _TS only!_ For performance reasons TS parser doesn't parse types right away. If you want to load all type info such as method return type, parameter types etc, please use `UIClass.loadTypes()`
