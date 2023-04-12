@@ -1,22 +1,27 @@
 import { IParserConfigHandler } from "./classes/config/IParserConfigHandler";
-import { IUIClassFactory } from "./classes/UI5Classes/interfaces/IUIClassFactory";
-import { ISyntaxAnalyser } from "./classes/UI5Classes/JSParser/ISyntaxAnalyser";
-import { UI5Parser } from "./UI5Parser";
-import { AcornSyntaxAnalyzer } from "./classes/UI5Classes/JSParser/AcornSyntaxAnalyzer";
 import { PackageParserConfigHandler } from "./classes/config/PackageParserConfigHandler";
-import { XMLParser } from "./classes/utils/XMLParser";
-import { TextDocument } from "./classes/UI5Classes/abstraction/TextDocument";
-import { WorkspaceFolder } from "./classes/UI5Classes/abstraction/WorkspaceFolder";
-import { IFileReader } from "./classes/utils/IFileReader";
-import { UI5TSParser } from "./UI5TSParser";
-import { AbstractUI5Parser } from "./IUI5Parser";
+import { AcornSyntaxAnalyzer } from "./classes/parsing/jsparser/AcornSyntaxAnalyzer";
+import { ISyntaxAnalyser } from "./classes/parsing/jsparser/ISyntaxAnalyser";
+import { IClassFactory } from "./classes/parsing/ui5class/factory/IClassFactory";
+import { toNative } from "./classes/parsing/util/filereader/AbstractFileReader";
+import { IFileReader } from "./classes/parsing/util/filereader/IFileReader";
+import { ReferenceFinder } from "./classes/parsing/util/referencefinder/ReferenceFinder";
+import { TSReferenceFinder } from "./classes/parsing/util/referencefinder/TSReferenceFinder";
+import { TextDocument } from "./classes/parsing/util/textdocument/TextDocument";
+import { WorkspaceFolder } from "./classes/parsing/util/textdocument/WorkspaceFolder";
+import { XMLParser } from "./classes/parsing/util/xml/XMLParser";
+import { AbstractUI5Parser } from "./parser/abstraction/AbstractUI5Parser";
+import ParserFactory from "./parser/factory/ParserFactory";
+import ParserPool from "./parser/pool/ParserPool";
+import { UI5JSParser } from "./parser/UI5JSParser";
+import { UI5TSParser } from "./parser/UI5TSParser";
 import { AnyCustomTSClass, ICustomTSField, ICustomTSMethod } from "./Types";
 
 export {
-	UI5Parser,
+	UI5JSParser,
 	UI5TSParser,
 	IParserConfigHandler,
-	IUIClassFactory,
+	IClassFactory,
 	IFileReader,
 	ISyntaxAnalyser,
 	AcornSyntaxAnalyzer,
@@ -27,5 +32,10 @@ export {
 	WorkspaceFolder,
 	ICustomTSField,
 	ICustomTSMethod,
-	AnyCustomTSClass
+	AnyCustomTSClass,
+	ParserFactory,
+	ParserPool,
+	ReferenceFinder,
+	TSReferenceFinder,
+	toNative
 };

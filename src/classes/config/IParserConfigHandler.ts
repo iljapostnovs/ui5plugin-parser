@@ -6,4 +6,7 @@ export interface IParserConfigHandler {
 	getRejectUnauthorized(): boolean;
 
 	getLibsToLoad(): string[];
+	getAdditionalWorkspaces(): string[];
+	getProxyWorkspaces(): string[] | undefined;
+	packagePath: string;
 }
