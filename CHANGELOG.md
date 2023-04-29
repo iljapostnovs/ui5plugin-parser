@@ -1,3 +1,7 @@
+## 1.1.0 (29-04-2023)
+
+-   Global package configuration option added
+
 ## 1.0.0 (12-04-2023)
 
 -   Typescript updated to v5.0.2

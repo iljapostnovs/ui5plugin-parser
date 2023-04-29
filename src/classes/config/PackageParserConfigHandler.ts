@@ -5,6 +5,10 @@ import { IParserConfigHandler } from "./IParserConfigHandler";
 
 export class PackageParserConfigHandler implements IParserConfigHandler {
 	static readonly packageCache: { [key: string]: IUI5PackageConfigEntry } = {};
+	private static _globalPackage?: IUI5PackageConfigEntry;
+	static setGlobalConfigPath(fsPath: string) {
+		this._globalPackage = JSON.parse(fs.readFileSync(fsPath, "utf8")) || {};
+	}
 	private _package!: IUI5PackageConfigEntry;
 	packagePath: string;
 	constructor(packagePath = join(process.cwd(), "/package.json")) {
@@ -14,7 +18,10 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 
 	getProxyWorkspaces(): string[] | undefined {
 		this.loadCache();
-		return this._package.ui5?.ui5parser?.proxyWorkspaces;
+		return (
+			this._package.ui5?.ui5parser?.proxyWorkspaces ??
+			PackageParserConfigHandler._globalPackage?.ui5?.ui5parser?.proxyWorkspaces
+		);
 	}
 
 	loadCache() {
@@ -31,29 +38,51 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 	}
 
 	getAdditionalWorkspaces() {
-		return this._package.ui5?.ui5parser?.additionalWorkspaces ?? [];
+		return (
+			this._package.ui5?.ui5parser?.additionalWorkspaces ??
+			PackageParserConfigHandler._globalPackage?.ui5?.ui5parser?.additionalWorkspaces ??
+			[]
+		);
 	}
 
 	getUI5Version() {
-		return this._package?.ui5?.ui5parser?.ui5version ?? "1.84.30";
+		return (
+			this._package?.ui5?.ui5parser?.ui5version ??
+			PackageParserConfigHandler._globalPackage?.ui5?.ui5parser?.ui5version ??
+			"1.84.30"
+		);
 	}
 
 	getExcludeFolderPatterns() {
-		const userExclusions = this._package?.ui5?.ui5parser?.excludeFolderPatterns ?? [];
+		const userExclusions =
+			this._package?.ui5?.ui5parser?.excludeFolderPatterns ??
+			PackageParserConfigHandler._globalPackage?.ui5?.ui5parser?.excludeFolderPatterns ??
+			[];
 		userExclusions.push("**/resources/**", "**/dist/**", "**/node_modules/**");
 		return userExclusions;
 	}
 
 	getDataSource() {
-		return this._package?.ui5?.ui5parser?.dataSource ?? "https://ui5.sap.com/";
+		return (
+			this._package?.ui5?.ui5parser?.dataSource ??
+			PackageParserConfigHandler._globalPackage?.ui5?.ui5parser?.dataSource ??
+			"https://ui5.sap.com/"
+		);
 	}
 
 	getRejectUnauthorized() {
-		return this._package?.ui5?.ui5parser?.rejectUnauthorized ?? false;
+		return (
+			this._package?.ui5?.ui5parser?.rejectUnauthorized ??
+			PackageParserConfigHandler._globalPackage?.ui5?.ui5parser?.rejectUnauthorized ??
+			false
+		);
 	}
 
 	getLibsToLoad() {
-		const additionalLibsToLoad = this._package?.ui5?.ui5parser?.libsToLoad ?? [];
+		const additionalLibsToLoad =
+			this._package?.ui5?.ui5parser?.libsToLoad ??
+			PackageParserConfigHandler._globalPackage?.ui5?.ui5parser?.libsToLoad ??
+			[];
 		return [
 			"sap.m",
 			"sap.ui.comp",
