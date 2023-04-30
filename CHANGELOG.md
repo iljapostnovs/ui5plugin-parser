@@ -1,4 +1,4 @@
-## 1.1.0 (29-04-2023)
+## 1.1.0 (01-05-2023)
 
 -   Global package configuration option added
 
