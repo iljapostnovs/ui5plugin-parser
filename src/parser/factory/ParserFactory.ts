@@ -3,11 +3,11 @@ import { IParserConfigHandler } from "../../classes/config/IParserConfigHandler"
 import { PackageParserConfigHandler } from "../../classes/config/PackageParserConfigHandler";
 import { AbstractFileReader } from "../../classes/parsing/util/filereader/AbstractFileReader";
 import { WorkspaceFolder } from "../../classes/parsing/util/textdocument/WorkspaceFolder";
+import { UI5JSParser } from "../UI5JSParser";
+import { UI5TSParser } from "../UI5TSParser";
 import { AbstractUI5Parser } from "../abstraction/AbstractUI5Parser";
 import { IUI5Parser } from "../abstraction/IUI5Parser";
 import ParserPool from "../pool/ParserPool";
-import { UI5JSParser } from "../UI5JSParser";
-import { UI5TSParser } from "../UI5TSParser";
 import path = require("path");
 
 export enum MessageState {
@@ -24,8 +24,12 @@ export default class ParserFactory {
 	static async createInstances(
 		wsFolders: WorkspaceFolder[],
 		globalStoragePath: string = path.join(__dirname, "./node_modules/.cache/ui5plugin"),
-		clearCache = false
+		clearCache = false,
+		globalConfigPath?: string
 	) {
+		if (globalConfigPath) {
+			PackageParserConfigHandler.setGlobalConfigPath(globalConfigPath);
+		}
 		this._initializationMessages = [];
 		const wsFoldersAndConfigHandlers = this._extractAllWSFoldersAndConfigHandlers(wsFolders);
 
@@ -182,7 +186,10 @@ export default class ParserFactory {
 		wsFolder: WorkspaceFolder;
 		configHandler: IParserConfigHandler;
 	}): IUI5Parser {
-		const isTypescriptProject = AbstractUI5Parser.getIsTypescriptProject(manifestInfo.wsFolder, manifestInfo.configHandler);
+		const isTypescriptProject = AbstractUI5Parser.getIsTypescriptProject(
+			manifestInfo.wsFolder,
+			manifestInfo.configHandler
+		);
 		const packagePath = join(manifestInfo.wsFolder.fsPath, "/package.json");
 		const manifestFolderPath = dirname(manifestInfo.path);
 		if (isTypescriptProject) {
