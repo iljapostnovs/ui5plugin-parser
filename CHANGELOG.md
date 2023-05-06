@@ -1,3 +1,7 @@
+## 1.1.1 (06-05-2023)
+
+-   `additionalWorkspaces` now accepts absolute path as well
+
 ## 1.1.0 (01-05-2023)
 
 -   Global package configuration option added

@@ -139,7 +139,8 @@ export default class ParserFactory {
 			}
 			const additionalWorkspacePaths = configHandler.getAdditionalWorkspaces();
 			return additionalWorkspacePaths.map(additionalWorkspacePath => {
-				const workspaceFsPath = path.join(wsFolder.fsPath, additionalWorkspacePath);
+				const isPathAbsolute = path.isAbsolute(additionalWorkspacePath);
+				const workspaceFsPath = isPathAbsolute ? additionalWorkspacePath : path.join(wsFolder.fsPath, additionalWorkspacePath);
 				return this._createWorkspaceFolderAndConfigHandler(workspaceFsPath);
 			});
 		});
