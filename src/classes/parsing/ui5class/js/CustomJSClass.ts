@@ -2,6 +2,7 @@
 import * as commentParser from "comment-parser";
 import * as path from "path";
 import { UI5JSParser } from "../../../../parser/UI5JSParser";
+import ParserPool from "../../../../parser/pool/ParserPool";
 import { IAcornLocation, IAcornPosition } from "../../jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "../../jsparser/ISyntaxAnalyser";
 import {
@@ -21,7 +22,6 @@ import {
 	IUIProperty
 } from "./AbstractJSClass";
 import LineColumn = require("line-column");
-import ParserPool from "../../../../parser/pool/ParserPool";
 const acornLoose = require("acorn-loose");
 
 interface ILooseObject {
@@ -57,6 +57,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 	acornMethodsAndFields: any[] = [];
 	fileContent: any;
 	private _parentVariableName: any;
+	defaultModelClassName?: string;
 	acornReturnedClassExtendBody: any | undefined;
 	classBodyAcornVariableName: string | undefined;
 	private readonly syntaxAnalyser: ISyntaxAnalyser;
@@ -73,9 +74,32 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 		this._fillUI5Metadata();
 		this._fillMethodsAndFields();
 		this._enrichMemberInfoWithJSDocs();
+		this._enrichClassInfoWithJSDocs();
 		this._enrichMethodParamsWithHungarianNotation();
 		this._fillIsAbstract();
 		this._enrichVariablesWithJSDocTypesAndVisibility();
+	}
+
+	private _enrichClassInfoWithJSDocs() {
+		if (this.acornReturnedClassExtendBody) {
+			const comment = this.comments.find(comment => {
+				const positionDifference = this.acornReturnedClassExtendBody.start - comment.end;
+				return positionDifference < 15 && positionDifference > 0;
+			});
+			const ui5ModelTag = comment?.jsdoc?.tags?.find((tag: any) => tag.tag === "ui5model");
+			if (ui5ModelTag) {
+				this.defaultModelClassName = ui5ModelTag.type;
+			}
+
+			if (comment?.jsdoc?.description) {
+				this.description = comment?.jsdoc?.description;
+			}
+
+			const abstractTag = comment?.jsdoc?.tags?.find((tag: any) => tag.tag === "abstract");
+			if (abstractTag) {
+				this.abstract = true;
+			}
+		}
 	}
 
 	getMembers(): ICustomMember<any>[] {
@@ -83,7 +107,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 	}
 
 	protected _fillIsAbstract() {
-		this.abstract = !!this.methods.find(method => method.abstract) || !!this.fields.find(field => field.abstract);
+		this.abstract = this.abstract || !!this.methods.find(method => method.abstract) || !!this.fields.find(field => field.abstract);
 	}
 
 	private _enrichMemberInfoWithJSDocs() {

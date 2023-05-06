@@ -1,8 +1,11 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 
-export interface IUIMethodParam {
-	name: string;
+export interface IDescriptionable {
 	description: string;
+}
+
+export interface IUIMethodParam extends IDescriptionable {
+	name: string;
 	isOptional: boolean;
 	type: string;
 }
@@ -19,8 +22,7 @@ export interface IStatic {
 	static: boolean;
 }
 
-export interface IMember extends IName, IAbstract, IStatic, IVisibility {
-	description: string;
+export interface IMember extends IName, IAbstract, IStatic, IVisibility, IDescriptionable {
 	owner: string;
 	deprecated: boolean;
 }
@@ -36,9 +38,8 @@ export interface IUIMethod extends IMember {
 export interface IUIField extends IMember {
 	type: string | undefined;
 }
-export interface ITypeValue {
+export interface ITypeValue extends IDescriptionable {
 	text: string;
-	description: string;
 }
 export interface IUIProperty extends IName, IVisibility {
 	type: string | undefined;
@@ -46,27 +47,24 @@ export interface IUIProperty extends IName, IVisibility {
 	description: string;
 	defaultValue?: string;
 }
-export interface IUIAggregation extends IName, IVisibility {
+export interface IUIAggregation extends IName, IVisibility, IDescriptionable {
 	type: string;
 	multiple: boolean;
 	singularName: string;
-	description: string;
 	default: boolean;
 }
 export interface IUIEventParam extends IName {
 	type: string;
 }
-export interface IUIEvent extends IName, IVisibility {
-	description: string;
+export interface IUIEvent extends IName, IVisibility, IDescriptionable {
 	params: IUIEventParam[];
 }
-export interface IUIAssociation extends IName, IVisibility {
+export interface IUIAssociation extends IName, IVisibility, IDescriptionable {
 	type: string | undefined;
-	description: string;
 	multiple: boolean;
 	singularName: string;
 }
-export abstract class AbstractJSClass implements IAbstract {
+export abstract class AbstractJSClass implements IAbstract, IDescriptionable {
 	classExists: boolean;
 	abstract: boolean;
 	className: string;
@@ -79,6 +77,7 @@ export abstract class AbstractJSClass implements IAbstract {
 	interfaces: string[] = [];
 	parentClassNameDotNotation = "";
 	deprecated = false;
+	description = "";
 	protected readonly parser: IUI5Parser;
 
 	constructor(className: string, parser: IUI5Parser) {
