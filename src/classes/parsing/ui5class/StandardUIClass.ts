@@ -106,6 +106,7 @@ export class StandardUIClass extends AbstractJSClass {
 				this._fillConstructor();
 				this._fillInterfaces();
 				this._fillDeprecated();
+				this._fillDescription();
 
 				this._enrichWithXmlnsProperties();
 			} else if (className === "sap.ui.core.FragmentDefinition") {
@@ -113,6 +114,13 @@ export class StandardUIClass extends AbstractJSClass {
 			}
 		}
 	}
+
+	private _fillDescription() {
+		const node = this.parser.nodeDAO.findNode(this.className);
+		const nodeDescription = node?.getMetadata()?.getRawMetadata()?.description ?? "";
+		this.description = StandardUIClass.adjustLinks(this.parser, nodeDescription);
+	}
+
 	private _fillDeprecated() {
 		const SAPNode = this._findSAPNode(this.className);
 		this.deprecated = SAPNode?.getIsDeprecated() || false;
@@ -141,14 +149,14 @@ export class StandardUIClass extends AbstractJSClass {
 							name: method.name.replace(`${neededClassForMethods}.`, ""),
 							visibility: method.visibility || "public",
 							description: method.description
-								? StandardUIClass.removeTags(method.description)
-								: StandardUIClass.removeTags(method.code),
+								? StandardUIClass.adjustLinks(this.parser, method.description)
+								: StandardUIClass.adjustLinks(this.parser, method.code),
 							params:
 								method.parameters?.map((param: any) => {
 									const parameter: IUIMethodParam = {
 										isOptional: param.optional || false,
 										name: param.name,
-										description: StandardUIClass.removeTags(param.description),
+										description: StandardUIClass.adjustLinks(this.parser, param.description),
 										type: param.types?.map((type: any) => type.value).join("|") || "any"
 									};
 									return parameter;
@@ -176,7 +184,10 @@ export class StandardUIClass extends AbstractJSClass {
 					{
 						name: "extensionAPI",
 						description: SAPNode.getMetadata()?.getRawMetadata()?.description
-							? StandardUIClass.removeTags(SAPNode.getMetadata().getRawMetadata().description)
+							? StandardUIClass.adjustLinks(
+									this.parser,
+									SAPNode.getMetadata().getRawMetadata().description
+							)
 							: "Extension API",
 						type: neededClassForFields,
 						visibility: "public",
@@ -225,14 +236,14 @@ export class StandardUIClass extends AbstractJSClass {
 
 				const classMethod: IStandardClassUIMethod = {
 					name: methodName,
-					description: `${StandardUIClass.removeTags(method.description)}`,
+					description: `${StandardUIClass.adjustLinks(this.parser, method.description)}`,
 					params: method.parameters
 						? method.parameters
 								.filter((parameter: any) => !parameter.depth)
 								.map((parameter: any) => {
 									return {
 										name: parameter.name + (parameter.optional ? "?" : ""),
-										description: StandardUIClass.removeTags(parameter.description),
+										description: StandardUIClass.adjustLinks(this.parser, parameter.description),
 										type: parameter.types
 											? parameter.types.map((type: any) => type.value).join("|")
 											: "any",
@@ -295,6 +306,19 @@ export class StandardUIClass extends AbstractJSClass {
 		return this.parser.nodeDAO.findNode(className);
 	}
 
+	static adjustLinks(parser: IUI5Parser, text = "") {
+		const matches = text.match(/<a target="_self" href=".*?"/g);
+
+		matches?.forEach(match => {
+			const hrefIndex = match.indexOf('href="') + 'href="'.length;
+			const urlBase = parser.urlBuilder.getUrlBase();
+			const newHref = `${urlBase}/` + match.substring(hrefIndex, match.length);
+			const replaceTo = match.substring(0, hrefIndex) + newHref;
+			text = text.replace(match, replaceTo);
+		});
+		return text;
+	}
+
 	static removeTags(text = "") {
 		let textWithoutTags = "";
 		let i = 0;
@@ -340,7 +364,10 @@ export class StandardUIClass extends AbstractJSClass {
 					accumulator.push({
 						name: name,
 						type: type,
-						description: `${additionalDescription}\n${StandardUIClass.removeTags(description)}`.trim(),
+						description: `${additionalDescription}\n${StandardUIClass.adjustLinks(
+							this.parser,
+							description
+						)}`.trim(),
 						visibility: visibility,
 						owner: this.className,
 						abstract: false,
@@ -369,7 +396,10 @@ export class StandardUIClass extends AbstractJSClass {
 						defaultValue: defaultValue.toString(),
 						type,
 						typeValues: this.generateTypeValues(type),
-						description: `${additionalDescription}\n${StandardUIClass.removeTags(description)}`.trim(),
+						description: `${additionalDescription}\n${StandardUIClass.adjustLinks(
+							this.parser,
+							description
+						)}`.trim(),
 						visibility
 					});
 					return accumulator;
@@ -406,7 +436,7 @@ export class StandardUIClass extends AbstractJSClass {
 				metadata?.rawMetadata?.properties?.map((property: any): ITypeValue => {
 					return {
 						text: `${property.name}`.replace(`${type}.`, ""),
-						description: StandardUIClass.removeTags(property.description)
+						description: StandardUIClass.adjustLinks(this.parser, property.description)
 					};
 				}) || [];
 		}
@@ -425,7 +455,7 @@ export class StandardUIClass extends AbstractJSClass {
 			SAPNode?.getEvents().reduce((accumulator: IUIEvent[], event: any) => {
 				accumulator.push({
 					name: event.name,
-					description: StandardUIClass.removeTags(event.description),
+					description: StandardUIClass.adjustLinks(this.parser, event.description),
 					visibility: event.visibility,
 					params: event?.parameters
 						?.filter((parameter: any) => parameter.depth === 2)
@@ -457,7 +487,7 @@ export class StandardUIClass extends AbstractJSClass {
 					type: aggregation.type,
 					multiple: aggregation.cardinality === "0..n",
 					singularName: aggregation.singularName,
-					description: StandardUIClass.removeTags(aggregation.description),
+					description: StandardUIClass.adjustLinks(this.parser, aggregation.description),
 					visibility: aggregation.visibility,
 					default: SAPNode.getMetadata()?.getUI5Metadata()?.defaultAggregation === aggregation.name
 				});
@@ -480,7 +510,7 @@ export class StandardUIClass extends AbstractJSClass {
 				accumulator.push({
 					name: association.name,
 					type: association.type,
-					description: StandardUIClass.removeTags(association.description),
+					description: StandardUIClass.adjustLinks(this.parser, association.description),
 					multiple: association.multiple || association.cardinality === "0..n",
 					singularName: association.singularName,
 					visibility: association.visibility
@@ -495,22 +525,34 @@ export class StandardUIClass extends AbstractJSClass {
 		const metadata = SAPNode?.getMetadata();
 		if (metadata?.rawMetadata?.constructor?.codeExample) {
 			const constructor = metadata.rawMetadata.constructor;
-			const codeExample = StandardUIClass.removeTags(constructor.codeExample);
-			let parameterText = MainLooper.getEndOfChar("(", ")", codeExample);
-			parameterText = parameterText.substring(1, parameterText.length - 1); //remove ()
-			const parameters = parameterText ? parameterText.split(", ") : [];
-
-			this.methods.push({
-				name: "constructor",
-				description: StandardUIClass.removeTags(constructor.codeExample),
-				params: parameters.map(param => {
+			let parameters: IUIMethodParam[] = [];
+			if (!constructor.parameters) {
+				const codeExample = StandardUIClass.adjustLinks(this.parser, constructor.codeExample);
+				let parameterText = MainLooper.getEndOfChar("(", ")", codeExample);
+				parameterText = parameterText.substring(1, parameterText.length - 1); //remove ()
+				parameters = parameterText ? parameterText.split(", ").map(param => {
 					return {
 						name: param,
 						description: "",
 						type: "any",
 						isOptional: param.endsWith("?")
 					};
-				}),
+				}) : [];
+			} else {
+				parameters = constructor.parameters.map((param: any) => {
+					return {
+                        name: param.name + (param.optional ? "?" : ""),
+						description: StandardUIClass.adjustLinks(param.description),
+						type: param.types.map((type: any) => type.name).join("|"),
+						isOptional: param.optional
+					};
+				});
+			}
+
+			this.methods.push({
+				name: "constructor",
+				description: StandardUIClass.adjustLinks(this.parser, constructor.description ?? constructor.codeExample),
+				params: parameters,
 				returnType: this.className,
 				isFromParent: false,
 				api: this.parser.urlBuilder.getUrlForClassApi(this),

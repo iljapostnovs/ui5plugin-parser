@@ -1,3 +1,10 @@
+## 1.2.0 (07-05-2023)
+
+-   `ForOfStatement` and `AssignmentPattern` support added
+-   Minor syntax analyser improvements
+-   `@ui5model`, `@abstract` jsdoc support for classes added
+-   Classes now have description
+
 ## 1.1.1 (06-05-2023)
 
 -   `additionalWorkspaces` now accepts absolute path as well

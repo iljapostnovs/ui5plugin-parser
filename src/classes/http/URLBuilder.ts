@@ -159,4 +159,8 @@ export class URLBuilder {
 	private _getUrlBase() {
 		return `${this._URLHost}${this._UI5Version}`;
 	}
+
+	getUrlBase() {
+		return this._getUrlBase();
+	}
 }

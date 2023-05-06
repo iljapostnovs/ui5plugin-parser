@@ -111,7 +111,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				innerNode = this.findAcornNode(node.arguments, position);
 			}
 		} else if (node.type === "ObjectExpression") {
-			innerNode = this.findAcornNode(node.properties, position)?.value;
+			innerNode = this.findAcornNode(node.properties, position);
 		} else if (
 			node.type === "FunctionDeclaration" ||
 			node.type === "FunctionExpression" ||
@@ -146,6 +146,23 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			}
 			if (!innerNode && node.test) {
 				innerNode = this.findAcornNode([node.test], position);
+			}
+		} else if (node.type === "ForOfStatement") {
+			if (node.body) {
+				innerNode = this.findAcornNode([node.body], position);
+			}
+			if (!innerNode && node.left) {
+				innerNode = this.findAcornNode([node.left], position);
+			}
+			if (!innerNode && node.right) {
+				innerNode = this.findAcornNode([node.right], position);
+			}
+		} else if (node.type === "AssignmentPattern") {
+			if (node.left) {
+				innerNode = this.findAcornNode([node.left], position);
+			}
+			if (!innerNode && node.right) {
+				innerNode = this.findAcornNode([node.right], position);
 			}
 		}
 
@@ -1279,7 +1296,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		} else if (node.type === "Property") {
 			innerNodes.push(node.value);
 		} else if (node.type === "ObjectExpression") {
-			innerNodes = node.properties.map((declaration: any) => declaration.value);
+			innerNodes = node.properties;
 		} else if (
 			node.type === "FunctionDeclaration" ||
 			node.type === "FunctionExpression" ||
@@ -1301,6 +1318,23 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			node.type === "ForInStatement"
 		) {
 			innerNodes.push(node.body);
+		} else if (node.type === "ForOfStatement") {
+			if (node.body) {
+				innerNodes.push(node.body);
+			}
+			if (node.left) {
+				innerNodes.push(node.left);
+			}
+			if (node.right) {
+				innerNodes.push(node.right);
+			}
+		} else if (node.type === "AssignmentPattern") {
+			if (node.left) {
+				innerNodes.push(node.left);
+			}
+			if (node.right) {
+				innerNodes.push(node.right);
+			}
 		}
 
 		innerNodes = innerNodes.filter(node => !!node);

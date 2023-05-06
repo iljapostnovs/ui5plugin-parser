@@ -87,6 +87,7 @@ export abstract class AbstractCustomClass<
 	abstract node: ClassNodeType;
 	abstract UIDefine: IUIDefine[];
 	abstract parentClassNameDotNotation: string;
+	abstract defaultModelClassName?: string;
 	abstract fsPath: string;
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
 	private _cache: Record<string, any> = {};

@@ -29,6 +29,7 @@ export class CustomTSObject extends AbstractCustomClass<
 	ObjectLiteralElementLike,
 	ObjectLiteralExpression
 > {
+	defaultModelClassName?: string;
 	parentClassNameDotNotation = "";
 	readonly typeChecker: TypeChecker;
 	protected _fillIsAbstract(): void {

@@ -3,6 +3,7 @@ import * as path from "path";
 import {
 	ClassDeclaration,
 	ConstructorDeclaration,
+	JSDoc,
 	MethodDeclaration,
 	PropertyDeclaration,
 	SourceFile,
@@ -47,6 +48,7 @@ export class CustomTSClass extends AbstractCustomClass<
 	fields: ICustomClassTSField[] = [];
 	constructors: ICustomClassTSConstructor[] = [];
 	fsPath: string;
+	defaultModelClassName?: string;
 	readonly classText: string;
 	UIDefine: IUIDefine[] = [];
 	relatedViewsAndFragments?: IViewsAndFragmentsCache[];
@@ -76,6 +78,31 @@ export class CustomTSClass extends AbstractCustomClass<
 		}
 
 		this._fillUI5Metadata(undefined, false);
+		this._fillClassJSDoc();
+	}
+
+	private _fillClassJSDoc() {
+		const classJsDocs = this.node.getJsDocs();
+		this._fillDefaultModelClassName(classJsDocs);
+		this._fillClassDescription(classJsDocs);
+	}
+
+	private _fillDefaultModelClassName(classJsDocs: JSDoc[]) {
+		const ui5modelDoc = classJsDocs.find(jsDoc => jsDoc.getTags().some(tag => tag.getTagName() === "ui5model"));
+		const tag = ui5modelDoc?.getTags().find(tag => tag.getTagName() === "ui5model");
+		const comment = tag?.getComment();
+		if (comment && typeof comment === "string") {
+			const trimmedComment = comment.trim();
+			this.defaultModelClassName = trimmedComment.substring(1, trimmedComment.length - 1);
+		}
+	}
+
+	private _fillClassDescription(classJsDocs: JSDoc[]) {
+		const descriptionDoc = classJsDocs.find(jsDoc => jsDoc.getTags().some(tag => tag.getTagName() === "description"));
+		const description = descriptionDoc?.getDescription();
+		if (description) {
+			this.description = description;
+		}
 	}
 
 	loadTypes() {
