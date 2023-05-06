@@ -2,7 +2,7 @@
 
 -   `ForOfStatement` and `AssignmentPattern` support added
 -   Minor syntax analyser improvements
--   Add `@ui5model`, `@abstract` jsdoc support for classes
+-   `@ui5model`, `@abstract` jsdoc support for classes added
 -   Classes now have description
 
 ## 1.1.1 (06-05-2023)
