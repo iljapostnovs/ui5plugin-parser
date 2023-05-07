@@ -1,3 +1,7 @@
+## 1.3.0 (07-05-2023)
+
+-   Add special settings support
+
 ## 1.2.3 (07-05-2023)
 
 -   Fix assigning of `any` type to variables
