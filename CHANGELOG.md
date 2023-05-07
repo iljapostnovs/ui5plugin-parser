@@ -1,3 +1,7 @@
+## 1.2.2 (07-05-2023)
+
+-   `byId` exceptions adapted to new standart types
+
 ## 1.2.1 (07-05-2023)
 
 -   `ArrayPattern` and `ChainExpression` support added
