@@ -947,6 +947,7 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		let isGetViewByIdException = false;
 		if (
 			(className === "sap.ui.core.mvc.View" ||
+				className === "sap.ui.core.mvc.View|undefined" ||
 				this.parser.classFactory.isClassAChildOfClassB(className, "sap.ui.core.Control") ||
 				this.parser.classFactory.isClassAChildOfClassB(className, "sap.ui.core.mvc.Controller")) &&
 			stack.length > 1 &&
