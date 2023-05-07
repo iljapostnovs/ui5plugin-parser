@@ -427,8 +427,8 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				className = this.getResultOfPromise(currentClassName);
 			}
 
-			if (!currentNode._acornSyntaxAnalyserType && !stackWasModified && !className?.includes("__map__")) {
-				currentNode._acornSyntaxAnalyserType = className || "any";
+			if (!currentNode._acornSyntaxAnalyserType && !stackWasModified && !className?.includes("__map__") && className) {
+				currentNode._acornSyntaxAnalyserType = className;
 			}
 
 			temporaryCurrentClassName = this._handleArrayMethods(stack, primaryClassName, className);

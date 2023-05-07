@@ -1,3 +1,7 @@
+## 1.2.3 (07-05-2023)
+
+-   Fix assigning of `any` type to variables
+
 ## 1.2.2 (07-05-2023)
 
 -   `byId` exceptions adapted to new standart types
