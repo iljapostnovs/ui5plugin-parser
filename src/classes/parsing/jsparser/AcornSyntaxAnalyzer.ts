@@ -164,6 +164,14 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			if (!innerNode && node.right) {
 				innerNode = this.findAcornNode([node.right], position);
 			}
+		} else if (node.type === "ArrayPattern") {
+			if (node.elements) {
+				innerNode = this.findAcornNode(node.elements, position);
+			}
+		} else if (node.type === "ChainExpression") {
+			if (node.expression) {
+				innerNode = this.findAcornNode([node.expression], position);
+			}
 		}
 
 		return innerNode;
@@ -1334,6 +1342,14 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			}
 			if (node.right) {
 				innerNodes.push(node.right);
+			}
+		} else if (node.type === "ArrayPattern") {
+			if (node.elements) {
+				innerNodes.push(...node.elements);
+			}
+		} else if (node.type === "ChainExpression") {
+			if (node.expression) {
+				innerNodes.push(node.expression);
 			}
 		}
 

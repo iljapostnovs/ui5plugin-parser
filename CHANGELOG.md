@@ -1,3 +1,7 @@
+## 1.2.1 (07-05-2023)
+
+-   `ArrayPattern` and `ChainExpression` support added
+
 ## 1.2.0 (07-05-2023)
 
 -   `ForOfStatement` and `AssignmentPattern` support added

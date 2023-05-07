@@ -134,7 +134,12 @@ export class FieldsAndMethodForPositionBeforeCurrentStrategy extends FieldMethod
 				clearStack
 			);
 		}
-
+		if (classNameOfTheCurrentVariable?.endsWith("|undefined")) {
+			classNameOfTheCurrentVariable = classNameOfTheCurrentVariable.substring(
+				0,
+				classNameOfTheCurrentVariable.length - "|undefined".length
+			);
+		}
 		return classNameOfTheCurrentVariable;
 	}
 
