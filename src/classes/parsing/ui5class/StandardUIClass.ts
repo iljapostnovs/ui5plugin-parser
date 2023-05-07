@@ -406,6 +406,25 @@ export class StandardUIClass extends AbstractJSClass {
 				},
 				[]
 			) || [];
+
+		const specialSettings: IUIProperty[] =
+			SAPNode?.getSpecialSettings().map(({ name, type, description, visibility }: any) => {
+				const additionalDescription = this._generateAdditionalDescriptionFrom(type);
+				return {
+					name,
+					defaultValue: "",
+					type,
+					typeValues: this.generateTypeValues(type),
+					description: `${additionalDescription}\n${StandardUIClass.adjustLinks(
+						this.parser,
+						description
+					)}`.trim(),
+					visibility
+				};
+			}) || [];
+
+		classProperties.push(...specialSettings);
+
 		return classProperties;
 	}
 
@@ -530,18 +549,20 @@ export class StandardUIClass extends AbstractJSClass {
 				const codeExample = StandardUIClass.adjustLinks(this.parser, constructor.codeExample);
 				let parameterText = MainLooper.getEndOfChar("(", ")", codeExample);
 				parameterText = parameterText.substring(1, parameterText.length - 1); //remove ()
-				parameters = parameterText ? parameterText.split(", ").map(param => {
-					return {
-						name: param,
-						description: "",
-						type: "any",
-						isOptional: param.endsWith("?")
-					};
-				}) : [];
+				parameters = parameterText
+					? parameterText.split(", ").map(param => {
+							return {
+								name: param,
+								description: "",
+								type: "any",
+								isOptional: param.endsWith("?")
+							};
+					})
+					: [];
 			} else {
 				parameters = constructor.parameters.map((param: any) => {
 					return {
-                        name: param.name + (param.optional ? "?" : ""),
+						name: param.name + (param.optional ? "?" : ""),
 						description: StandardUIClass.adjustLinks(param.description),
 						type: param.types.map((type: any) => type.name).join("|"),
 						isOptional: param.optional
@@ -551,7 +572,10 @@ export class StandardUIClass extends AbstractJSClass {
 
 			this.methods.push({
 				name: "constructor",
-				description: StandardUIClass.adjustLinks(this.parser, constructor.description ?? constructor.codeExample),
+				description: StandardUIClass.adjustLinks(
+					this.parser,
+					constructor.description ?? constructor.codeExample
+				),
 				params: parameters,
 				returnType: this.className,
 				isFromParent: false,

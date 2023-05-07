@@ -97,6 +97,18 @@ export class SAPNode {
 		);
 	}
 
+	getSpecialSettings(): any[] {
+		const metadata = this.getMetadata();
+		const UI5Metadata: any = metadata?.getUI5Metadata();
+		return (
+			UI5Metadata?.specialSettings?.filter(
+				(specialSetting: any) =>
+					!specialSetting.deprecated &&
+					(specialSetting.visibility === "public" || specialSetting.visibility === "protected")
+			) || []
+		);
+	}
+
 	getEvents(): any[] {
 		const metadata = this.getMetadata();
 		const UI5Metadata: any = metadata?.getRawMetadata();
