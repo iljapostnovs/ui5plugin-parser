@@ -78,10 +78,11 @@ export namespace IFileReader {
 	}
 }
 
-export interface IUIManifest {
+export interface IUIManifest extends ICacheable {
 	fsPath: string;
 	componentName: string;
 	content: any;
+	contentString: string;
 }
 
 export interface IManifestPaths {

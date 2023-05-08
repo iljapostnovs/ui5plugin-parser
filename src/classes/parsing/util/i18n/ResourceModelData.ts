@@ -1,6 +1,8 @@
+import { Properties } from "properties-file";
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
 import { TextDocument } from "../textdocument/TextDocument";
+import LineColumn = require("line-column");
 
 export interface IInternalizationText {
 	text: string;
@@ -8,6 +10,7 @@ export interface IInternalizationText {
 	id: string;
 	positionBegin: number;
 	positionEnd: number;
+	hasKeyCollisions: boolean;
 }
 interface IResourceModel {
 	[key: string]: IInternalizationText[];
@@ -30,17 +33,19 @@ export class ResourceModelData {
 	private _updateResourceModelData(resourceModelFile: { content: string; componentName: string }) {
 		this.resourceModels[resourceModelFile.componentName] = [];
 
-		const texts = resourceModelFile.content.match(/.*?([a-zA-Z]|\s|\d)=.*([a-zA-Z]|\s|\d)/g);
-		texts?.forEach(text => {
-			const textParts = text.split("=");
-			const textId = textParts.shift()?.trim();
-			const textDescription = textParts.join("=").trim();
+		const lineColumn = LineColumn(resourceModelFile.content);
+		const propertyFile = new Properties(resourceModelFile.content);
+
+		propertyFile.collection.forEach(translation => {
 			this.resourceModels[resourceModelFile.componentName].push({
-				text: `{i18n>${textId}}`,
-				description: textDescription,
-				id: textId || "",
-				positionBegin: resourceModelFile.content.indexOf(text),
-				positionEnd: resourceModelFile.content.indexOf(text) + text.length
+				text: `{i18n>${translation.key}}`,
+				description: translation.value,
+				id: translation.key,
+				hasKeyCollisions: translation.hasKeyCollisions,
+				positionBegin: lineColumn.toIndex(translation.startingLineNumber, 1),
+				positionEnd:
+					lineColumn.toIndex(translation.endingLineNumber, 1) +
+					(propertyFile as unknown as { lines: string[] }).lines[translation.endingLineNumber - 1].length
 			});
 		});
 	}
