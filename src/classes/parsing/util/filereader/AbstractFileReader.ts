@@ -207,13 +207,23 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 		const manifests = this.getManifestFSPathsInWorkspaceFolder();
 		for (const manifest of manifests) {
 			try {
-				const UI5Manifest: any = JSON.parse(fs.readFileSync(manifest.fsPath, "utf8"));
+				const UI5Manifest = fs.readFileSync(manifest.fsPath, "utf8");
+				const parsedManifest: any = JSON.parse(UI5Manifest);
 				const manifestFsPath: string = manifest.fsPath.replace(`${fileSeparator}manifest.json`, "");
 				const UIManifest = {
-					componentName: UI5Manifest["sap.app"]?.id || "",
+					componentName: parsedManifest["sap.app"]?.id || "",
 					fsPath: manifestFsPath,
-					content: UI5Manifest
+					content: parsedManifest,
+					contentString: UI5Manifest,
+					getCache: function <Type>(cacheName: string) {
+						return <Type>(this as any)._cache[cacheName];
+					},
+					setCache: function <Type>(cacheName: string, cacheValue: Type) {
+						(this as any)._cache[cacheName] = cacheValue;
+					}
 				};
+				(UIManifest as any)._cache = {};
+
 				this._manifests.push(UIManifest);
 			} catch (error) {
 				console.error(`Couldn't read manifest.json. Error message: ${(<Error>error).message || ""}`);

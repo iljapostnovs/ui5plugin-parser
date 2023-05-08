@@ -1,3 +1,7 @@
+## 1.4.0 (09-05-2023)
+
+-   Parsing of `.properties` file migrated to [properties-file](https://github.com/Avansai/properties-file) package
+
 ## 1.3.0 (07-05-2023)
 
 -   Add special settings support
