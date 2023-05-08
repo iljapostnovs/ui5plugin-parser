@@ -1,3 +1,7 @@
+## 1.4.1 (09-05-2023)
+
+-   Set bigger position difference for JSClass JSDoc finding
+
 ## 1.4.0 (09-05-2023)
 
 -   Parsing of `.properties` file migrated to [properties-file](https://github.com/Avansai/properties-file) package

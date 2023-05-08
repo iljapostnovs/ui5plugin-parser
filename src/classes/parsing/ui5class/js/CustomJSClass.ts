@@ -84,7 +84,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 		if (this.acornReturnedClassExtendBody) {
 			const comment = this.comments.find(comment => {
 				const positionDifference = this.acornReturnedClassExtendBody.start - comment.end;
-				return positionDifference < 15 && positionDifference > 0;
+				return positionDifference < 100 && positionDifference > 0;
 			});
 			const ui5ModelTag = comment?.jsdoc?.tags?.find((tag: any) => tag.tag === "ui5model");
 			if (ui5ModelTag) {
