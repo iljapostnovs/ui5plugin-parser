@@ -1,3 +1,7 @@
+## 1.4.2 (16-05-2023)
+
+-   Add ui5ignored property to ResourceModelData entries
+
 ## 1.4.1 (09-05-2023)
 
 -   Set bigger position difference for JSClass JSDoc finding

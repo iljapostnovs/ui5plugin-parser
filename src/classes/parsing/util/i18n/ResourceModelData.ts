@@ -1,10 +1,10 @@
 import { Properties } from "properties-file";
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
-import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
+import { AbstractCustomClass, UI5Ignoreable } from "../../ui5class/AbstractCustomClass";
 import { TextDocument } from "../textdocument/TextDocument";
 import LineColumn = require("line-column");
 
-export interface IInternalizationText {
+export interface IInternalizationText extends UI5Ignoreable {
 	text: string;
 	description: string;
 	id: string;
@@ -36,16 +36,18 @@ export class ResourceModelData {
 		const lineColumn = LineColumn(resourceModelFile.content);
 		const propertyFile = new Properties(resourceModelFile.content);
 
+		const lines = (propertyFile as unknown as { lines: string[] })?.lines ?? [];
 		propertyFile.collection.forEach(translation => {
 			this.resourceModels[resourceModelFile.componentName].push({
 				text: `{i18n>${translation.key}}`,
 				description: translation.value,
 				id: translation.key,
+				ui5ignored: ["#@ui5ignore", "# @ui5ignore"].includes(lines[translation.startingLineNumber - 2]),
 				hasKeyCollisions: translation.hasKeyCollisions,
 				positionBegin: lineColumn.toIndex(translation.startingLineNumber, 1),
 				positionEnd:
 					lineColumn.toIndex(translation.endingLineNumber, 1) +
-					(propertyFile as unknown as { lines: string[] }).lines[translation.endingLineNumber - 1].length
+					lines[translation.endingLineNumber - 1].length
 			});
 		});
 	}
