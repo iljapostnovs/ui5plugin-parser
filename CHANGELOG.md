@@ -1,3 +1,7 @@
+## 1.4.3 (16-05-2023)
+
+-   Filter constructor params by depth
+
 ## 1.4.2 (16-05-2023)
 
 -   Add ui5ignored property to ResourceModelData entries
