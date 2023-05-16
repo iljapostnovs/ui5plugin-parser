@@ -560,7 +560,7 @@ export class StandardUIClass extends AbstractJSClass {
 					})
 					: [];
 			} else {
-				parameters = constructor.parameters.map((param: any) => {
+				parameters = constructor.parameters.filter((param: any) => param.depth === 0).map((param: any) => {
 					return {
 						name: param.name + (param.optional ? "?" : ""),
 						description: StandardUIClass.adjustLinks(param.description),
