@@ -307,7 +307,7 @@ export class StandardUIClass extends AbstractJSClass {
 	}
 
 	static adjustLinks(parser: IUI5Parser, text = "") {
-		const matches = text.match(/<a target="_self" href=".*?"/g);
+		const matches = text.match(/<a target="_self"( .*?)? href=".*?"/g);
 
 		matches?.forEach(match => {
 			const hrefIndex = match.indexOf('href="') + 'href="'.length;
