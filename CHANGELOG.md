@@ -1,3 +1,7 @@
+## 1.4.4 (25-05-2023)
+
+-   Fix links in description of the classes
+
 ## 1.4.3 (16-05-2023)
 
 -   Filter constructor params by depth
