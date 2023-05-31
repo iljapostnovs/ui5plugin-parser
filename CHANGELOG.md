@@ -1,3 +1,8 @@
+## 1.4.5 (01-06-2023)
+
+-   Fix finding of the default model for TS
+-   Fix link generation from UI5 docs
+
 ## 1.4.4 (25-05-2023)
 
 -   Fix links in description of the classes

@@ -312,7 +312,7 @@ export class StandardUIClass extends AbstractJSClass {
 		matches?.forEach(match => {
 			const hrefIndex = match.indexOf('href="') + 'href="'.length;
 			const urlBase = parser.urlBuilder.getUrlBase();
-			const newHref = `${urlBase}/` + match.substring(hrefIndex, match.length);
+			const newHref = `${urlBase}/#/` + match.substring(hrefIndex, match.length);
 			const replaceTo = match.substring(0, hrefIndex) + newHref;
 			text = text.replace(match, replaceTo);
 		});
