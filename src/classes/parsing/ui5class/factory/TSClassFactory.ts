@@ -747,7 +747,9 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 			const firstArg = args?.[0];
 			if (
 				firstArg &&
-				((ts.isCallExpression(firstArg) && ts.isStringLiteral(firstArg.arguments[0])) ||
+				((ts.isCallExpression(firstArg) &&
+					firstArg.arguments?.[0] &&
+					ts.isStringLiteral(firstArg.arguments[0])) ||
 					ts.isNewExpression(firstArg))
 			) {
 				// const modelName = firstArg.arguments[0].text;
