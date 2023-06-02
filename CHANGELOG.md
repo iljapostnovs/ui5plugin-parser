@@ -1,3 +1,7 @@
+## 1.4.6 (02-06-2023)
+
+-   Update readme
+
 ## 1.4.5 (01-06-2023)
 
 -   Fix finding of the default model for TS

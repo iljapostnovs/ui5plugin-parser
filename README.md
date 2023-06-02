@@ -12,13 +12,24 @@ Any support is highly appreciated!<br/>
 
 ---
 
-### Default Config Handler
+# Summary
 
-By default parser uses PackageParserConfigHandler, which reads the data from `package.json` in CWD.
+-   [Configuration](#configuration)
+    -   [package.json config interface](#packagejson-config-interface)
+    -   [Config default values](#config-default-values)
+-   [Parser instantiation logic](#parser-instantiation-logic)
+	-   [Additional Workspaces](#additional-workspaces)
+	-   [Proxy Workspaces](#proxy-workspaces)
+-   [TS vs JS](#ts-vs-js)
+	-   [Initialization](#initialization)
+	-   [Folder exclusions](#folder-exclusions)
+-   [How to use](#how-to-use)
+
+## Configuration
 
 ### package.json config interface
 
-PackageParserConfigHandler uses `IUI5PackageConfigEntry` interface in order to get the config.
+`PackageParserConfigHandler` uses `IUI5PackageConfigEntry` interface in order to get the config.
 
 ```ts
 interface IUI5PackageConfigEntry {
@@ -42,14 +53,19 @@ interface IUI5ParserEntryFields {
 
 Default package.json config looks as follows:
 
-```json
+```jsonc
 {
 	"ui5": {
 		"ui5parser": {
+			// UI5 Version for standard library metadata preload from ui5.sap.com
 			"ui5version": "1.84.30",
+			// Folder GLOB patterns which should be excluded from reading by parser
 			"excludeFolderPatterns": ["**/resources/**", "**/dist/**", "**/node_modules/**"],
+			// Source for standard library metadata preload
 			"dataSource": "https://ui5.sap.com/",
+			// For HTTP requests to dataSource
 			"rejectUnauthorized": false,
+			// List of libraries to be loaded
 			"libsToLoad": [
 				"sap.m",
 				"sap.ui.comp",
@@ -65,9 +81,9 @@ Default package.json config looks as follows:
 				"sap.tnt",
 				"sap.suite.ui.microchart"
 			],
-			//Handy to add additional workspace paths if e.g. library is outside of CWD
+			//Handy to add additional workspace paths if e.g. library is outside of CWD. See "Additional workspaces" section for more details
 			"additionalWorkspaces": ["../MyLibrary"],
-			//option to tell explicitly where UI5 projects are relative to CWD, useful for CAP projects
+			//option to tell explicitly where UI5 projects are relative to CWD, useful for CAP projects. See "Proxy workspaces" section for more details
 			"proxyWorkspaces": ["./MyFEApp1", "./MyFEApp2"]
 		}
 	}
@@ -77,6 +93,133 @@ Default package.json config looks as follows:
 These are default values, which can be overriden.
 
 > In case of `libsToLoad` and `excludeFolderPatterns` all additional values which are added in package.json will be added to the default values, not rewritten.
+
+---
+
+### Parser instantiation logic
+
+Let's introduce two terms which will be used here:
+
+-   **CWD** - current working directory, or the root folder of the project which is opened in the VSCode.
+-   **Workspace** - UI5 workspace, or the folder which has `manifest.json` in it.
+
+```
+--- CWD ---
+├── webapp
+--- Workspace 1 ---
+│   ├── Component.js
+│   └── manifest.json
+├── library
+--- Workspace 2 ---
+│   ├── library.js
+│   └── manifest.json
+└── package.json
+```
+
+The basic way for instantiating the parser looks as follows:
+
+-   Read `package.json` in `CWD` and use it as a configuration source
+-   Read all `Workspaces` and create UI5 Parser instance for it, using `package.json` as configuration source from previous step
+-   If `CWD` has `tsconfig.json` and any `.ts` files, it is considered to be TS project. Otherwise it's JS project.
+
+> **Important!** Take in mind that nested projects are not supported anymore, which means that there can be no folders with such structure:
+
+```
+├── webapp
+│   ├── library
+│   │   ├── library.js
+│   │   └── manifest.json
+│   ├── Component.js
+│   └── manifest.json
+```
+
+> The structure which will work as expected:
+
+```
+├── library
+│   ├── library.js
+│   └── manifest.json
+├── webapp
+│   ├── Component.js
+│   └── manifest.json
+```
+
+---
+
+#### Additional Workspaces
+
+If there is a e.g. library outside of the `CWD`, checkout `additionalWorkspaces` config for `ui5parser`.
+Example:
+
+```
+├── MyApp (CWD)
+│   │   ├── webapp
+│   │   │   ├── manifest.json
+│   │   │   └── Component.js
+│   └── package.json
+├── MyLibrary (Outside of CWD)
+│   │   ├── src
+│   │   │   ├── manifest.json
+│   │   │   └── library.js
+│   └── package.json
+└── tsconfig.json
+```
+
+To make this work, corresponding entry in `package.json` should be added
+
+```json
+"ui5": {
+   "ui5parser": {
+      "additionalWorkspaces" : ["../MyLibrary"]
+   }
+}
+```
+
+---
+
+#### Proxy Workspaces
+
+There are cases when project is mixed, meaning that one folder may contain many different projects inside, non-ui5 as well. Most frequent case would be CAP project with both backend and frontend in one folder.
+
+Example:
+
+```
+├── frontend
+│   ├── webapp
+│   │   └── manifest.json
+│   ├── package.json (<- this file will be used as configuration source after proxyWorkspaces is configured)
+│   └── tsconfig.json
+├── backend
+│   ├── Whatever.js
+│   └── package.json
+├── package.json (<- proxyWorkspaces should be configured here)
+└── tsconfig.json
+```
+
+To make the parser work only for `frontend` folder, corresponding entry in `package.json` should be added
+
+```json
+"ui5": {
+   "ui5parser": {
+      "proxyWorkspaces" : ["./frontend"]
+   }
+}
+```
+
+What happens is that `CWD` is replaced with the new path from `proxyWorkspaces`, so at instantiation stage `package.json` and `tsconfig.json` from `frontend` folder will be used instead of root folder.
+
+---
+
+## TS vs JS
+
+### Initialization
+
+If `tsconfig.json` is found in the CWD and any `.ts` files are found in the workspace, parser considers that it's TS project. <br/>
+`tsconfig.json` should be located in CWD.
+
+### Folder exclusions
+
+For convenience purposes `UI5TSParser` ignores `src-gen` folder, because they contain transpiled JS/XML files, which can make the parser to think that source files are there. If build folder name is different, is should be added to `excludeFolderPatterns` in your `package.json`. If you are using older tooling with manual babel transpiler which generates `webapp` folder, it should be added to `excludeFolderPatterns` as well
 
 ---
 
@@ -93,25 +236,6 @@ Necessary methods for getting information about the classes exists `ParserPool` 
 
 ```ts
 const parser = ParserPool.getParserForCustomClass("com.test.any.class");
-const UIClass = parser.classFactory.getUIClass("com.test.any.class");
-```
-
-### TS vs JS
-
-#### Initialization
-
-If `tsconfig.json` is found in the CWD and any `.ts` files are found in the workspace, parser considers that it's TS project. <br/>
-`tsconfig.json` should be located in CWD.
-
-#### Folder exclusions
-
-For convenience purposes `UI5TSParser` ignores `src-gen` folder, because they contain transpiled JS/XML files, which can make the parser to think that source files are there. If build folder name is different, is should be added to `excludeFolderPatterns` in your `package.json`. If you are using older tooling with manual babel transpiler which generates `webapp` folder, it should be added to `excludeFolderPatterns` as well
-
-### Usage
-
-How to get info about a JS/TS Class:
-
-```ts
 const UIClass = parser.classFactory.getUIClass("com.test.any.class");
 ```
 
