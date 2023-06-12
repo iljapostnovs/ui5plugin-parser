@@ -1,3 +1,7 @@
+## 1.5.1 (12-06-2023)
+
+-   Bugfix for `package.json` config
+
 ## 1.5.0 (12-06-2023)
 
 -   Support for [rc](https://github.com/azu/rc-config-loader) files introduced
