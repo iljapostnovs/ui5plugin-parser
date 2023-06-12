@@ -15,7 +15,8 @@ Any support is highly appreciated!<br/>
 # Summary
 
 -   [Configuration](#configuration)
-    -   [package.json config interface](#packagejson-config-interface)
+    -   [RC and package.json](#rc-and-packagejson)
+    -   [Config interface](#config-interface)
     -   [Config default values](#config-default-values)
 -   [Parser instantiation logic](#parser-instantiation-logic)
 	-   [Additional Workspaces](#additional-workspaces)
@@ -27,9 +28,18 @@ Any support is highly appreciated!<br/>
 
 ## Configuration
 
-### package.json config interface
+### RC and package.json
 
-`PackageParserConfigHandler` uses `IUI5PackageConfigEntry` interface in order to get the config.
+Configuration can be done in `package.json` or in any of `rc` file types:
+ - `.ui5pluginrc`
+ - `.ui5pluginrc.json`
+ - `.ui5pluginrc.yaml`
+ - `.ui5pluginrc.yml`
+ - `.ui5pluginrc.js`
+
+ For simplicity purposes all examples are written for `package.json`, but it works the same way for all file types.
+
+### Config interface
 
 ```ts
 interface IUI5PackageConfigEntry {
@@ -51,7 +61,7 @@ interface IUI5ParserEntryFields {
 
 ### Config default values
 
-Default package.json config looks as follows:
+Default `package.json` or `rc` file config looks as follows:
 
 ```jsonc
 {
