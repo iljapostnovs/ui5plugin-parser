@@ -1,6 +1,6 @@
 {
 	"name": "ui5plugin-parser",
-	"version": "1.4.6",
+	"version": "1.5.0",
 	"description": "UI5 Class parser",
 	"main": "dist/index.js",
 	"scripts": {
@@ -50,6 +50,7 @@
 		"hjson": "^3.2.2",
 		"line-column": "^1.0.2",
 		"properties-file": "^3.2.1",
+		"rc-config-loader": "^4.1.2",
 		"ts-morph": "^18.0.0",
 		"typescript": "^5.0.2"
 	}

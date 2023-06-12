@@ -1,5 +1,6 @@
 import * as fs from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
+import { rcFile } from "rc-config-loader";
 import { toNative } from "../parsing/util/filereader/AbstractFileReader";
 import { IParserConfigHandler } from "./IParserConfigHandler";
 
@@ -29,7 +30,9 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 			if (PackageParserConfigHandler.packageCache[this.packagePath]) {
 				this._package = PackageParserConfigHandler.packageCache[this.packagePath];
 			} else {
-				this._package = JSON.parse(fs.readFileSync(this.packagePath, "utf8")) || {};
+				const cwd = dirname(this.packagePath);
+				const config = rcFile("ui5plugin", { cwd: cwd, packageJSON: { fieldName: "ui5" } })?.config ?? {};
+				this._package = config;
 				PackageParserConfigHandler.packageCache[this.packagePath] = this._package;
 			}
 		} catch (error) {

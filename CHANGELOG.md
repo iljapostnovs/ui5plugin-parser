@@ -1,3 +1,7 @@
+## 1.5.0 (12-06-2023)
+
+-   Support for [rc](https://github.com/azu/rc-config-loader) files introduced
+
 ## 1.4.6 (02-06-2023)
 
 -   Update readme
