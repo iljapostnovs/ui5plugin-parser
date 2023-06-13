@@ -1,6 +1,6 @@
+import { cosmiconfigSync } from "cosmiconfig";
 import * as fs from "fs";
 import { dirname, join } from "path";
-import { rcFile } from "rc-config-loader";
 import { toNative } from "../parsing/util/filereader/AbstractFileReader";
 import { IParserConfigHandler } from "./IParserConfigHandler";
 
@@ -31,10 +31,11 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 				this._package = PackageParserConfigHandler.packageCache[this.packagePath];
 			} else {
 				const cwd = dirname(this.packagePath);
-				const { config, filePath } = rcFile("ui5plugin", { cwd: cwd, packageJSON: { fieldName: "ui5" } }) ?? {
+				const explorer = cosmiconfigSync("ui5plugin", { packageProp: "ui5.ui5parser" });
+				const { config, filepath } = explorer.search(cwd) ?? {
 					config: {}
 				};
-				this._package = filePath?.endsWith("package.json") ? { ui5: config } : config;
+				this._package = filepath?.endsWith("package.json") ? { ui5: { ui5parser: config } } : config;
 				PackageParserConfigHandler.packageCache[this.packagePath] = this._package;
 			}
 		} catch (error) {

@@ -1,3 +1,7 @@
+## 1.5.2 (13-06-2023)
+
+-   Migrate to `cosmiconfig`
+
 ## 1.5.1 (12-06-2023)
 
 -   Bugfix for `package.json` config
