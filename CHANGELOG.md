@@ -1,3 +1,7 @@
+## 1.5.3 (14-06-2023)
+
+-   Migrate to fixed version of `rc-config-loader`
+
 ## 1.5.2 (13-06-2023)
 
 -   Migrate to `cosmiconfig`
