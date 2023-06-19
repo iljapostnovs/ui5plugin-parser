@@ -1,3 +1,7 @@
+## 1.5.4 (19-06-2023)
+
+-   Upgrade typescript to 5.1.3
+
 ## 1.5.3 (14-06-2023)
 
 -   Migrate to fixed version of `rc-config-loader`
