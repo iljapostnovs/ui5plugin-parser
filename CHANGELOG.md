@@ -1,3 +1,7 @@
+## 1.5.6 (27-06-2023)
+
+-   Add `configPath` to `IParserConfigHandler`
+
 ## 1.5.5 (23-06-2023)
 
 -   Fix config finding going into recursive

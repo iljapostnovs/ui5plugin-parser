@@ -9,4 +9,5 @@ export interface IParserConfigHandler {
 	getAdditionalWorkspaces(): string[];
 	getProxyWorkspaces(): string[] | undefined;
 	packagePath: string;
+	configPath?: string;
 }
