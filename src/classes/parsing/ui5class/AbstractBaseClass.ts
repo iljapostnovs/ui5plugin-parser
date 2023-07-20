@@ -1,11 +1,10 @@
-import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
+import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
 
 export interface IDescriptionable {
 	description: string;
 }
 
-export interface IUIMethodParam extends IDescriptionable {
-	name: string;
+export interface IUIMethodParam extends IDescriptionable, IName {
 	isOptional: boolean;
 	type: string;
 }
@@ -41,10 +40,9 @@ export interface IUIField extends IMember {
 export interface ITypeValue extends IDescriptionable {
 	text: string;
 }
-export interface IUIProperty extends IName, IVisibility {
+export interface IUIProperty extends IName, IVisibility, IDescriptionable {
 	type: string | undefined;
 	typeValues: ITypeValue[];
-	description: string;
 	defaultValue?: string;
 }
 export interface IUIAggregation extends IName, IVisibility, IDescriptionable {
@@ -64,7 +62,7 @@ export interface IUIAssociation extends IName, IVisibility, IDescriptionable {
 	multiple: boolean;
 	singularName: string;
 }
-export abstract class AbstractJSClass implements IAbstract, IDescriptionable {
+export abstract class AbstractBaseClass implements IAbstract, IDescriptionable, IAbstract {
 	classExists: boolean;
 	abstract: boolean;
 	className: string;

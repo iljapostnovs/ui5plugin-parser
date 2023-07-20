@@ -1,6 +1,6 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import ParserPool from "../../../../parser/pool/ParserPool";
-import { IMember, IUIMethod } from "../../ui5class/js/AbstractJSClass";
+import { IMember, IUIMethod } from "../../ui5class/AbstractBaseClass";
 import { ICommentPositions, IXMLFile } from "../filereader/IFileReader";
 
 export interface ITag {
@@ -186,10 +186,11 @@ export class XMLParser {
 								? this._parser.classFactory.isClassAChildOfClassB(
 										responsibleClassName,
 										functionCallClassName
-								) || this._parser.classFactory.isClassAChildOfClassB(
-									functionCallClassName,
-									responsibleClassName
-							)
+								  ) ||
+										this._parser.classFactory.isClassAChildOfClassB(
+											functionCallClassName,
+											responsibleClassName
+										)
 								: false;
 						}
 

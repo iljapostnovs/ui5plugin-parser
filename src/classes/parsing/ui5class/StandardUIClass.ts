@@ -1,9 +1,8 @@
 import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
 import ParserPool from "../../../parser/pool/ParserPool";
 import { MainLooper } from "../jsparser/MainLooper";
-import { AbstractCustomClass } from "./AbstractCustomClass";
 import {
-	AbstractJSClass,
+	AbstractBaseClass,
 	ITypeValue,
 	IUIAggregation,
 	IUIAssociation,
@@ -12,7 +11,7 @@ import {
 	IUIMethod,
 	IUIMethodParam,
 	IUIProperty
-} from "./js/AbstractJSClass";
+} from "./AbstractBaseClass";
 
 const aXmlnsData = [
 	{
@@ -82,10 +81,10 @@ const aFioriElementsControllers = [
 	"sap.suite.ui.generic.template.ListReport.view.ListReport"
 ];
 
-export class StandardUIClass extends AbstractJSClass {
+export class StandardUIClass extends AbstractBaseClass {
 	methods: IStandardClassUIMethod[] = [];
 
-	constructor(className: string, parser: IUI5Parser<AbstractCustomClass>) {
+	constructor(className: string, parser: IUI5Parser) {
 		super(className, parser);
 
 		if (aFioriElementsControllers.includes(className)) {
@@ -187,7 +186,8 @@ export class StandardUIClass extends AbstractJSClass {
 							? StandardUIClass.adjustLinks(
 									this.parser,
 									SAPNode.getMetadata().getRawMetadata().description
-							)
+									// eslint-disable-next-line no-mixed-spaces-and-tabs
+							  )
 							: "Extension API",
 						type: neededClassForFields,
 						visibility: "public",
@@ -557,17 +557,20 @@ export class StandardUIClass extends AbstractJSClass {
 								type: "any",
 								isOptional: param.endsWith("?")
 							};
-					})
+							// eslint-disable-next-line no-mixed-spaces-and-tabs
+					  })
 					: [];
 			} else {
-				parameters = constructor.parameters.filter((param: any) => param.depth === 0).map((param: any) => {
-					return {
-						name: param.name + (param.optional ? "?" : ""),
-						description: StandardUIClass.adjustLinks(param.description),
-						type: param.types.map((type: any) => type.name).join("|"),
-						isOptional: param.optional
-					};
-				});
+				parameters = constructor.parameters
+					.filter((param: any) => param.depth === 0)
+					.map((param: any) => {
+						return {
+							name: param.name + (param.optional ? "?" : ""),
+							description: StandardUIClass.adjustLinks(param.description),
+							type: param.types.map((type: any) => type.name).join("|"),
+							isOptional: param.optional
+						};
+					});
 			}
 
 			this.methods.push({

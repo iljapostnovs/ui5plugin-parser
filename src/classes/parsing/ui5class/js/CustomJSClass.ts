@@ -6,13 +6,6 @@ import ParserPool from "../../../../parser/pool/ParserPool";
 import { IAcornLocation, IAcornPosition } from "../../jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "../../jsparser/ISyntaxAnalyser";
 import {
-	AbstractCustomClass,
-	ICustomClassField,
-	ICustomClassMethod,
-	ICustomMember,
-	IUIDefine
-} from "../AbstractCustomClass";
-import {
 	IUIAggregation,
 	IUIAssociation,
 	IUIEvent,
@@ -20,7 +13,14 @@ import {
 	IUIMethod,
 	IUIMethodParam,
 	IUIProperty
-} from "./AbstractJSClass";
+} from "../AbstractBaseClass";
+import {
+	AbstractCustomClass,
+	ICustomClassField,
+	ICustomClassMethod,
+	ICustomMember,
+	IUIDefine
+} from "../AbstractCustomClass";
 import LineColumn = require("line-column");
 const acornLoose = require("acorn-loose");
 
@@ -107,7 +107,10 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 	}
 
 	protected _fillIsAbstract() {
-		this.abstract = this.abstract || !!this.methods.find(method => method.abstract) || !!this.fields.find(field => field.abstract);
+		this.abstract =
+			this.abstract ||
+			!!this.methods.find(method => method.abstract) ||
+			!!this.fields.find(field => field.abstract);
 	}
 
 	private _enrichMemberInfoWithJSDocs() {

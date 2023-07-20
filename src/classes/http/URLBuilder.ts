@@ -1,7 +1,7 @@
 import ParserPool from "../../parser/pool/ParserPool";
 import { IParserConfigHandler } from "../config/IParserConfigHandler";
 import { SAPNode } from "../librarydata/SAPNode";
-import { AbstractJSClass } from "../parsing/ui5class/js/AbstractJSClass";
+import { AbstractBaseClass } from "../parsing/ui5class/AbstractBaseClass";
 
 export class URLBuilder {
 	private readonly _UI5Version: string;
@@ -12,11 +12,11 @@ export class URLBuilder {
 		this._UI5Version = configHandler.getUI5Version();
 	}
 
-	getMarkupUrlForClassApi(SAPClass: SAPNode | AbstractJSClass) {
+	getMarkupUrlForClassApi(SAPClass: SAPNode | AbstractBaseClass) {
 		const className =
 			SAPClass instanceof SAPNode
 				? SAPClass.getName()
-				: SAPClass instanceof AbstractJSClass
+				: SAPClass instanceof AbstractBaseClass
 				? SAPClass.className
 				: "";
 
@@ -27,7 +27,7 @@ export class URLBuilder {
 		return this._wrapInMarkup(this.getUrlForClassApi(SAPClass));
 	}
 
-	getMarkupUrlForPropertiesApi(SAPClass: AbstractJSClass) {
+	getMarkupUrlForPropertiesApi(SAPClass: AbstractBaseClass) {
 		if (ParserPool.getManifestForClass(SAPClass.className) || this._isNativeClass(SAPClass.className)) {
 			return "";
 		}
@@ -35,7 +35,7 @@ export class URLBuilder {
 		return this._wrapInMarkup(this._getUrlForPropertiesApi(SAPClass));
 	}
 
-	getMarkupUrlForAggregationApi(SAPClass: AbstractJSClass) {
+	getMarkupUrlForAggregationApi(SAPClass: AbstractBaseClass) {
 		if (ParserPool.getManifestForClass(SAPClass.className) || this._isNativeClass(SAPClass.className)) {
 			return "";
 		}
@@ -43,7 +43,7 @@ export class URLBuilder {
 		return this._wrapInMarkup(this._geUrlForAggregationApi(SAPClass));
 	}
 
-	getMarkupUrlForAssociationApi(SAPClass: AbstractJSClass) {
+	getMarkupUrlForAssociationApi(SAPClass: AbstractBaseClass) {
 		if (ParserPool.getManifestForClass(SAPClass.className) || this._isNativeClass(SAPClass.className)) {
 			return "";
 		}
@@ -51,7 +51,7 @@ export class URLBuilder {
 		return this._wrapInMarkup(this._geUrlForAssociationApi(SAPClass));
 	}
 
-	getMarkupUrlForEventsApi(SAPClass: AbstractJSClass, eventName = "Events") {
+	getMarkupUrlForEventsApi(SAPClass: AbstractBaseClass, eventName = "Events") {
 		if (ParserPool.getManifestForClass(SAPClass.className) || this._isNativeClass(SAPClass.className)) {
 			return "";
 		}
@@ -59,11 +59,11 @@ export class URLBuilder {
 		return this._wrapInMarkup(this._geUrlForEventsApi(SAPClass, eventName));
 	}
 
-	getMarkupUrlForMethodApi(SAPClass: AbstractJSClass | SAPNode, methodName: string) {
+	getMarkupUrlForMethodApi(SAPClass: AbstractBaseClass | SAPNode, methodName: string) {
 		const className =
 			SAPClass instanceof SAPNode
 				? SAPClass.getName()
-				: SAPClass instanceof AbstractJSClass
+				: SAPClass instanceof AbstractBaseClass
 				? SAPClass.className
 				: "";
 
@@ -74,11 +74,11 @@ export class URLBuilder {
 		return this._wrapInMarkup(this.getUrlForMethodApi(SAPClass, methodName));
 	}
 
-	getUrlForClassApi(SAPClass: SAPNode | AbstractJSClass) {
+	getUrlForClassApi(SAPClass: SAPNode | AbstractBaseClass) {
 		const className =
 			SAPClass instanceof SAPNode
 				? SAPClass.getName()
-				: SAPClass instanceof AbstractJSClass
+				: SAPClass instanceof AbstractBaseClass
 				? SAPClass.className
 				: "";
 
@@ -89,31 +89,31 @@ export class URLBuilder {
 		return this._getUrlClassApiBase(className);
 	}
 
-	private _getUrlForPropertiesApi(SAPClass: AbstractJSClass) {
+	private _getUrlForPropertiesApi(SAPClass: AbstractBaseClass) {
 		const urlBase = this._getUrlClassApiBase(SAPClass.className);
 		return `${urlBase}/controlProperties`;
 	}
 
-	private _geUrlForEventsApi(SAPClass: AbstractJSClass, eventName: string) {
+	private _geUrlForEventsApi(SAPClass: AbstractBaseClass, eventName: string) {
 		const urlBase = this._getUrlClassApiBase(SAPClass.className);
 		return `${urlBase}/events/${eventName}`;
 	}
 
-	private _geUrlForAggregationApi(SAPClass: AbstractJSClass) {
+	private _geUrlForAggregationApi(SAPClass: AbstractBaseClass) {
 		const urlBase = this._getUrlClassApiBase(SAPClass.className);
 		return `${urlBase}/aggregations`;
 	}
 
-	private _geUrlForAssociationApi(SAPClass: AbstractJSClass) {
+	private _geUrlForAssociationApi(SAPClass: AbstractBaseClass) {
 		const urlBase = this._getUrlClassApiBase(SAPClass.className);
 		return `${urlBase}/associations`;
 	}
 
-	getUrlForMethodApi(SAPClass: AbstractJSClass | SAPNode, methodName: string) {
+	getUrlForMethodApi(SAPClass: AbstractBaseClass | SAPNode, methodName: string) {
 		const className =
 			SAPClass instanceof SAPNode
 				? SAPClass.getName()
-				: SAPClass instanceof AbstractJSClass
+				: SAPClass instanceof AbstractBaseClass
 				? SAPClass.className
 				: "";
 		if (ParserPool.getManifestForClass(className) || this._isNativeClass(className)) {

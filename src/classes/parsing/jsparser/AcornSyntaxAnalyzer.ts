@@ -1,15 +1,15 @@
 import { IUI5Parser } from "../../../parser/abstraction/IUI5Parser";
 import ParserPool from "../../../parser/pool/ParserPool";
+import { IUIField, IUIMethod } from "../ui5class/AbstractBaseClass";
 import { AbstractCustomClass } from "../ui5class/AbstractCustomClass";
 import { IFieldsAndMethods } from "../ui5class/factory/IClassFactory";
-import { IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
 import { CustomJSClass, ICustomClassJSField, ICustomClassJSMethod } from "../ui5class/js/CustomJSClass";
 import { IXMLFile } from "../util/filereader/IFileReader";
 import { TextDocument } from "../util/textdocument/TextDocument";
 import { ISyntaxAnalyser } from "./ISyntaxAnalyser";
-import { FieldPropertyMethodGetterStrategy } from "./typesearch/abstraction/FieldPropertyMethodGetterStrategy";
 import { FieldsAndMethodForPositionBeforeCurrentStrategy } from "./typesearch/FieldsAndMethodForPositionBeforeCurrentStrategy";
 import { InnerPropertiesStrategy } from "./typesearch/InnerPropertiesStrategy";
+import { FieldPropertyMethodGetterStrategy } from "./typesearch/abstraction/FieldPropertyMethodGetterStrategy";
 
 export interface IAcornPosition {
 	line: number;
@@ -427,7 +427,12 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 				className = this.getResultOfPromise(currentClassName);
 			}
 
-			if (!currentNode._acornSyntaxAnalyserType && !stackWasModified && !className?.includes("__map__") && className) {
+			if (
+				!currentNode._acornSyntaxAnalyserType &&
+				!stackWasModified &&
+				!className?.includes("__map__") &&
+				className
+			) {
 				currentNode._acornSyntaxAnalyserType = className;
 			}
 

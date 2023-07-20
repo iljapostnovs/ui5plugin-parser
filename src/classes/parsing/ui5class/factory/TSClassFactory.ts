@@ -3,20 +3,20 @@ import * as ts from "typescript";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import ParserPool from "../../../../parser/pool/ParserPool";
 import { StandardUIClass } from "../../ui5class/StandardUIClass";
+import { EmptyJSClass } from "../../ui5class/js/EmptyJSClass";
+import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
+import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
+import { IFragment, IView } from "../../util/filereader/IFileReader";
+import { TextDocument } from "../../util/textdocument/TextDocument";
 import {
-	AbstractJSClass,
+	AbstractBaseClass,
 	IUIAggregation,
 	IUIAssociation,
 	IUIEvent,
 	IUIField,
 	IUIMethod,
 	IUIProperty
-} from "../../ui5class/js/AbstractJSClass";
-import { EmptyJSClass } from "../../ui5class/js/EmptyJSClass";
-import { CustomTSClass } from "../../ui5class/ts/CustomTSClass";
-import { CustomTSObject } from "../../ui5class/ts/CustomTSObject";
-import { IFragment, IView } from "../../util/filereader/IFileReader";
-import { TextDocument } from "../../util/textdocument/TextDocument";
+} from "../AbstractBaseClass";
 import { AbstractCustomClass } from "../AbstractCustomClass";
 import { IClassFactory, IFieldsAndMethods, IUIClassMap, IViewsAndFragments } from "./IClassFactory";
 
@@ -27,7 +27,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		this.parser = parser;
 	}
 
-	isCustomClass(UIClass: AbstractJSClass): UIClass is CustomTSClass | CustomTSObject {
+	isCustomClass(UIClass: AbstractBaseClass): UIClass is CustomTSClass | CustomTSObject {
 		return UIClass instanceof CustomTSClass || UIClass instanceof CustomTSObject;
 	}
 
@@ -36,7 +36,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		declaration?: ClassDeclaration | ObjectLiteralExpression,
 		typeChecker?: TypeChecker
 	) {
-		let returnClass: AbstractJSClass | undefined;
+		let returnClass: AbstractBaseClass | undefined;
 		const isThisClassFromAProject = !!ParserPool.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className, this.parser);
@@ -69,6 +69,10 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 				returnClass = new EmptyJSClass(className, this.parser);
 			}
 		} else {
+			returnClass = new EmptyJSClass(className, this.parser);
+		}
+
+		if (!returnClass.classExists && !(returnClass instanceof EmptyJSClass)) {
 			returnClass = new EmptyJSClass(className, this.parser);
 		}
 
@@ -674,7 +678,7 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		delete this._UIClasses[className];
 	}
 
-	getParent(UIClass: AbstractJSClass) {
+	getParent(UIClass: AbstractBaseClass) {
 		if (UIClass.parentClassNameDotNotation) {
 			return this.getUIClass(UIClass.parentClassNameDotNotation);
 		}
