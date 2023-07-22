@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import ParserPool from "../../../../parser/pool/ParserPool";
 import { IMember, IUIMethod } from "../../ui5class/AbstractBaseClass";

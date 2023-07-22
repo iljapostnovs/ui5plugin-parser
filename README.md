@@ -7,8 +7,9 @@ Primarely used by `ui5plugin-linter` package and Visual Studio Code SAPUI5 Exten
 ---
 
 Any support is highly appreciated!<br/>
+[<img src="images/paypal-donate-button.png" height="30"/>](https://www.paypal.com/donate/?hosted_button_id=HPZ5FA8C3KJ6W)
 [<img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86" height="30"/>](https://github.com/sponsors/iljapostnovs)
-[<img src="https://newbie.zeromesh.net/donate.7.6.svg" height="30"/>](https://donate.cafe/iljapostnovs)
+[<img src="./images/donate.png" height="30"/>](https://donate.cafe/iljapostnovs)
 
 ---
 
@@ -21,6 +22,7 @@ Any support is highly appreciated!<br/>
 -   [Parser instantiation logic](#parser-instantiation-logic)
 	-   [Additional Workspaces](#additional-workspaces)
 	-   [Proxy Workspaces](#proxy-workspaces)
+	-   [Node projects](#node-projects)
 -   [TS vs JS](#ts-vs-js)
 	-   [Initialization](#initialization)
 	-   [Folder exclusions](#folder-exclusions)
@@ -55,6 +57,7 @@ interface IUI5ParserEntryFields {
 	rejectUnauthorized?: boolean;
 	libsToLoad?: string[];
 	additionalWorkspaces?: string[];
+	nodeProjects?: string[];
 	proxyWorkspaces?: string[];
 }
 ```
@@ -94,7 +97,9 @@ Default `package.json` or `rc` file config looks as follows:
 			//Handy to add additional workspace paths if e.g. library is outside of CWD. See "Additional workspaces" section for more details
 			"additionalWorkspaces": ["../MyLibrary"],
 			//option to tell explicitly where UI5 projects are relative to CWD, useful for CAP projects. See "Proxy workspaces" section for more details
-			"proxyWorkspaces": ["./MyFEApp1", "./MyFEApp2"]
+			"proxyWorkspaces": ["./MyFEApp1", "./MyFEApp2"],
+			// This configuration entry tries to parse UI5 project from node_modules folder. Requires "-dbg.js" files and "manifest.json" to be there.
+			"nodeProjects": ["my-node-library"]
 		}
 	}
 }
@@ -217,6 +222,27 @@ To make the parser work only for `frontend` folder, corresponding entry in `pack
 ```
 
 What happens is that `CWD` is replaced with the new path from `proxyWorkspaces`, so at instantiation stage `package.json` and `tsconfig.json` from `frontend` folder will be used instead of root folder.
+
+---
+
+#### Node projects
+
+There are cases when custom projects (e.g. libraries) installed via `npm` are used, for that purpose `nodeProjects` configuration entry was created.
+Example:
+
+`npm install my-custom-library`
+
+`package.json`:
+```json
+"ui5": {
+   "ui5parser": {
+		"nodeProjects": ["my-custom-library"]
+   }
+}
+```
+
+> **Important!** In order to get the project parsed properly, it should have `-dbg.js` files and `manifest.json`. Configuration will be inherited from main project (project in `CWD`). In other words, npm packages which were not built properly and have no `manifest.json` will not work.
+
 
 ---
 

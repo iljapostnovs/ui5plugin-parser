@@ -1,3 +1,7 @@
+## 1.6.0 (22-07-2023)
+
+-   `nodeProjects` configuration option added. [Readme](README.md#node-projects)
+
 ## 1.5.6 (27-06-2023)
 
 -   Add `configPath` to `IParserConfigHandler`

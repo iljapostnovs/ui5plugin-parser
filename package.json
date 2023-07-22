@@ -22,7 +22,21 @@
 		"sapui5",
 		"sap"
 	],
-	"author": "Ilja Postnovs",
+	"funding": [
+		{
+			"type": "paypal",
+			"url": "https://www.paypal.com/donate/?hosted_button_id=HPZ5FA8C3KJ6W"
+		},
+		{
+			"type": "github",
+			"url": "https://github.com/sponsors/iljapostnovs"
+		},
+		{
+			"type": "individual",
+			"url": "https://donate.cafe/iljapostnovs"
+		}
+	],
+	"author": "Ilja Postnovs <ilja.postnovs@gmail.com>",
 	"license": "Apache-2.0",
 	"contributors": [
 		"Ilja Postnovs <ilja.postnovs@gmail.com>"
@@ -36,9 +50,9 @@
 		"@types/hjson": "^2.4.3",
 		"@types/line-column": "^1.0.0",
 		"@types/node": "^20.4.1",
-		"@typescript-eslint/eslint-plugin": "^6.0.0",
-		"@typescript-eslint/parser": "^6.0.0",
-		"eslint": "^8.44.0",
+		"@typescript-eslint/eslint-plugin": "^6.1.0",
+		"@typescript-eslint/parser": "^6.1.0",
+		"eslint": "^8.45.0",
 		"ts-loader": "^9.4.4"
 	},
 	"dependencies": {

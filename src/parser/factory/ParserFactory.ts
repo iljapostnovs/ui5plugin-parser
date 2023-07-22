@@ -3,6 +3,7 @@ import { IParserConfigHandler } from "../../classes/config/IParserConfigHandler"
 import { PackageParserConfigHandler } from "../../classes/config/PackageParserConfigHandler";
 import { AbstractFileReader } from "../../classes/parsing/util/filereader/AbstractFileReader";
 import { WorkspaceFolder } from "../../classes/parsing/util/textdocument/WorkspaceFolder";
+import { UI5JSNodeParser } from "../UI5JSNodeParser";
 import { UI5JSParser } from "../UI5JSParser";
 import { UI5TSParser } from "../UI5TSParser";
 import { AbstractUI5Parser } from "../abstraction/AbstractUI5Parser";
@@ -33,13 +34,18 @@ export default class ParserFactory {
 		this._initializationMessages = [];
 		const wsFoldersAndConfigHandlers = this._extractAllWSFoldersAndConfigHandlers(wsFolders);
 
-		const manifestInfos = wsFoldersAndConfigHandlers.flatMap(({ wsFolder, configHandler }) => {
-			const manifestPaths = AbstractFileReader.readFilesInWorkspace(wsFolder, "**/manifest.json", configHandler);
+		const manifestInfos = wsFoldersAndConfigHandlers.flatMap(({ wsFolder, configHandler, isNodeProject }) => {
+			const manifestPaths = AbstractFileReader.readFilesInWorkspace(
+				wsFolder,
+				"**/manifest.json",
+				isNodeProject ? undefined : configHandler
+			);
 
 			return manifestPaths.map(manifestPath => ({
 				path: manifestPath,
 				wsFolder: wsFolder,
-				configHandler: configHandler
+				configHandler: configHandler,
+				isNodeProject
 			}));
 		});
 
@@ -116,6 +122,7 @@ export default class ParserFactory {
 	private static _extractAllWSFoldersAndConfigHandlers(wsFolders: WorkspaceFolder[]): {
 		wsFolder: WorkspaceFolder;
 		configHandler: PackageParserConfigHandler;
+		isNodeProject: boolean;
 	}[] {
 		if (wsFolders.length === 0) {
 			return [];
@@ -123,7 +130,8 @@ export default class ParserFactory {
 		const wsFoldersAndConfigHandlers = wsFolders.map(wsFolder => {
 			return {
 				wsFolder: wsFolder,
-				configHandler: this._getConfigHandlerForWorkspaceFolder(wsFolder)
+				configHandler: this._getConfigHandlerForWorkspaceFolder(wsFolder),
+				isNodeProject: false
 			};
 		});
 
@@ -138,11 +146,25 @@ export default class ParserFactory {
 				return [];
 			}
 			const additionalWorkspacePaths = configHandler.getAdditionalWorkspaces();
-			return additionalWorkspacePaths.map(additionalWorkspacePath => {
-				const isPathAbsolute = path.isAbsolute(additionalWorkspacePath);
-				const workspaceFsPath = isPathAbsolute ? additionalWorkspacePath : path.join(wsFolder.fsPath, additionalWorkspacePath);
-				return this._createWorkspaceFolderAndConfigHandler(workspaceFsPath);
-			});
+			const nodeProjects = configHandler.getNodeProjects();
+
+			return additionalWorkspacePaths
+				.map(additionalWorkspacePath => {
+					const isPathAbsolute = path.isAbsolute(additionalWorkspacePath);
+					const workspaceFsPath = isPathAbsolute
+						? additionalWorkspacePath
+						: path.join(wsFolder.fsPath, additionalWorkspacePath);
+					return this._createWorkspaceFolderAndConfigHandler(workspaceFsPath);
+				})
+				.concat(
+					nodeProjects.map(nodeProject => {
+						return this._createWorkspaceFolderAndConfigHandler(
+							path.join(wsFolder.fsPath, "/node_modules", `/${nodeProject}`),
+							true,
+							path.join(wsFolder.fsPath, "/package.json")
+						);
+					})
+				);
 		});
 		nonProxyWorkspaces.push(...additionalWorkspaces);
 
@@ -171,10 +193,17 @@ export default class ParserFactory {
 		return uniqueWorkspaces;
 	}
 
-	private static _createWorkspaceFolderAndConfigHandler(workspaceFolderPath: string) {
+	private static _createWorkspaceFolderAndConfigHandler(
+		workspaceFolderPath: string,
+		isNodeProject = false,
+		configPath?: string
+	) {
 		return {
 			wsFolder: new WorkspaceFolder(workspaceFolderPath),
-			configHandler: new PackageParserConfigHandler(path.join(workspaceFolderPath, "/package.json"))
+			configHandler: new PackageParserConfigHandler(
+				configPath ?? path.join(workspaceFolderPath, "/package.json")
+			),
+			isNodeProject
 		};
 	}
 
@@ -186,6 +215,7 @@ export default class ParserFactory {
 		path: string;
 		wsFolder: WorkspaceFolder;
 		configHandler: IParserConfigHandler;
+		isNodeProject: boolean;
 	}): IUI5Parser {
 		const isTypescriptProject = AbstractUI5Parser.getIsTypescriptProject(
 			manifestInfo.wsFolder,
@@ -193,7 +223,12 @@ export default class ParserFactory {
 		);
 		const packagePath = join(manifestInfo.wsFolder.fsPath, "/package.json");
 		const manifestFolderPath = dirname(manifestInfo.path);
-		if (isTypescriptProject) {
+		if (manifestInfo.isNodeProject) {
+			return new UI5JSNodeParser(
+				{ workspaceFolder: new WorkspaceFolder(manifestFolderPath), configHandler: manifestInfo.configHandler },
+				packagePath
+			);
+		} else if (isTypescriptProject) {
 			return new UI5TSParser(
 				{ workspaceFolder: new WorkspaceFolder(manifestFolderPath), configHandler: manifestInfo.configHandler },
 				packagePath

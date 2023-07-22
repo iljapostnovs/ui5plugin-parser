@@ -552,6 +552,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 					.replace(/\.js$/, "")
 					.replace(/\.controller\.ts$/, "")
 					.replace(/\.ts$/, "")
+					.replace(/-dbg$/, "")
 					.replace(new RegExp(`${escapedFileSeparator}`, "g"), ".");
 		}
 
@@ -745,9 +746,9 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 		}
 	}
 
-	static readFilesInWorkspace(wsFolder: WorkspaceFolder, path: string, configHandler: IParserConfigHandler) {
+	static readFilesInWorkspace(wsFolder: WorkspaceFolder, path: string, configHandler?: IParserConfigHandler) {
 		const wsFolderFSPath = wsFolder.fsPath.replace(new RegExp(`${escapedFileSeparator}`, "g"), "/");
-		const exclusions: string[] = configHandler.getExcludeFolderPatterns();
+		const exclusions: string[] = configHandler?.getExcludeFolderPatterns() ?? [];
 		const exclusionPaths = exclusions.map(excludeString => {
 			return `${wsFolderFSPath}/${excludeString}`;
 		});

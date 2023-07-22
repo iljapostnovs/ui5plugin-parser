@@ -99,7 +99,7 @@ export class JSFileReader extends AbstractFileReader<CustomJSClass, UI5JSParser>
 		this._readAllJSFiles();
 	}
 
-	private _readAllJSFiles() {
+	protected _readAllJSFiles() {
 		const classPaths = this._readFilesInWorkspace("**/*.js");
 		const classNames = classPaths.map(path => this.getClassNameFromPath(path));
 		classNames.forEach(className => {

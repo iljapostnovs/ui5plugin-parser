@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import { IUIEventParam, IUIField, IUIMethod } from "../ui5class/AbstractBaseClass";
 import { IFieldsAndMethods } from "../ui5class/factory/IClassFactory";
 import { CustomJSClass } from "../ui5class/js/CustomJSClass";
