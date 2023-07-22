@@ -8,6 +8,7 @@ export interface IParserConfigHandler {
 	getLibsToLoad(): string[];
 	getAdditionalWorkspaces(): string[];
 	getProxyWorkspaces(): string[] | undefined;
+	getNodeProjects(): string[];
 	packagePath: string;
 	configPath?: string;
 }

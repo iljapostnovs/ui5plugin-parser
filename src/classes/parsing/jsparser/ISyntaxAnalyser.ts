@@ -1,5 +1,6 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
+import { IUIEventParam, IUIField, IUIMethod } from "../ui5class/AbstractBaseClass";
 import { IFieldsAndMethods } from "../ui5class/factory/IClassFactory";
-import { IUIEventParam, IUIField, IUIMethod } from "../ui5class/js/AbstractJSClass";
 import { CustomJSClass } from "../ui5class/js/CustomJSClass";
 import { TextDocument } from "../util/textdocument/TextDocument";
 
@@ -16,7 +17,7 @@ export interface ISyntaxAnalyser {
 		| {
 				className: string;
 				eventName: string;
-		}
+		  }
 		| undefined;
 	findMethodReturnType(
 		method: IUIMethod,

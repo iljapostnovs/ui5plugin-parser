@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import { IUI5Parser } from "../../parser/abstraction/IUI5Parser";
 import { SAPNode } from "./SAPNode";
 import { UI5Metadata } from "./UI5Metadata";

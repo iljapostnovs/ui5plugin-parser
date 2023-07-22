@@ -1,20 +1,20 @@
-import ParserPool from "../../../../parser/pool/ParserPool";
 import { UI5JSParser } from "../../../../parser/UI5JSParser";
+import ParserPool from "../../../../parser/pool/ParserPool";
 import { ISyntaxAnalyser } from "../../jsparser/ISyntaxAnalyser";
+import { StandardUIClass } from "../../ui5class/StandardUIClass";
+import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
+import { NativeJSClass } from "../../ui5class/js/NativeJSClass";
+import { IFragment, IView } from "../../util/filereader/IFileReader";
+import { TextDocument } from "../../util/textdocument/TextDocument";
 import {
-	AbstractJSClass,
+	AbstractBaseClass,
 	IUIAggregation,
 	IUIAssociation,
 	IUIEvent,
 	IUIField,
 	IUIMethod,
 	IUIProperty
-} from "../../ui5class/js/AbstractJSClass";
-import { CustomJSClass } from "../../ui5class/js/CustomJSClass";
-import { NativeJSClass } from "../../ui5class/js/NativeJSClass";
-import { StandardUIClass } from "../../ui5class/StandardUIClass";
-import { IFragment, IView } from "../../util/filereader/IFileReader";
-import { TextDocument } from "../../util/textdocument/TextDocument";
+} from "../AbstractBaseClass";
 import { AbstractCustomClass } from "../AbstractCustomClass";
 import { EmptyJSClass } from "../js/EmptyJSClass";
 import { IClassFactory, IFieldsAndMethods, IUIClassMap, IViewsAndFragments } from "./IClassFactory";
@@ -38,7 +38,7 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 		};
 	}
 
-	isCustomClass(UIClass: AbstractJSClass): UIClass is CustomJSClass {
+	isCustomClass(UIClass: AbstractBaseClass): UIClass is CustomJSClass {
 		return UIClass instanceof CustomJSClass;
 	}
 
@@ -65,15 +65,12 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 	}
 
 	private _getInstance(className: string, documentText?: string) {
-		let returnClass: AbstractJSClass;
+		let returnClass: AbstractBaseClass;
 		const isThisClassFromAProject = !!ParserPool.getManifestForClass(className);
 		if (!isThisClassFromAProject) {
 			returnClass = new StandardUIClass(className, this.parser);
 		} else {
 			returnClass = new CustomJSClass(className, this.syntaxAnalyser, this.parser, documentText);
-			if (!returnClass.classExists) {
-				returnClass = new EmptyJSClass(className, this.parser);
-			}
 			if (returnClass instanceof CustomJSClass) {
 				returnClass.comments?.forEach(comment => {
 					const typedefDoc = comment.jsdoc?.tags?.find((tag: any) => {
@@ -84,6 +81,9 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 					}
 				});
 			}
+		}
+		if (!returnClass.classExists) {
+			returnClass = new EmptyJSClass(className, this.parser);
 		}
 
 		return returnClass;
@@ -695,7 +695,7 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 		delete this._UIClasses[className];
 	}
 
-	getParent(UIClass: AbstractJSClass) {
+	getParent(UIClass: AbstractBaseClass) {
 		if (UIClass.parentClassNameDotNotation) {
 			return this.getUIClass(UIClass.parentClassNameDotNotation);
 		}

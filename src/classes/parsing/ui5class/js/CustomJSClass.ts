@@ -6,13 +6,6 @@ import ParserPool from "../../../../parser/pool/ParserPool";
 import { IAcornLocation, IAcornPosition } from "../../jsparser/AcornSyntaxAnalyzer";
 import { ISyntaxAnalyser } from "../../jsparser/ISyntaxAnalyser";
 import {
-	AbstractCustomClass,
-	ICustomClassField,
-	ICustomClassMethod,
-	ICustomMember,
-	IUIDefine
-} from "../AbstractCustomClass";
-import {
 	IUIAggregation,
 	IUIAssociation,
 	IUIEvent,
@@ -20,7 +13,14 @@ import {
 	IUIMethod,
 	IUIMethodParam,
 	IUIProperty
-} from "./AbstractJSClass";
+} from "../AbstractBaseClass";
+import {
+	AbstractCustomClass,
+	ICustomClassField,
+	ICustomClassMethod,
+	ICustomMember,
+	IUIDefine
+} from "../AbstractCustomClass";
 import LineColumn = require("line-column");
 const acornLoose = require("acorn-loose");
 
@@ -107,7 +107,10 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 	}
 
 	protected _fillIsAbstract() {
-		this.abstract = this.abstract || !!this.methods.find(method => method.abstract) || !!this.fields.find(field => field.abstract);
+		this.abstract =
+			this.abstract ||
+			!!this.methods.find(method => method.abstract) ||
+			!!this.fields.find(field => field.abstract);
 	}
 
 	private _enrichMemberInfoWithJSDocs() {
@@ -127,7 +130,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 
 			//static methods
 			//TODO: Move this
-			const UIDefineBody = this.fileContent?.body[0]?.expression?.arguments[1]?.body?.body;
+			const UIDefineBody = this.getUIDefineAcornBody();
 			if (UIDefineBody && this.classBodyAcornVariableName) {
 				const thisClassVariableAssignments: any[] = UIDefineBody.filter((node: any) => {
 					return (
@@ -385,7 +388,7 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 		let UIDefine: IUIDefine[] = [];
 
 		if (this.fileContent) {
-			const args = this.fileContent?.body[0]?.expression?.arguments;
+			const args = this._getUIDefineItself()?.expression?.arguments;
 			if (args && args.length >= 2) {
 				const UIDefinePaths: string[] = args[0].elements?.map((part: any) => part.value) || [];
 				const UIDefineClassNames: string[] = args[1].params?.map((part: any) => part.name) || [];
@@ -761,22 +764,22 @@ export class CustomJSClass extends AbstractCustomClass<any, any, any, any> {
 	}
 
 	getUIDefineAcornBody() {
-		let UIDefineBody;
-		const body = this.fileContent;
-
-		const UIDefineBodyExists =
-			this.fileContent?.body &&
-			this.fileContent?.body[0]?.expression?.arguments &&
-			(body?.body[0]?.expression?.arguments[1]?.body?.body ||
-				body?.body[0]?.expression?.arguments[2]?.body?.body);
-
-		if (UIDefineBodyExists) {
-			UIDefineBody =
-				this.fileContent?.body[0]?.expression?.arguments[1]?.body?.body ||
-				this.fileContent?.body[0]?.expression?.arguments[2]?.body?.body;
-		}
+		const UIDefineBody =
+			this._getUIDefineItself()?.expression?.arguments[1]?.body?.body ||
+			this._getUIDefineItself()?.expression?.arguments[2]?.body?.body;
 
 		return UIDefineBody;
+	}
+
+	private _getUIDefineItself(): any | undefined {
+		const uiDefineItself = this.fileContent?.body?.find((body: any) => {
+			return (
+				(body.expression?.arguments?.[1]?.body?.body ||
+					body.expression?.arguments?.[2]?.body?.body)
+			);
+		});
+
+		return uiDefineItself;
 	}
 
 	private _fillMethodsAndFieldsFromPrototype() {

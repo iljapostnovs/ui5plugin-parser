@@ -110,6 +110,14 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 			"sap.suite.ui.microchart"
 		].concat(additionalLibsToLoad);
 	}
+
+	getNodeProjects() {
+		return (
+			this._config?.ui5?.ui5parser?.nodeProjects ??
+			PackageParserConfigHandler._globalConfig?.ui5?.ui5parser?.nodeProjects ??
+			[]
+		);
+	}
 }
 
 export interface IUI5PackageConfigEntry {
@@ -127,5 +135,6 @@ export interface IUI5ParserEntryFields {
 	rejectUnauthorized?: boolean;
 	libsToLoad?: string[];
 	additionalWorkspaces?: string[];
+	nodeProjects?: string[];
 	proxyWorkspaces?: string[];
 }

@@ -10,8 +10,9 @@ import {
 	TypeChecker
 } from "ts-morph";
 import * as ts from "typescript";
-import ParserPool from "../../../../parser/pool/ParserPool";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
+import ParserPool from "../../../../parser/pool/ParserPool";
+import { IUIAssociation, IUIProperty } from "../AbstractBaseClass";
 import {
 	AbstractCustomClass,
 	ICustomClassField,
@@ -19,7 +20,6 @@ import {
 	IUIDefine,
 	IViewsAndFragmentsCache
 } from "../AbstractCustomClass";
-import { IUIAssociation, IUIProperty } from "../js/AbstractJSClass";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ICustomClassTSField extends ICustomClassField<PropertyDeclaration> {}
@@ -98,7 +98,9 @@ export class CustomTSClass extends AbstractCustomClass<
 	}
 
 	private _fillClassDescription(classJsDocs: JSDoc[]) {
-		const descriptionDoc = classJsDocs.find(jsDoc => jsDoc.getTags().some(tag => tag.getTagName() === "description"));
+		const descriptionDoc = classJsDocs.find(jsDoc =>
+			jsDoc.getTags().some(tag => tag.getTagName() === "description")
+		);
 		const description = descriptionDoc?.getDescription();
 		if (description) {
 			this.description = description;

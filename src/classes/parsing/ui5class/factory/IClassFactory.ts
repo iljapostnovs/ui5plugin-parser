@@ -1,16 +1,16 @@
 import { IUI5Parser } from "../../../../parser/abstraction/IUI5Parser";
 import { AbstractCustomClass } from "../../ui5class/AbstractCustomClass";
+import { IFragment, IView } from "../../util/filereader/IFileReader";
+import { TextDocument } from "../../util/textdocument/TextDocument";
 import {
-	AbstractJSClass,
+	AbstractBaseClass,
 	IUIAggregation,
 	IUIAssociation,
 	IUIEvent,
 	IUIField,
 	IUIMethod,
 	IUIProperty
-} from "../../ui5class/js/AbstractJSClass";
-import { IFragment, IView } from "../../util/filereader/IFileReader";
-import { TextDocument } from "../../util/textdocument/TextDocument";
+} from "../AbstractBaseClass";
 
 export interface IClassFactory<CustomClass extends AbstractCustomClass> {
 	isClassAChildOfClassB(classA: string, classB: string): boolean;
@@ -24,14 +24,14 @@ export interface IClassFactory<CustomClass extends AbstractCustomClass> {
 	getClassAggregations(className: string, returnDuplicates?: boolean): IUIAggregation[];
 	getClassAssociations(className: string, returnDuplicates?: boolean): IUIAssociation[];
 	getClassProperties(className: string, returnDuplicates?: boolean): IUIProperty[];
-	getUIClass(className: string): AbstractJSClass;
+	getUIClass(className: string): AbstractBaseClass;
 	getAllCustomUIClasses(): AbstractCustomClass[];
 	getAllExistentUIClasses(): IUIClassMap;
 	getDefaultModelForClass(className: string): string | undefined;
 	isMethodOverriden(className: string, methodName: string): boolean;
 	removeClass(className: string): void;
-	getParent(UIClass: AbstractJSClass): AbstractJSClass | undefined;
-	isCustomClass(UIClass: AbstractJSClass): UIClass is CustomClass;
+	getParent(UIClass: AbstractBaseClass): AbstractBaseClass | undefined;
+	isCustomClass(UIClass: AbstractBaseClass): UIClass is CustomClass;
 	setNewNameForClass(oldPath: string, newPath: string): void;
 	getViewsAndFragmentsOfControlHierarchically(
 		CurrentUIClass: CustomClass,
@@ -46,7 +46,7 @@ export interface IClassFactory<CustomClass extends AbstractCustomClass> {
 }
 
 export interface IUIClassMap {
-	[key: string]: AbstractJSClass;
+	[key: string]: AbstractBaseClass;
 }
 export interface IFieldsAndMethods {
 	className: string;
