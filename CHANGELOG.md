@@ -1,3 +1,7 @@
+## 1.6.1 (13-08-2023)
+
+-   Additional dependencies are exported now
+
 ## 1.6.0 (22-07-2023)
 
 -   `nodeProjects` configuration option added. [Readme](README.md#node-projects)

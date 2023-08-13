@@ -6,9 +6,9 @@ import {
 	ParameterDeclaration,
 	PropertyAssignment,
 	SourceFile,
-	TypeChecker
+	TypeChecker,
+	ts
 } from "ts-morph";
-import * as ts from "typescript";
 import ParserPool from "../../../../parser/pool/ParserPool";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import {

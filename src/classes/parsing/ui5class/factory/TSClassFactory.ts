@@ -1,5 +1,4 @@
-import { ClassDeclaration, ObjectLiteralExpression, Project, SourceFile, TypeChecker } from "ts-morph";
-import * as ts from "typescript";
+import { ClassDeclaration, ObjectLiteralExpression, Project, SourceFile, TypeChecker, ts } from "ts-morph";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import ParserPool from "../../../../parser/pool/ParserPool";
 import { StandardUIClass } from "../../ui5class/StandardUIClass";

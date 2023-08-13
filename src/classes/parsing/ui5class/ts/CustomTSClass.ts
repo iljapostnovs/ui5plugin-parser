@@ -7,9 +7,9 @@ import {
 	MethodDeclaration,
 	PropertyDeclaration,
 	SourceFile,
-	TypeChecker
+	TypeChecker,
+	ts
 } from "ts-morph";
-import * as ts from "typescript";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import ParserPool from "../../../../parser/pool/ParserPool";
 import { IUIAssociation, IUIProperty } from "../AbstractBaseClass";
