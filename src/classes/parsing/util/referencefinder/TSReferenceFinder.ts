@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/indent */
 import * as path from "path";
-import { MethodDeclaration } from "ts-morph";
-import * as ts from "typescript";
+import { MethodDeclaration, ts } from "ts-morph";
 import { UI5TSParser } from "../../../../parser/UI5TSParser";
 import { AnyCustomTSClass, ICustomTSField, ICustomTSMethod } from "../../../../Types";
 import { CustomTSClass, ICustomClassTSConstructor } from "../../ui5class/ts/CustomTSClass";
