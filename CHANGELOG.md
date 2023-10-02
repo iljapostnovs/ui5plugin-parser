@@ -1,3 +1,7 @@
+## 1.6.2 (02-10-2023)
+
+-   Minor bugfixes
+
 ## 1.6.1 (13-08-2023)
 
 -   Additional dependencies are exported now
