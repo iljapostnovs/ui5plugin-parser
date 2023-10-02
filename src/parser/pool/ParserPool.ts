@@ -1,5 +1,6 @@
 import { AbstractCustomClass } from "../../classes/parsing/ui5class/AbstractCustomClass";
 import { IUIClassMap } from "../../classes/parsing/ui5class/factory/IClassFactory";
+import { toNative } from "../../classes/parsing/util/filereader/AbstractFileReader";
 import { IFileReader } from "../../classes/parsing/util/filereader/IFileReader";
 import { IUI5Parser } from "../abstraction/IUI5Parser";
 
@@ -29,7 +30,7 @@ export default class ParserPool {
 	}
 
 	static getParserForFile<Parser extends IUI5Parser = IUI5Parser>(fsPath: string) {
-		const fsPathLower = fsPath.toLowerCase();
+		const fsPathLower = toNative(fsPath).toLowerCase();
 		const manifests = this.getAllManifests();
 		const manifest = manifests.find(manifest => fsPathLower.startsWith(manifest.fsPath.toLowerCase()));
 		return (
