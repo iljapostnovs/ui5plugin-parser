@@ -51,13 +51,19 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 					?.getChildren()
 					.find(child => child.asKind(ts.SyntaxKind.ClassDeclaration)?.isDefaultExport())
 					?.asKind(ts.SyntaxKind.ClassDeclaration);
+				const classDeclarationFallback = syntaxList
+					?.getChildren()
+					.find(child => child.asKind(ts.SyntaxKind.ClassDeclaration))
+					?.asKind(ts.SyntaxKind.ClassDeclaration);
 
 				const [exportAssignment] = syntaxList?.getChildrenOfKind(ts.SyntaxKind.ExportAssignment) ?? [];
 				const [objectLiteralExpression] =
 					exportAssignment?.getChildrenOfKind(ts.SyntaxKind.ObjectLiteralExpression) ?? [];
 
-				if (!declaration) {
+				if (!declaration && objectLiteralExpression) {
 					declaration = objectLiteralExpression;
+				} else if (!declaration && classDeclarationFallback) {
+					declaration = classDeclarationFallback;
 				}
 			}
 			if (declaration && typeChecker && declaration instanceof ClassDeclaration) {
@@ -146,15 +152,19 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 						?.getChildren()
 						.find(child => child.asKind(ts.SyntaxKind.ClassDeclaration)?.isDefaultExport())
 						?.asKind(ts.SyntaxKind.ClassDeclaration);
+					const classDeclarationFallback = syntaxList
+						?.getChildren()
+						.find(child => child.asKind(ts.SyntaxKind.ClassDeclaration))
+						?.asKind(ts.SyntaxKind.ClassDeclaration);
 
 					const [exportAssignment] = syntaxList?.getChildrenOfKind(ts.SyntaxKind.ExportAssignment) ?? [];
 					const [objectLiteralExpression] =
 						exportAssignment?.getChildrenOfKind(ts.SyntaxKind.ObjectLiteralExpression) ?? [];
 
-					if (classDeclaration || objectLiteralExpression) {
+					if (classDeclaration ?? objectLiteralExpression ?? classDeclarationFallback) {
 						const theClass = this._getInstance(
 							classNameDotNotation,
-							classDeclaration || objectLiteralExpression,
+							classDeclaration ?? objectLiteralExpression ?? classDeclarationFallback,
 							project.getTypeChecker()
 						);
 						if (theClass) {

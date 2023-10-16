@@ -1,3 +1,7 @@
+## 1.6.4 (16-10-2023)
+
+-   Now as a fallback for TS parsing if no default exported class or object is found, first class declaration is taken as main class in the file which will be parsed
+
 ## 1.6.3 (07-10-2023)
 
 -   Regex bugfix
