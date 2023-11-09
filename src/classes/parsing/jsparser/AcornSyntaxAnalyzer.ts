@@ -1149,6 +1149,13 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 			});
 		}
 
+		if (!variableDeclaration) {
+			const variableDeclarations = this._findAllDeclarations(UIClass.getUIDefineAcornBody() ?? []);
+			variableDeclaration = variableDeclarations.find(declaration => {
+				return declaration.declarations.find((declaration: any) => declaration.id.name === variableName);
+			});
+		}
+
 		return variableDeclaration;
 	}
 

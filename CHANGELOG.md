@@ -1,3 +1,7 @@
+## 1.7.0 (09-11-2023)
+
+-   Variable declarations are now being searched above class declaration as well
+
 ## 1.6.4 (16-10-2023)
 
 -   Now as a fallback for TS parsing if no default exported class or object is found, first class declaration is taken as main class in the file which will be parsed
