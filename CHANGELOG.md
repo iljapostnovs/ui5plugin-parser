@@ -1,3 +1,7 @@
+## 1.7.1 (23-11-2023)
+
+-   Various small parsing bugfixes
+
 ## 1.7.0 (09-11-2023)
 
 -   Variable declarations are now being searched above class declaration as well

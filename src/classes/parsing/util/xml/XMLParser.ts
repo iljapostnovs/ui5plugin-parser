@@ -797,12 +797,12 @@ export class XMLParser {
 			strings: [],
 			comments: undefined
 		};
-		const stringData = this._getStringPositionMapping(XMLFile);
+		const stringData = this.getStringPositionMapping(XMLFile);
 		XMLFile.XMLParserData.strings = stringData.positionMapping;
 		XMLFile.XMLParserData.areAllStringsClosed = stringData.areAllStringsClosed;
 	}
 
-	private _getStringPositionMapping(document: IXMLFile) {
+	private getStringPositionMapping(document: IXMLFile) {
 		const positionMapping: boolean[] = [];
 		let quotionMarkCount = 0;
 		let secondTypeQuotionMarkCount = 0;
