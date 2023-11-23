@@ -1,3 +1,7 @@
+## 1.7.4 (23-11-2023)
+
+-   Global variable searching fix
+
 ## 1.7.3 (23-11-2023)
 
 -   Unexpected parsing exception fix
