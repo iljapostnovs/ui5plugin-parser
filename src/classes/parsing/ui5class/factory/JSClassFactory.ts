@@ -398,7 +398,7 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 							if (isMethodMentionedInTheView) {
 								method.mentionedInTheXMLDocument = true;
 								method.isEventHandler = true;
-								if (!method?.node?.params?.[0]?.jsType) {
+								if (method?.node?.params?.[0] && !method?.node?.params?.[0].jsType) {
 									method.node.params[0].jsType = "sap.ui.base.Event";
 								}
 							}
