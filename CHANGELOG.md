@@ -1,3 +1,7 @@
+## 1.7.2 (23-11-2023)
+
+-   API bugfix
+
 ## 1.7.1 (23-11-2023)
 
 -   Various small parsing bugfixes

@@ -802,7 +802,7 @@ export class XMLParser {
 		XMLFile.XMLParserData.areAllStringsClosed = stringData.areAllStringsClosed;
 	}
 
-	private getStringPositionMapping(document: IXMLFile) {
+	getStringPositionMapping(document: IXMLFile) {
 		const positionMapping: boolean[] = [];
 		let quotionMarkCount = 0;
 		let secondTypeQuotionMarkCount = 0;
