@@ -1375,6 +1375,8 @@ export class AcornSyntaxAnalyzer implements ISyntaxAnalyser {
 		let className = "";
 		if (declaration._acornSyntaxAnalyserType) {
 			className = declaration._acornSyntaxAnalyserType;
+		} else if (declaration.init === UIClass.acornReturnedClassExtendBody) {
+			className = UIClass.className;
 		} else {
 			const stackWasEmpty = stack.length === 0;
 			if (declaration.init) {

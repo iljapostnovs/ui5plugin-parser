@@ -235,12 +235,24 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 		XMLDocuments.forEach(XMLDocument => {
 			CurrentUIClass.methods.forEach(method => {
 				if (!method.isEventHandler && !method.mentionedInTheXMLDocument) {
-					const regex = new RegExp(`(\\.|"|')${method.name}"`);
+					const regex = new RegExp(`("|')(\\.?)${method.name}"`);
 					if (XMLDocument) {
-						const isMethodMentionedInTheView = regex.test(XMLDocument.content);
-						if (isMethodMentionedInTheView) {
-							method.mentionedInTheXMLDocument = true;
-							method.isEventHandler = true;
+						const controllerName = this.parser.fileReader.getResponsibleClassForXMLDocument(
+							new TextDocument(XMLDocument.content, XMLDocument.fsPath)
+						);
+						if (
+							controllerName &&
+							(this.parser.classFactory.isClassAChildOfClassB(CurrentUIClass.className, controllerName) ||
+								this.parser.classFactory.isClassAChildOfClassB(
+									controllerName,
+									CurrentUIClass.className
+								))
+						) {
+							const isMethodMentionedInTheView = regex.test(XMLDocument.content);
+							if (isMethodMentionedInTheView) {
+								method.mentionedInTheXMLDocument = true;
+								method.isEventHandler = true;
+							}
 						}
 					}
 				}
@@ -561,12 +573,18 @@ export class TSClassFactory implements IClassFactory<CustomTSClass | CustomTSObj
 
 		//check for mentioning
 		fragments.forEach(fragment => {
-			if (fragment.content.includes(`${CurrentUIClass.className}.`)) {
+			if (
+				fragment.content.includes(`${CurrentUIClass.className}.`) ||
+				fragment.content.includes(`'${CurrentUIClass.className.replace(/\./g, "/")}'`)
+			) {
 				viewsAndFragments.fragments.push(fragment);
 			}
 		});
 		allViews.forEach(view => {
-			if (view.content.includes(`${CurrentUIClass.className}.`)) {
+			if (
+				view.content.includes(`${CurrentUIClass.className}.`) ||
+				view.content.includes(`'${CurrentUIClass.className.replace(/\./g, "/")}'`)
+			) {
 				viewsAndFragments.views.push(view);
 			}
 		});

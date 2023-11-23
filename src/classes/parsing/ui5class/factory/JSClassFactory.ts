@@ -381,14 +381,26 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 		XMLDocuments.forEach(XMLDocument => {
 			CurrentUIClass.methods.forEach(method => {
 				if (!method.isEventHandler && !method.mentionedInTheXMLDocument) {
-					const regex = new RegExp(`(\\.|"|')${method.name}"`);
+					const regex = new RegExp(`("|')(\\.?)${method.name}"`);
 					if (XMLDocument) {
-						const isMethodMentionedInTheView = regex.test(XMLDocument.content);
-						if (isMethodMentionedInTheView) {
-							method.mentionedInTheXMLDocument = true;
-							method.isEventHandler = true;
-							if (method?.node?.params && method?.node?.params[0] && !method.node.params[0].jsType) {
-								method.node.params[0].jsType = "sap.ui.base.Event";
+						const controllerName = this.parser.fileReader.getResponsibleClassForXMLDocument(
+							new TextDocument(XMLDocument.content, XMLDocument.fsPath)
+						);
+						if (
+							controllerName &&
+							(this.parser.classFactory.isClassAChildOfClassB(CurrentUIClass.className, controllerName) ||
+								this.parser.classFactory.isClassAChildOfClassB(
+									controllerName,
+									CurrentUIClass.className
+								))
+						) {
+							const isMethodMentionedInTheView = regex.test(XMLDocument.content);
+							if (isMethodMentionedInTheView) {
+								method.mentionedInTheXMLDocument = true;
+								method.isEventHandler = true;
+								if (!method?.node?.params?.[0]?.jsType) {
+									method.node.params[0].jsType = "sap.ui.base.Event";
+								}
 							}
 						}
 					}
@@ -539,12 +551,18 @@ export class JSClassFactory implements IClassFactory<CustomJSClass> {
 
 		//check for mentioning
 		fragments.forEach(fragment => {
-			if (fragment.content.includes(`${CurrentUIClass.className}.`)) {
+			if (
+				fragment.content.includes(`${CurrentUIClass.className}.`) ||
+				fragment.content.includes(`'${CurrentUIClass.className.replace(/\./g, "/")}'`)
+			) {
 				viewsAndFragments.fragments.push(fragment);
 			}
 		});
 		allViews.forEach(view => {
-			if (view.content.includes(`${CurrentUIClass.className}.`)) {
+			if (
+				view.content.includes(`${CurrentUIClass.className}.`) ||
+				view.content.includes(`'${CurrentUIClass.className.replace(/\./g, "/")}'`)
+			) {
 				viewsAndFragments.views.push(view);
 			}
 		});
