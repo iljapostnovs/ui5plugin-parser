@@ -38,7 +38,7 @@ export interface IFileReader {
 	getResponsibleClassForXMLDocument(document: TextDocument): string | undefined;
 	getResponsibleClassNameForViewOrFragment(viewOrFragment: IXMLFile): string | undefined;
 	getManifestExtensionsForClass(className: string): any | undefined;
-	getFragmentsFromXMLDocumentText(documentText: string): IFragment[];
+	getFragmentsFromXMLDocumentText(document: IXMLFile): IFragment[];
 	getFragment(fragmentName: string): IFragment | undefined;
 	getAllFragments(): IFragment[];
 	getClassNameFromPath(fsPath: string): string | undefined;
