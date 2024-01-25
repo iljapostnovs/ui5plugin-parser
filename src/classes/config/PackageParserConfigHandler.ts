@@ -60,7 +60,7 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 		return (
 			this._config?.ui5?.ui5parser?.ui5version ??
 			PackageParserConfigHandler._globalConfig?.ui5?.ui5parser?.ui5version ??
-			"1.84.30"
+			"1.108.27"
 		);
 	}
 

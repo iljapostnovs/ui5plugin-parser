@@ -71,7 +71,7 @@ Default `package.json` or `rc` file config looks as follows:
 	"ui5": {
 		"ui5parser": {
 			// UI5 Version for standard library metadata preload from ui5.sap.com
-			"ui5version": "1.84.30",
+			"ui5version": "1.108.27",
 			// Folder GLOB patterns which should be excluded from reading by parser
 			"excludeFolderPatterns": ["**/resources/**", "**/dist/**", "**/node_modules/**"],
 			// Source for standard library metadata preload
