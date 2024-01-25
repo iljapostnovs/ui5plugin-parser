@@ -50,10 +50,10 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 
 	reloadFragmentReferences() {
 		this.getAllFragments().forEach(fragment => {
-			fragment.fragments = this.getFragmentsFromXMLDocumentText(fragment.content);
+			fragment.fragments = this.getFragmentsFromXMLDocumentText(fragment);
 		});
 		this.getAllViews().forEach(view => {
-			view.fragments = this.getFragmentsFromXMLDocumentText(view.content);
+			view.fragments = this.getFragmentsFromXMLDocumentText(view);
 		});
 	}
 
@@ -70,7 +70,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 				this._viewCache[viewName].controllerName = this.getControllerNameFromView(viewContent) || "";
 				this._viewCache[viewName].idClassMap = {};
 				this._viewCache[viewName].fsPath = fsPath;
-				this._viewCache[viewName].fragments = this.getFragmentsFromXMLDocumentText(viewContent);
+				this._viewCache[viewName].fragments = this.getFragmentsFromXMLDocumentText(this._viewCache[viewName]);
 				this._viewCache[viewName].XMLParserData = undefined;
 				(this._viewCache[viewName] as any)._cache = {};
 			} else {
@@ -80,7 +80,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 					name: viewName || "",
 					content: viewContent,
 					fsPath: fsPath,
-					fragments: this.getFragmentsFromXMLDocumentText(viewContent),
+					fragments: [],
 					getCache: function <Type>(cacheName: string) {
 						return <Type>(this as any)._cache[cacheName];
 					},
@@ -89,6 +89,9 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 					}
 				};
 				(this._viewCache[viewName] as any)._cache = {};
+				this._viewCache[viewName].fragments = this.getFragmentsFromXMLDocumentText(
+					this._viewCache[viewName]
+				);
 			}
 		}
 	}
@@ -106,7 +109,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 				this._fragmentCache[fragmentName].fsPath = fsPath;
 				this._fragmentCache[fragmentName].name = fragmentName;
 				this._fragmentCache[fragmentName].idClassMap = {};
-				this._fragmentCache[fragmentName].fragments = this.getFragmentsFromXMLDocumentText(text);
+				this._fragmentCache[fragmentName].fragments = this.getFragmentsFromXMLDocumentText(this._fragmentCache[fragmentName]);
 				this._fragmentCache[fragmentName].XMLParserData = undefined;
 				(this._fragmentCache[fragmentName] as any)._cache = {};
 			} else {
@@ -115,7 +118,7 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 					fsPath: fsPath,
 					name: fragmentName,
 					idClassMap: {},
-					fragments: this.getFragmentsFromXMLDocumentText(text),
+					fragments: [],
 					getCache: function <Type>(cacheName: string) {
 						return <Type>(this as any)._cache[cacheName];
 					},
@@ -124,6 +127,9 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 					}
 				};
 				(this._fragmentCache[fragmentName] as any)._cache = {};
+				this._fragmentCache[fragmentName].fragments = this.getFragmentsFromXMLDocumentText(
+					this._fragmentCache[fragmentName]
+				);
 			}
 		}
 	}
@@ -488,9 +494,9 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 		return responsibleClass?.className;
 	}
 
-	getFragmentsFromXMLDocumentText(documentText: string) {
+	getFragmentsFromXMLDocumentText(document: IXMLFile) {
 		const fragments: IFragment[] = [];
-		const fragmentTags = this._getFragmentTags(documentText);
+		const fragmentTags = this._getFragmentTags(document);
 		fragmentTags.forEach(fragmentTag => {
 			const fragmentName = this._getFragmentNameFromTag(fragmentTag);
 			if (fragmentName) {
@@ -522,8 +528,17 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 		return fragmentName;
 	}
 
-	protected _getFragmentTags(documentText: string) {
-		return documentText.match(/<.*?:Fragment\s(.|\s)*?\/?>/g) || [];
+	protected _getFragmentTags(document: IXMLFile) {
+		const fragmentTags: string[] = [];
+		const regExp = /<.*?:Fragment\s(.|\s)*?\/?>/g;
+		let result = regExp.exec(document.content);
+		while (result) {
+			if (this._parser.xmlParser.getIfPositionIsNotInComments(document, result.index)) {
+				fragmentTags.push(result[0]);
+			}
+			result = regExp.exec(document.content);
+		}
+		return fragmentTags;
 	}
 
 	getClassNameFromPath(fsPath: string) {

@@ -1,3 +1,12 @@
+## 1.7.6 (25-01-2024)
+
+-   Refactor resource model data class
+-   update dependencies
+
+## 1.7.5 (25-12-2023)
+
+-   Fragment determination in XML files fix
+
 ## 1.7.4 (23-11-2023)
 
 -   Global variable searching fix

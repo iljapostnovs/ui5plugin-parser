@@ -31,14 +31,16 @@ export class ResourceModelData {
 	}
 
 	private _updateResourceModelData(resourceModelFile: { content: string; componentName: string }) {
-		this.resourceModels[resourceModelFile.componentName] = [];
+		this.resourceModels[resourceModelFile.componentName] = ResourceModelData.parseFile(resourceModelFile);
+	}
 
+	static parseFile(resourceModelFile: { content: string; componentName: string }) {
 		const lineColumn = LineColumn(resourceModelFile.content);
 		const propertyFile = new Properties(resourceModelFile.content);
 
 		const lines = (propertyFile as unknown as { lines: string[] })?.lines ?? [];
-		propertyFile.collection.forEach(translation => {
-			this.resourceModels[resourceModelFile.componentName].push({
+		return propertyFile.collection.map(translation => {
+			return {
 				text: `{i18n>${translation.key}}`,
 				description: translation.value,
 				id: translation.key,
@@ -48,7 +50,7 @@ export class ResourceModelData {
 				positionEnd:
 					lineColumn.toIndex(translation.endingLineNumber, 1) +
 					lines[translation.endingLineNumber - 1].length
-			});
+			};
 		});
 	}
 
