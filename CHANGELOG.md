@@ -1,3 +1,7 @@
+## 1.7.8 (13-03-2025)
+
+-   fix application/json header issue
+
 ## 1.7.7 (25-01-2024)
 
 -   Update default UI5 version to 1.108.27

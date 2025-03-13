@@ -29,7 +29,7 @@ export class HTTPHandler {
 				HTTPHandler._requests[uri] = pResponse;
 			}
 			const response = await pResponse;
-			if (response.headers?.["content-type"] === "application/json") {
+			if (response.headers?.["content-type"]?.includes("application/json")) {
 				data = JSON.parse(response.data);
 			} else {
 				data = response.data;
@@ -52,7 +52,7 @@ export class HTTPHandler {
 					return status >= 200 && status < 300;
 				}
 			});
-			if (response.headers?.["content-type"] === "application/json") {
+			if (response.headers?.["content-type"]?.includes("application/json")) {
 				data = JSON.parse(response.data);
 			} else {
 				data = response.data;
