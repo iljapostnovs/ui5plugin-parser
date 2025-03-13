@@ -591,6 +591,9 @@ export abstract class AbstractFileReader<CustomClass extends AbstractCustomClass
 			const fileText = fs.readFileSync(cachePath, "utf8");
 			try {
 				cache = JSON.parse(fileText);
+				if (typeof cache === "string") {
+					return;
+				}
 			} catch (error) {
 				console.log(error);
 			}
