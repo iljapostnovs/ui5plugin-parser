@@ -1,3 +1,7 @@
+## 1.8.2 (16-04-2025)
+
+-   fix parser config handler
+
 ## 1.8.1 (16-04-2025)
 
 -   fix parser factory

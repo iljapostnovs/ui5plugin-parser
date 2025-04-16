@@ -114,7 +114,7 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 	}
 
 	private _findLatestVersionFor(version: string): string {
-		if (version.split(".").length === 2) {
+		if (version.split(".").length === 3) {
 			return version;
 		}
 		const patches = PackageParserConfigHandler._versionInfo?.patches.filter(patch =>
