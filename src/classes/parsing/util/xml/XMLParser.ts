@@ -57,9 +57,10 @@ export class XMLParser {
 					const eventHandlerAttributes = attributes?.filter(attribute => {
 						const { attributeValue } = this.getAttributeNameAndValue(attribute);
 						let currentEventHandlerName = this.getEventHandlerNameFromAttributeValue(attributeValue);
+						const currentEventHandlerNameNoDot = currentEventHandlerName.startsWith(".") ? currentEventHandlerName.replace(".", "") : currentEventHandlerName;
 
 						if (
-							currentEventHandlerName !== eventHandlerName &&
+							currentEventHandlerNameNoDot !== eventHandlerName &&
 							currentEventHandlerName.includes(eventHandlerName)
 						) {
 							//TODO: refactoring
@@ -88,10 +89,14 @@ export class XMLParser {
 										}
 									}
 								}
-								currentEventHandlerName = filteredResults[1].substring(
-									0,
-									filteredResults[1].length - 1
-								); //removes "'"
+								currentEventHandlerName = filteredResults[1];
+                                const charsToSubstring = [".", "'", "(", "\""];
+								if (charsToSubstring.includes(currentEventHandlerName.at(-1) ?? "")) {
+									currentEventHandlerName = currentEventHandlerName.substring(
+										0,
+										filteredResults[1].length - 1
+									);
+								}
 							} else if (filteredResults && filteredResults.length > 2) {
 								//maybe static classes e.g. com.test.formatter.test
 								const manifest = ParserPool.getManifestForClass(currentEventHandlerName);
@@ -179,7 +184,7 @@ export class XMLParser {
 									}
 								}
 							}
-						} else if (functionCallClassName && currentEventHandlerName === eventHandlerName) {
+						} else if (functionCallClassName && currentEventHandlerNameNoDot === eventHandlerName) {
 							const responsibleClassName =
 								this._parser.fileReader.getResponsibleClassNameForViewOrFragment(viewOrFragment);
 
@@ -908,6 +913,9 @@ export class XMLParser {
 		if (eventHandlerName.startsWith(".")) {
 			eventHandlerName = eventHandlerName.replace(".", "");
 		}
+		// if (eventHandlerName.includes(".")) {
+        //     eventHandlerName = eventHandlerName.split(".").at(-1) ?? eventHandlerName;
+        // }
 		if (eventHandlerName.includes("(")) {
 			const result = /.*?(?=\((.|\n|\t|\r)*\))/.exec(eventHandlerName);
 			if (result) {
