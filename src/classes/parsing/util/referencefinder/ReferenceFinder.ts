@@ -89,7 +89,7 @@ export class ReferenceFinder extends ReferenceFinderBase<
 	}
 
 	private _getCurrentMethodMentioning(member: ICustomClassJSMethod | ICustomClassJSField, UIClass: CustomJSClass) {
-		const regexp = new RegExp(`(?<=\\.)${member.name}(\\(|\\)|\\,|\\.|\\s|;|\\[|\\])(?!=)`, "g");
+        const regexp = new RegExp(`(?<=\\.)${member.name}(\\}|\\(|\\)|\\,|\\.|\\s|;|\\[|\\])(?!=)`, "g");
 		const results: RegExpExecArray[] = [];
 		let result = regexp.exec(UIClass.classText);
 		while (result) {
