@@ -1,3 +1,9 @@
+## 1.8.0 (16-04-2025)
+
+-   minor parsing improvements
+-   default version updated to 1.120
+-   UI5 version now can be set w/o patch and latest patch will be fetched
+
 ## 1.7.8 (13-03-2025)
 
 -   fix application/json header issue

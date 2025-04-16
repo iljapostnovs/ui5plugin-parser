@@ -1,15 +1,55 @@
 import * as fs from "fs";
 import { dirname, join } from "path";
 import { rcFile } from "rc-config-loader";
+import { HTTPHandler } from "../http/HTTPHandler";
 import { toNative } from "../parsing/util/filereader/AbstractFileReader";
 import { IParserConfigHandler } from "./IParserConfigHandler";
+
+export interface VersionInfo {
+	versions: Version[];
+	patches: Patch[];
+}
+
+export interface Patch {
+	version: string;
+	eocp: string;
+	removed?: boolean;
+	hidden?: boolean;
+	extended_eocp?: string;
+}
+
+export interface Version {
+	version: string;
+	version_label?: string;
+	support: Support;
+	lts: boolean;
+	eom: string;
+	eocp: string;
+	sapuiversion: string;
+	frontendserver: string;
+	beta?: string[];
+}
+
+export enum Support {
+	Maintenance = "Maintenance",
+	OutOfMaintenance = "Out of maintenance",
+	Skipped = "Skipped"
+}
 
 export class PackageParserConfigHandler implements IParserConfigHandler {
 	static readonly configCache: { [key: string]: IUI5PackageConfigEntry } = {};
 	private static _globalConfig?: IUI5PackageConfigEntry;
+
+	private static _versionInfo?: VersionInfo;
+
 	static setGlobalConfigPath(fsPath: string) {
 		this._globalConfig = JSON.parse(fs.readFileSync(fsPath, "utf8")) || {};
 	}
+
+	static async loadVersionInfo(dataSource: string) {
+		this._versionInfo = await HTTPHandler.get(`${dataSource}versionoverview.json`);
+	}
+
 	private _config!: IUI5PackageConfigEntry;
 	packagePath: string;
 	configPath?: string;
@@ -57,11 +97,38 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 	}
 
 	getUI5Version() {
-		return (
+		const version =
 			this._config?.ui5?.ui5parser?.ui5version ??
 			PackageParserConfigHandler._globalConfig?.ui5?.ui5parser?.ui5version ??
-			"1.108.27"
+			"1.120";
+
+		const hasNoPatch = version.split(".").length === 2;
+		let fullVersion: string;
+		if (hasNoPatch) {
+			fullVersion = this._findLatestVersionFor(version);
+		} else {
+			fullVersion = version;
+		}
+
+		return fullVersion;
+	}
+
+	private _findLatestVersionFor(version: string): string {
+		if (version.split(".").length === 2) {
+			return version;
+		}
+		const patches = PackageParserConfigHandler._versionInfo?.patches.filter(patch =>
+			patch.version.startsWith(`${version}.`)
 		);
+
+		patches?.sort((patchA, patchB) => {
+			const patchANumber = patchA.version.split(".").at(2) ?? "0";
+			const patchBNumber = patchB.version.split(".").at(2) ?? "0";
+
+			return parseInt(patchBNumber, 10) - parseInt(patchANumber, 10);
+		});
+
+		return patches?.at(0)?.version ?? `${version}.0`;
 	}
 
 	getExcludeFolderPatterns() {
