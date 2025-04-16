@@ -33,6 +33,7 @@ export default class ParserFactory {
 		}
 		this._initializationMessages = [];
 		const wsFoldersAndConfigHandlers = this._extractAllWSFoldersAndConfigHandlers(wsFolders);
+		await this._loadVersionInfo(wsFoldersAndConfigHandlers);
 
 		const manifestInfos = wsFoldersAndConfigHandlers.flatMap(({ wsFolder, configHandler, isNodeProject }) => {
 			const manifestPaths = AbstractFileReader.readFilesInWorkspace(
@@ -68,6 +69,30 @@ export default class ParserFactory {
 		this._addInitializationMessages(parsers);
 
 		return ParserPool.getAllParsers();
+	}
+
+	private static async _loadVersionInfo(
+		wsFoldersAndConfigHandlers: {
+			wsFolder: WorkspaceFolder;
+			configHandler: PackageParserConfigHandler;
+			isNodeProject: boolean;
+		}[]
+	) {
+		const sources = [
+			...new Set(
+				wsFoldersAndConfigHandlers.map(wsFoldersAndConfigHandler =>
+					wsFoldersAndConfigHandler.configHandler.getDataSource()
+				)
+			)
+		];
+		if (sources.length > 1) {
+			this._initializationMessages.push({
+				state: MessageState.Information,
+				message: `Multiple sources found for UI5 Library metadata preload. "${sources[0]}" is used to fetch UI5 version info.`
+			});
+		}
+		const source = sources[0];
+		await PackageParserConfigHandler.loadVersionInfo(source);
 	}
 
 	private static _addInitializationMessages(parsers: IUI5Parser[]) {
