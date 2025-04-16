@@ -1,3 +1,7 @@
+## 1.8.1 (16-04-2025)
+
+-   fix parser factory
+
 ## 1.8.0 (16-04-2025)
 
 -   minor parsing improvements
