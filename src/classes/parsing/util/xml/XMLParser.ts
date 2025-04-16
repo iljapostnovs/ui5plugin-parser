@@ -64,7 +64,7 @@ export class XMLParser {
 							currentEventHandlerName.includes(eventHandlerName)
 						) {
 							//TODO: refactoring
-							const results = new RegExp(`((\\..*?\\.)|("|\\.))${eventHandlerName}("|\\.|'|\\(|$)`).exec(
+							const results = new RegExp(`(((\\.|^).*?\\.)|("|\\.))${eventHandlerName}("|\\.|'|\\(|$)`).exec(
 								currentEventHandlerName
 							);
 							const filteredResults = results && results[0].split(".").filter(result => !!result);
@@ -116,7 +116,7 @@ export class XMLParser {
 								currentEventHandlerName !== eventHandlerName &&
 								currentEventHandlerName.includes(eventHandlerName)
 							) {
-								const results = new RegExp(`(\\.|"|')${eventHandlerName}("|'|\\(|\\.)`).exec(
+								const results = new RegExp(`(\\.|"|'|^)${eventHandlerName}("|'|\\(|\\.)`).exec(
 									currentEventHandlerName
 								);
 								if (results) {
