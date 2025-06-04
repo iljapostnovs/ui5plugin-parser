@@ -12,10 +12,7 @@ export class HTTPHandler {
 		let data = {};
 
 		const rejectUnauthorized = this.configHandler.getRejectUnauthorized();
-		const agent = new https.Agent({
-			rejectUnauthorized: !!rejectUnauthorized
-		});
-		options.httpsAgent = agent;
+		if (!rejectUnauthorized) options.httpsAgent = new https.Agent({ rejectUnauthorized: !!rejectUnauthorized });
 
 		try {
 			if (HTTPHandler._requests[uri]) {
