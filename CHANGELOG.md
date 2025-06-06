@@ -1,3 +1,8 @@
+## 1.9.0 (06-06-2025)
+
+-   validate TLS connections by default (rejectUnauthorized=true)
+-   improved proxy support (use custom agent only when not validating TLS connections)
+
 ## 1.8.2 (16-04-2025)
 
 -   fix parser config handler
