@@ -77,7 +77,7 @@ Default `package.json` or `rc` file config looks as follows:
 			// Source for standard library metadata preload
 			"dataSource": "https://ui5.sap.com/",
 			// For HTTP requests to dataSource
-			"rejectUnauthorized": false,
+			"rejectUnauthorized": true,
 			// List of libraries to be loaded
 			"libsToLoad": [
 				"sap.m",

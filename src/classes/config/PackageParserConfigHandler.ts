@@ -152,7 +152,7 @@ export class PackageParserConfigHandler implements IParserConfigHandler {
 		return (
 			this._config?.ui5?.ui5parser?.rejectUnauthorized ??
 			PackageParserConfigHandler._globalConfig?.ui5?.ui5parser?.rejectUnauthorized ??
-			false
+			true
 		);
 	}
 
