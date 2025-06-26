@@ -1,6 +1,6 @@
 {
 	"name": "ui5plugin-parser",
-	"version": "1.10.0",
+	"version": "1.10.1",
 	"description": "UI5 Class parser",
 	"main": "dist/index.js",
 	"scripts": {
@@ -56,7 +56,7 @@
 		"typescript": "5.8.3"
 	},
 	"dependencies": {
-		"acorn-loose": "8.5.1",
+		"acorn-loose": "8.4.0",
 		"axios": "1.8.4",
 		"comment-parser": "1.4.1",
 		"fast-xml-parser": "5.2.5",

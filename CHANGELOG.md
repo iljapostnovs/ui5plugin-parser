@@ -1,3 +1,7 @@
+## 1.10.1 (27-06-2025)
+
+-   Downgrade acorn-loose to 8.4.0
+
 ## 1.10.0 (27-06-2025)
 
 -   Bump ts-morph to 26.0.0 and acorn-loose to 8.5.1
